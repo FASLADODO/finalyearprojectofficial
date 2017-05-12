@@ -1,0 +1,10 @@
+: gender
+Male He Him Guy Man Boy
+Female Woman She Her Lady Girl
+: body
+Height tall short medium small
+Weight fat large medium_build small heavy obese skinny slim
+Hair bald long_hair short_hair brown_hair blonde_hair grey_hair dyed_hair ponytail curly curls
+: clothes
+Shirt t-shirt long-sleeve vest 
+
