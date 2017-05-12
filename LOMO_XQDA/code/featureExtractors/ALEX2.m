@@ -1,0 +1,158 @@
+function descriptors = ALEX(imageStore, options)
+%% function Descriptors = MACH(images, options)
+% Function for the machine learning feature extraction
+%
+% Input:
+%   <images>: a set of n RGB color images. Size: [h, w, 3, n]
+
+% Output:
+%   descriptors: the extracted LOMO descriptors. Size: [d, n]
+% 
+% Example:
+%     I = imread('../images/000_45_a.bmp');
+%     descriptor = LOMO(I);
+READ_STD=1;
+READ_CENTRAL=2;
+resizeMethodNames={'Standard','Central'};
+
+%% set parameters, check system
+if nargin >= 2
+    if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(options.trainSplit) && isnumeric(options.trainSplit) && options.trainSplit > 0
+        trainSplit = options.trainSplit;
+        fprintf('Training percentage of images is %d.\n', trainSplit);
+    end
+    if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
+        imResizeMethod = options.imResizeMethod;
+        fprintf('Resizing method of images is %s.\n', resizeMethodNames{imResizeMethod});
+    end
+end
+t0 = tic;
+% Get GPU device information
+%deviceInfo = gpuDevice;
+
+% Check the GPU compute capability
+%computeCapability = str2double(deviceInfo.ComputeCapability);
+%assert(computeCapability >= 3.0, ...
+ %   'This example requires a GPU device with compute capability 3.0 or higher.')
+
+%% create image datastores 
+switch imResizeMethod
+    case READ_STD
+        imageStore.ReadFcn = @readAlexNetStd; 
+    case READ_CENTRAL
+        imageStore.ReadFcn = @readAlexNetCentral;
+end
+
+[imagesTrain,imagesTest]= splitEachLabel(imageStore,trainSplit);
+
+%% create net instance, get properties
+net = alexnet;
+
+%%Display 20 sample images
+figure
+for i = 1:20
+    subplot(4,5,i)
+
+    I = readimage(imagesTrain,i);
+    imshow(I)
+    drawnow
+end
+%% extract Features: descriptors
+imagesTrain
+layer = 'fc7';
+trainingFeatures = activations(net,imagesTrain,layer);
+testFeatures = activations(net,imagesTest,layer);
+trainingLabels = imagesTrain.Labels;
+testLabels = imagesTest.Labels;
+%% finishing, clear temp vars, create descriptors
+descriptors=[trainingFeatures,testFeatures;trainingLabels, testLabels];
+
+feaTime = toc(t0);
+meanTime = feaTime / size(images, 4);
+fprintf('ALEX feature extraction finished. Running time: %.3f seconds in total, %.3f seconds per image.\n', feaTime, meanTime);
+
+
+end
+
+    %Leftmost
+    function imageData= readAlexNetStd(imageName)
+        imgSize = [227, 227, 3];
+        I = imread(imageName);
+        scaleY=imgSize(1)/size(I,1);
+        scaleX=imgSize(2)/size(I,2);
+        if(scaleX>scaleY)
+            I=imresize(I,scaleX);
+        else
+            I=imresize(I,scaleY);
+        end
+
+        %Resize images for net
+        imageData = I(1:imgSize(1),1:imgSize(2),1:imgSize(3)); 
+    end
+
+    %Leftmost
+    function imageData= readAlexNetCentral(imageName)
+
+        imgSize = [227, 227, 3];
+        I = imread(imageName);
+        scaleY=imgSize(1)/size(I,1);
+        scaleX=imgSize(2)/size(I,2);
+        %image scalex largest
+        if(scaleX>scaleY)
+            %image is smaller than input
+            if(scaleX>=1.0) %Y is now larger than it should be
+                I=imresize(I,scaleX);
+                idx=int16(((size(I,1)-imgSize(1))/2));
+                imageData=I(idx:imgSize(1)+idx,1:imgSize(2),1:imgSize(3));
+            else  
+                I=imresize(I,scaleX);
+                idx=int16(((size(I,1)-imgSize(1))/2));
+                imageData=I(idx:imgSize(1)+idx,1:imgSize(2),1:imgSize(3)); 
+            end
+        else
+            I=imresize(I,scaleY);%scaled height so width, numcols wrong
+            %eg 41 20 so want 10-30
+            idx=int16(((size(I,2)-imgSize(2))/2));
+            imageData = I(1:imgSize(1),idx:idx+imgSize(2),1:imgSize(3)); 
+        end    
+    end
+%{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+iMAGE cATEGORY CLASSIFICATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Get GPU device information
+%deviceInfo = gpuDevice;
+
+% Check the GPU compute capability
+%computeCapability = str2double(deviceInfo.ComputeCapability);
+%assert(computeCapability >= 3.0, ...
+ %   'This example requires a GPU device with compute capability 3.0 or higher.')
+
+url = 'http://www.vision.caltech.edu/Image_Datasets/Caltech101/101_ObjectCategories.tar.gz';
+% Store the output in a temporary folder
+outputFolder = fullfile(tempdir, 'caltech101'); % define output folder
+if ~exist(outputFolder, 'dir') % download only once
+    disp('Downloading 126MB Caltech101 data set...');
+    untar(url, outputFolder);
+end
+rootFolder = fullfile(outputFolder, '101_ObjectCategories');
+categories = {'airplanes', 'ferry', 'laptop'};
+imds = imageDatastore(fullfile(rootFolder, categories), 'LabelSource', 'foldernames');
+%imageDatastore labels is empty if not specified
+tbl = countEachLabel(imds)
+%%%%%%%%%%%%Balance out no. image labels for training
+%Equal positive and negative
+minSetCount = min(tbl{:,2}); % determine the smallest amount of images in a category
+
+% Use splitEachLabel method to trim the set.
+imds = splitEachLabel(imds, minSetCount, 'randomize');
+% Find the first instance of an image for each category
+airplanes = find(imds.Labels == 'airplanes', 1);
+
+% Notice that each set now has exactly the same number of images.
+countEachLabel(imds)
+
+%}
+
+
+
