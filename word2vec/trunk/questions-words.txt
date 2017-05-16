@@ -1,10 +1,14 @@
 : gender
 male he him guy man boy
 female woman she her lady girl
+: shoes
+girl sandals pumps flats
+old slippers flat_slippers
+man trainers loafers boots
 : body
 height tall short medium small
 weight fat large build small heavy obese skinny slim
-hair bald longr short brown blonde grey dyed ponytail curly curls bald
+hair bald longer short brown blonde grey dyed ponytail curly curls bald
 age middle-aged old young twenties teenage boy teens
 : clothes
 trousers jeans short long grey black denim smart belt
@@ -14,3 +18,31 @@ skirt mini short long denim red orange blue black
 carries bag laptop handbag phone hand left right 
 : male
 he him male guy boy
+: man
+hair bald short
+wearing shirt trousers watch
+female woman
+girl woman
+: colour
+t-shirt black white
+shirt black white
+: woman
+hair long_hair ponytail dyed_hair
+bag handbag purse clutch
+: age
+young twenties boy girl
+: carrying
+arm bag laptop backpack rucksack 
+hand phone book notebook cellphone mobile
+bag bags laptop rucksack backpack
+: carries
+arm bag laptop backpack rucksack 
+hand phone book notebook cellphone mobile
+bag bags laptop rucksack backpack
+: asian
+origin chinese japanese 
+:wearing
+shirt short t-shirt
+: trousers
+blue jeans
+

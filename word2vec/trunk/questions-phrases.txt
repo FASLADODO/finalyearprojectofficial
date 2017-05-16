@@ -1,3 +1,28 @@
+: man
+hair bald short_hair 
+wearing shirt trousers wrist_watch
+female woman
+girl woman
+: colour
+t-shirt black white
+shirt black white
+: woman
+hair long_hair ponytail dyed_hair
+bag handbag purse clutch
+: age
+young twenties boy girl
+: carrying
+arm bag laptop_bag backpack back_pack rucksack 
+hand phone book notebook cellphone mobile_phone
+bag bags laptop_bag rucksack backpack
+: carries
+arm bag laptop_bag backpack back_pack rucksack 
+hand phone book notebook cellphone mobile_phone
+bag bags laptop_bag rucksack backpack
+: asian
+origin chinese japanese asian_origin
+:wearing
+shirt short_sleeved t-shirt
 : gender
 male he him guy man boy
 female woman she her lady girl
