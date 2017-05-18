@@ -18,7 +18,7 @@ for file_in in files:
 	file_name="vectors-phrase.txt"
 	word=[] #Contains key of words
 	vector=[] #Contains 
-	with open(file_name, "r") as f:
+	with open(file_in, "r") as f:
 		header=f.readline()
 		vocab_size, vector_size = map(int, header.split())
 		print vocab_size 
@@ -36,7 +36,7 @@ for file_in in files:
 #file_name="phrase2"#COuld be phrase0, phrase1
 #for i in range(len(phrase_files)):
 	phrases=[]
-	with open(phrase_files[i], "r") as f:
+	with open(phrase_files[phrasefileindex], "r") as f:
 		phrases = [line.rstrip('\n') for line in f]
 
 	for p in phrases:
@@ -60,9 +60,9 @@ for file_in in files:
 			#sum_vectors[p]+=word_vec_dict[w]
 
 	#Output to word-vects.txt file
-	file_name="phrase-vects.txt"
+	#file_name="phrase-vects.txt"
 	print len(sum_vectors)
-	f=open(phraseout_files[i], "w+")
+	f=open(phraseout_file, "w+")
 	for phrase in range(len(sum_vectors)):
 			#print len(sum_vectors)
 			#print range(len(sum_vectors))
