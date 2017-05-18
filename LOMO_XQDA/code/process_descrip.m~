@@ -1,4 +1,0 @@
-file=fopen('','rb');
-A=fread()
-phraseFile=fopen('../../word2vec/trunk/vectors-phrase.bin','rb');
-B=fread()

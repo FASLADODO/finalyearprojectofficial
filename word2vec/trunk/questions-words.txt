@@ -1,6 +1,7 @@
 : gender
 male he him guy man boy
 female woman she her lady girl
+girl boy woman man
 : shoes
 girl sandals pumps flats
 old slippers flat_slippers
@@ -18,6 +19,7 @@ skirt mini short long denim red orange blue black
 carries bag laptop handbag phone hand left right 
 : male
 he him male guy boy
+hair bald short
 : man
 hair bald short
 wearing shirt trousers watch
