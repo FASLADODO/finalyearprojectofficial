@@ -21,6 +21,8 @@ hand phone book notebook cellphone mobile_phone
 bag bags laptop_bag rucksack backpack
 : asian
 origin chinese japanese asian_origin
+: an_asian
+
 :wearing
 shirt short_sleeved t-shirt
 : gender
