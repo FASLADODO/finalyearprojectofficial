@@ -14,7 +14,8 @@ function descriptors = ALEX(images, options)
 %     descriptor = LOMO(I);
 READ_STD=1;
 READ_CENTRAL=2;
-resizeMethodNames={'Standard','Central'};
+READ_ALL=3;
+resizeMethodNames={'Standard','Central', 'All'};
 
 %% set parameters, check system
 if nargin >= 2
@@ -46,6 +47,8 @@ switch imResizeMethod
         images=imageResizeStd(images);
     case READ_CENTRAL
         images=imageResizeCtrl(images);
+    case READ_ALL
+        images=imageResizeAll(images);
 end
 split=int16(trainSplit*noImages);
 imagesTrain=images(:,:,:,1:split);
@@ -95,6 +98,35 @@ function newImages=imageResizeStd(images)
             newImages(:,:,:,i) = I(1:imgSize(1),1:imgSize(2),1:imgSize(3));
         end        
 end
+
+function newImages=imageResizeCtrl(images)
+        newImages=zeros(227,227,3,size(images,4));
+        imgSize = [227, 227, 3];
+        for i=1:size(images,4)
+                I = squeeze(images(:,:,:,i));
+                scaleY=imgSize(1)/size(I,1);
+                scaleX=imgSize(2)/size(I,2);
+                if(scaleX>scaleY)
+                    %image is smaller than input
+                    if(scaleX>=1.0) %Y is now larger than it should be
+                        I=imresize(I,scaleX);
+                        idx=int16(((size(I,1)-imgSize(1))/2));
+                        newImages(:,:,:,i)=I(idx:imgSize(1)+idx-1,1:imgSize(2),1:imgSize(3));
+                    else  
+                        I=imresize(I,scaleX);
+                        idx=int16(((size(I,1)-imgSize(1))/2));
+                        newImages(:,:,:,i)=I(idx:imgSize(1)+idx-1,1:imgSize(2),1:imgSize(3)); 
+                    end
+                else
+                    I=imresize(I,scaleY);%scaled height so width, numcols wrong
+                    %eg 41 20 so want 10-30
+                    idx=int16(((size(I,2)-imgSize(2))/2));
+                    newImages(:,:,:,i) = I(1:imgSize(1),idx:idx+imgSize(2)-1,1:imgSize(3)); 
+                end    
+        end        
+end
+
+
     %Leftmost
     function imageData= readAlexNetStd(imageName)
         imgSize = [227, 227, 3];
@@ -111,29 +143,34 @@ end
         imageData = I(1:imgSize(1),1:imgSize(2),1:imgSize(3)); 
     end
 
-function newImages=imageResizeCtrl(images)
-        newImages=zeros(227,227,3,size(images,4));
-        imgSize = [227, 227, 3];
-        for i=1:size(images,4)
+function newImages=imageResizeAll(images)
+         newImages=zeros(227,227,3,size(images,4));
+         imgSize = [227, 227, 3];
+         for i=1:size(images,4)
                 I = squeeze(images(:,:,:,i));
+                scaleY=imgSize(1)/size(I,1);
+                scaleX=imgSize(2)/size(I,2);
                 if(scaleX>scaleY)
                     %image is smaller than input
-                    if(scaleX>=1.0) %Y is now larger than it should be
-                        I=imresize(I,scaleX);
-                        idx=int16(((size(I,1)-imgSize(1))/2));
-                        newImages(:,:,:,i)=I(idx:imgSize(1)+idx,1:imgSize(2),1:imgSize(3));
-                    else  
-                        I=imresize(I,scaleX);
-                        idx=int16(((size(I,1)-imgSize(1))/2));
-                        newImages(:,:,:,i)=I(idx:imgSize(1)+idx,1:imgSize(2),1:imgSize(3)); 
-                    end
-                else
-                    I=imresize(I,scaleY);%scaled height so width, numcols wrong
+                   % if(scaleX>=1.0) %Y is now larger than it should be
+                        I=imresize(I,scaleY);
+                        size(I)
+                        idx=int16(((imgSize(2)-size(I,2))/2));
+                        size(newImages(:,idx:idx+size(I,2)-1,:,i))
+                        size(I(1:imgSize(1),:,:))
+                        newImages(:,idx:idx+size(I,2)-1,:,i)=I(1:imgSize(1),:,:);
+                    %else  
+                       % I=imresize(I,scaleY);
+                       % idx=int16(((imgSize(2)-size(I,2))/2));
+                        %newImages(:,:,:,i)=I(idx:imgSize(1)+idx,1:imgSize(2),1:imgSize(3)); 
+                    %end
+                else%scaleY>scaleX
+                    I=imresize(I,scaleX);%scaled width so height, numcols wrong
                     %eg 41 20 so want 10-30
-                    idx=int16(((size(I,2)-imgSize(2))/2));
-                    newImages(:,:,:,i) = I(1:imgSize(1),idx:idx+imgSize(2),1:imgSize(3)); 
+                    idx=int16(((imgSize(1)-size(I,1))/2));
+                    newImages(idx:idx+size(I,1)-1,:,:,i) = I(:,1:imgSize(2),:);
                 end    
-        end        
+        end              
 end
     %Leftmost
     function imageData= readAlexNetCentral(imageName)

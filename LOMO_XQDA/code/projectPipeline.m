@@ -32,6 +32,7 @@ numFolds=10; %Number of times to repeat experiment
 numRanks = 100;
 READ_STD=1;
 READ_CENTRAL=2;
+READ_ALL=3;
 options.imResizeMethod=READ_CENTRAL;
 options.trainSplit=0.6;
 options.noImages=5;%if 0 then all run
@@ -45,6 +46,7 @@ XQDA_F=1;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
+featureImgDimensions=[100,40; 227,277; 224,224];
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 featureForce=false; 
 featureExtractorsRun=[VGG_F];%LOMO_F
@@ -63,7 +65,7 @@ n = length(imgList);
 info = imfinfo([imgDir, imgList(1).name]);
 imgWidth=40;
 imgHeight=100;
-images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
+
 
 %% read categories
 person_ids=zeros(n,1);
@@ -75,6 +77,7 @@ for i=1:n
 end
 %options.noImages=n;
 
+images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
 %% read images
 for i = 1 : n
     temp = imread([imgDir, imgList(i).name]);
@@ -124,6 +127,16 @@ for i=1:length(featureExtractorsRun)
         fprintf('Extracting current feature %s, place in data directory \n',currFeatureName)
         features=[];
         
+        %Load images according to size of feature extraction process
+        imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
+        imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
+        images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
+        images = readInImages(imgDir, imgList, imgWidth, imgHeight, options.imResizeMethod);
+        %% read images
+        %for i = 1 : n
+        %   temp = imread([imgDir, imgList(i).name]);
+         %  images(:,:,:,i) = imresize(temp,[imgHeight imgWidth]);   
+        %end
         if(strcmp(currFeatureName,'LOMO.mat'))
             features=featureFunct(images);
         else
