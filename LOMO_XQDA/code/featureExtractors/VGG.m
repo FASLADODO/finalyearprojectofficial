@@ -1,5 +1,5 @@
 
-function descriptors = VGG(images, options)
+function [personIds, descriptors] = VGG(images, personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -49,6 +49,7 @@ t0 = tic;
 %% create image datastores
 %%Display 20 sample images
 idx= randperm(size(images,4));
+personIds=personIdsIn(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre normalising input images')

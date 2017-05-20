@@ -47,11 +47,11 @@ XQDA_F=1;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
-featureImgDimensions=[100,40; 227,227; 224,224];
+featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
 featureForce=false; 
-featureExtractorsRun=[VGG_F];%LOMO_F
+featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDA}];
 classifiersRun=[XQDA_F];
 classifierName={'XQDA'};
@@ -139,10 +139,13 @@ for i=1:length(featureExtractorsRun)
         %   temp = imread([imgDir, imgList(i).name]);
          %  images(:,:,:,i) = imresize(temp,[imgHeight imgWidth]);   
         %end
+       
         if(strcmp(currFeatureName,'LOMO.mat'))
             features=featureFunct(images);
         else
-            features=featureFunct(images,options); %(:,:,:,1:options.noImages) done inside function 
+            %RandonPerm depending on noImages, need to keep associated
+            %order of personIds or worthless
+            personIds, features=featureFunct(images,personIds, options); %(:,:,:,1:options.noImages) done inside function 
         end
         
         save(char(strcat(featuresDir,currFeatureName)),'features');
@@ -194,7 +197,7 @@ for i=1:length(featureExtractorsRun)
     
     if(~isequal(strfind(featuresAvail,currFeatureName),[]))
         fprintf('Currently loading features %s into matrices \n',currFeatureName);
-        load(char(strcat(featuresDir,config,currFeatureName)));%originally saved as features
+        load(char(strcat(featuresDir,currFeatureName)));%originally saved as features
         descriptors=features;
         numImages= int16(size(descriptors,1)/2);
         galFea(i,:,:) = descriptors(1 : numImages, :);
@@ -212,16 +215,11 @@ cms = zeros(noTests, numFolds, numRanks);
 
 %%Select classifiers want to run
 for i=1:length(classifiersRun)
-   % for u=1:size(classifiers,1)
-        %potentClassifier=cell2mat(classifiers(u));
         idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
         currClassifierId=cell2mat(classifiers(idx,1));
         currClassifierFunct=cell2mat(classifiers(idx,2));
         currClassifierName=cell2mat(classifierName(currClassifierId));
         fprintf('Currently running classifier %s \n',currClassifierName)
-       % if(classifiersRun(i)==potentClassifier(1)) 
-            %method=currClassifier(2);
-            %method = potentClassifier(2);
             %%For every set of features
             for ft=1:size(galFea,1)
                 %Repeat classification process numFolds times

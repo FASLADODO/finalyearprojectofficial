@@ -1,5 +1,5 @@
 
-function descriptors = VGG(images, options)
+function personIds, descriptors = VGG(images, personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -49,6 +49,7 @@ t0 = tic;
 %% create image datastores
 %%Display 20 sample images
 idx= randperm(size(images,4));
+personIds=personIdsI
 images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre normalising input images')
@@ -60,19 +61,18 @@ for i = 1:min([20,noImages])
     drawnow
 end
 
-fprintf('Currently normalising input images \n')
+fprintf('Currently normalising input images, removing mean \n')
 for i= 1:noImages
     meany=im2double(repmat(mean(mean(squeeze(images(:,:,:,i)),1),2),size(images,1)));
     I=squeeze(images(:,:,:,i));
     images(:,:,:,i)=I-uint8(meany);
-    images(:,:,:,i)=(squeeze(im2double(images(:,:,:,i)))./std(squeeze(im2double(images(:,:,:,i))),0,1))./std(squeeze(im2double(images(:,:,:,i))),0,2);
 end
  
 
 
 
 figure
-title('Post Zero centering and normalising input images')
+title('Post normalising input images')
 for i =  1:min([20,noImages])
     subplot(4,5,i)
     
