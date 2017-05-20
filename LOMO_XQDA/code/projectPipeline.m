@@ -36,7 +36,7 @@ READ_CENTRAL=2;
 READ_ALL=3;
 options.imResizeMethod=READ_ALL;
 options.trainSplit=0.6;
-options.noImages=5;%if 0 then all run
+options.noImages=0;%if 0 then all run
 
 %%Features
 LOMO_F=1;
@@ -186,8 +186,8 @@ featuresAvail=[featureList.name];
 %for i= 1: size(featuresList,1)
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=fprintf('%d_%d_%d_',options.imResizeMethod,options.trainSplit,options.noImages);
-    currFeatureName=strcat(config,currFeatureName);
+    config=sprintf('%d_%d_%d_',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
+    currFeatureName=strrep(strcat(config,currFeatureName),' ', '');
     %%loads variables called descriptors from file
     %%featureList(1,i) as 1x1 struct
     %fileName=strcat(featuresDir,featuresList(i).name);

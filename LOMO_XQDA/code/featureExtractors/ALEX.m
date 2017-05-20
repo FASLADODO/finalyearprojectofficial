@@ -67,7 +67,7 @@ end
 
 
 %%Display 20 sample images
-idx= randperm(size(images,4))
+idx= randperm(size(images,4));
 images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre Zero centering and normalising input images')
@@ -86,6 +86,9 @@ for i= 1:noImages
     images(:,:,:,i)=I-uint8(meany);
     images(:,:,:,i)=(squeeze(im2double(images(:,:,:,i)))./std(squeeze(im2double(images(:,:,:,i))),0,1))./std(squeeze(im2double(images(:,:,:,i))),0,2);
 end
+ 
+
+
 
 figure
 title('Post Zero centering and normalising input images')
@@ -93,7 +96,7 @@ for i =  1:min([20,noImages])
     subplot(4,5,i)
     
     %I = readimage(imagesTrain,i);
-    imshow(squeeze(images(:,:,:,i)));
+    imshow(uint8(squeeze(images(:,:,:,i))));
     drawnow
 end
 fprintf('Images have been pre-processed. \n')
@@ -109,11 +112,11 @@ layer = 'fc8';
 sz=sprintf('%d ', size(squeeze(images(:,:,:,1))));
 fprintf('Input size is: 227 227 3 with zerocenter normalisation and layer input size is %s \n', sz)
 fprintf('Now extracting training features');
-trainingFeatures = activations(net,imagesTrain,layer)
+trainingFeatures = activations(net,imagesTrain,layer);
 sz=sprintf('%d ', size(trainingFeatures));
 fprintf('Training features extracted, size: %s\n', sz)
 fprintf('Now extracting test features');
-testFeatures = activations(net,imagesTest,layer)
+testFeatures = activations(net,imagesTest,layer);
 sz=sprintf('%d ', size(testFeatures));
 fprintf('Test features extracted, size: %s\n', sz)
 
