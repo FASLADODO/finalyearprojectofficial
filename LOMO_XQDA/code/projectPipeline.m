@@ -36,7 +36,7 @@ READ_CENTRAL=2;
 READ_ALL=3;
 options.imResizeMethod=READ_ALL;
 options.trainSplit=0.6;
-options.noImages=0;%if 0 then all run
+options.noImages=10;%if 0 then all run
 
 %%Features
 LOMO_F=1;
@@ -50,7 +50,7 @@ featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MA
 featureImgDimensions=[100,40; 227,227; 224,224];
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
-featureForce=false; 
+featureForce=true; 
 featureExtractorsRun=[ALEX_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDA}];
 classifiersRun=[XQDA_F];
