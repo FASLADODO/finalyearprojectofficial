@@ -1,5 +1,5 @@
 
-function descriptors = ALEX(images, options)
+function [personIds,descriptors] = ALEX(images,personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -68,6 +68,7 @@ end
 
 %%Display 20 sample images
 idx= randperm(size(images,4));
+personIds=personIdsIn(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre Zero centering and normalising input images')

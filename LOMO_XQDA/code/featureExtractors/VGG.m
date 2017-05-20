@@ -1,5 +1,5 @@
 
-function descriptors = VGG(images, options)
+function [personIds, descriptors] = VGG(images, personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -48,18 +48,41 @@ t0 = tic;
 
 %% create image datastores
 %%Display 20 sample images
+idx= randperm(size(images,4));
+personIds=personIdsIn(idx(1:noImages));
+images=images(:,:,:,idx(1:noImages));
 figure
+title('Pre normalising input images')
 for i = 1:min([20,noImages])
     subplot(4,5,i)
-
+    
     %I = readimage(imagesTrain,i);
     imshow(squeeze(images(:,:,:,i)));
     drawnow
 end
 
-%noImages=size(images,4);
-idx= randperm(size(images,4));
-images=images(:,:,:,idx(1:noImages));
+fprintf('Currently normalising input images, removing mean \n')
+for i= 1:noImages
+    meany=im2double(repmat(mean(mean(squeeze(images(:,:,:,i)),1),2),size(images,1)));
+    I=squeeze(images(:,:,:,i));
+    images(:,:,:,i)=I-uint8(meany);
+end
+ 
+
+
+
+figure
+title('Post normalising input images')
+for i =  1:min([20,noImages])
+    subplot(4,5,i)
+    
+    %I = readimage(imagesTrain,i);
+    imshow(uint8(squeeze(images(:,:,:,i))));
+    drawnow
+end
+fprintf('Images have been pre-processed. \n')
+
+
 %{
 switch imResizeMethod
     case READ_STD
