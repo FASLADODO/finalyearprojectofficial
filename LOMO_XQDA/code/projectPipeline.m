@@ -111,14 +111,14 @@ imds.Labels=cellstr(char(person_ids));
 
 %%Perform feature extraction
 %%Save to data folder
-disp('Checking if features to Extract already exist or forced \n')
+disp('Checking if features to Extract already exist or forced')
 for i=1:length(featureExtractorsRun)
     %Check if features already exist 
     featureList=dir([featuresDir, '*.mat']);
     featuresAvail=[featureList.name];
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=fprintf('%d_%d_%d_',options.imResizeMethod,options.trainSplit,options.noImages);
-    currFeatureName=strcat(config,currFeatureName);
+    config=sprintf('%d_%d_%d_',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
+    currFeatureName=strrep(strcat(config,currFeatureName),' ', '');
     %Run feature extraction function
     %If being forced or features Available doesnt already exist
     if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]))

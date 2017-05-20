@@ -23,6 +23,14 @@ if nargin >= 2
         trainSplit = options.trainSplit;
         fprintf('Training percentage of images is %d.\n', trainSplit);
     end
+    if isfield(options,'noImages') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
+        if(options.noImages==0)
+            noImages=size(images,4);
+        else
+            noImages = options.noImages;
+        end      
+        fprintf('Number of images used is %d.\n', noImages);
+    end
     if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
         imResizeMethod = options.imResizeMethod;
         fprintf('Resizing method of images is %s.\n', resizeMethodNames{imResizeMethod});
@@ -42,7 +50,6 @@ t0 = tic;
 %{
 
 %}
-noImages=size(images,4);
 
 %{
 switch imResizeMethod
@@ -60,10 +67,11 @@ end
 
 
 %%Display 20 sample images
-size(images,4)
+idx= randperm(size(images,4))
+images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre Zero centering and normalising input images')
-for i = 1:10
+for i = 1:min([20,noImages])
     subplot(4,5,i)
     
     %I = readimage(imagesTrain,i);
@@ -81,7 +89,7 @@ end
 
 figure
 title('Post Zero centering and normalising input images')
-for i = 1:10
+for i =  1:min([20,noImages])
     subplot(4,5,i)
     
     %I = readimage(imagesTrain,i);

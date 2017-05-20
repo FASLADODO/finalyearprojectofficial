@@ -58,7 +58,8 @@ for i = 1:min([20,noImages])
 end
 
 %noImages=size(images,4);
-images=images(:,:,:,1:noImages);
+idx= randperm(size(images,4))
+images=images(:,:,:,idx(1:noImages));
 %{
 switch imResizeMethod
     case READ_STD
