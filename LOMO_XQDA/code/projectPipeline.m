@@ -47,7 +47,7 @@ XQDA_F=1;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
-featureImgDimensions=[100,40; 227,277; 224,224];
+featureImgDimensions=[100,40; 227,227; 224,224];
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
 featureForce=false; 
@@ -125,7 +125,7 @@ for i=1:length(featureExtractorsRun)
         idx=find(cell2mat(featureExtractors(:,1))==featureExtractorsRun(i),1);
         %Could do error checking here to test match exists: 1x0
         %featureID= cell2mat(featureExtractors(u,1));
-        featureFunct= cell2mat(featureExtractors(idx,2))
+        featureFunct= cell2mat(featureExtractors(idx,2));
         fprintf('Extracting current feature %s, place in data directory \n',currFeatureName)
         features=[];
         

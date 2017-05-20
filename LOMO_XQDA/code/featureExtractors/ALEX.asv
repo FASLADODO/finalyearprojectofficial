@@ -62,49 +62,29 @@ end
 %%Display 20 sample images
 size(images,4)
 figure
-title('Pre Zero centering and normalising input images')
 for i = 1:10
     subplot(4,5,i)
-    
+
     %I = readimage(imagesTrain,i);
     imshow(squeeze(images(:,:,:,i)));
     drawnow
 end
 
-fprintf('Currently Zero centering and normalising input images \n')
-for i= 1:noImages
-    meany=im2double(repmat(mean(mean(squeeze(images(:,:,:,i)),1),2),size(images,1)));
-    I=squeeze(images(:,:,:,i));
-    images(:,:,:,i)=I-uint8(meany);
-    images(:,:,:,i)=(squeeze(im2double(images(:,:,:,i)))./std(squeeze(im2double(images(:,:,:,i))),0,1))./std(squeeze(im2double(images(:,:,:,i))),0,2);
-end
+fprintf('Post zero centering and normalising input images ')
 
-figure
-title('Post Zero centering and normalising input images')
-for i = 1:10
-    subplot(4,5,i)
-    
-    %I = readimage(imagesTrain,i);
-    imshow(squeeze(images(:,:,:,i)));
-    drawnow
-end
-fprintf('Images have been pre-processed. \n')
 %% create net instance, get properties
+net = alexnet;
 split=int16(trainSplit*noImages);
 imagesTrain=images(:,:,:,1:split);
 imagesTest=images(:,:,:,split+1:end);
-
-net = alexnet;
-
 %% extract Features: descriptors
 layer = 'fc8';
 sz=sprintf('%d ', size(squeeze(images(:,:,:,1))));
 fprintf('Input size is: 227 227 3 with zerocenter normalisation and layer input size is %s \n', sz)
-fprintf('Now extracting training features');
 trainingFeatures = activations(net,imagesTrain,layer)
 sz=sprintf('%d ', size(trainingFeatures));
 fprintf('Training features extracted, size: %s\n', sz)
-fprintf('Now extracting test features');
+
 testFeatures = activations(net,imagesTest,layer)
 sz=sprintf('%d ', size(testFeatures));
 fprintf('Test features extracted, size: %s\n', sz)

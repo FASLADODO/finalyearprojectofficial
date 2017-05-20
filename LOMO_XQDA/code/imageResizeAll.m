@@ -9,7 +9,7 @@ function newImage=imageResizeAll(image, imageWidth, imageHeight)
                     %image is smaller than input
                    % if(scaleX>=1.0) %Y is now larger than it should be
                         I=imresize(I,scaleY);
-                        size(I)
+                       
                         idx=int16(abs((imgSize(2)-size(I,2))/2));
                         %size(newImages(:,idx:idx+size(I,2)-1,:,i))
                         %size(I(1:imgSize(1),:,:))
