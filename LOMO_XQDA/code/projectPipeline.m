@@ -11,6 +11,7 @@
 %Matlab uses 1-indexing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc;
+close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Setup- set directories, number of experiment repeats
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -33,7 +34,7 @@ numRanks = 100;
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
-options.imResizeMethod=READ_CENTRAL;
+options.imResizeMethod=READ_STD;
 options.trainSplit=0.6;
 options.noImages=5;%if 0 then all run
 
@@ -130,7 +131,7 @@ for i=1:length(featureExtractorsRun)
         %Load images according to size of feature extraction process
         imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
         imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
-        images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
+        %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
         images = readInImages(imgDir, imgList, imgWidth, imgHeight, options.imResizeMethod);
         %% read images
         %for i = 1 : n

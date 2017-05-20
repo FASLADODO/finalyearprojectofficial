@@ -42,6 +42,7 @@ t0 = tic;
 
 %}
 noImages=size(images,4);
+%{
 switch imResizeMethod
     case READ_STD
         images=imageResizeStd(images);
@@ -50,6 +51,7 @@ switch imResizeMethod
     case READ_ALL
         images=imageResizeAll(images);
 end
+%}
 split=int16(trainSplit*noImages);
 imagesTrain=images(:,:,:,1:split);
 imagesTest=images(:,:,:,split+1:end);
