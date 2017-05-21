@@ -60,11 +60,13 @@ featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
 
 
-sentencesRun={'mode0_norm1outvectors_phrase_win2_threshold0.txt','mode0_norm1outvectors_phrase_win5_threshold50.txt' }; %'all' leads to running every sentence vector
+
+sentencesRun={'mode0_norm1outvectors_phrase_win2_threshold10_size500.txt','mode0_norm1outvectors_phrase_win5_threshold50_size500.txt' }; %'all' leads to running every sentence vector
 featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDA}];
 classifiersRun=[XQDA_F];
 classifierName={'XQDA'};
+dimensionMatchMethod='first'; %pca, first 
 
 features=[];
 
@@ -249,7 +251,7 @@ for i=1:length(featureExtractorsRun)
                 sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)) ; 
             end
         end
-        sentenceGalFea(i,:,:,:)=[sentences(:,:,:);sentences(:,:,:)];
+        sentenceGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
         sentenceProbFea(i,:,:,:)=sentenceImages(:,:,:);
         sentenceClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
         
@@ -274,25 +276,51 @@ for i=1:length(featureExtractorsRun)
         fprintf('Could not load features %s into matrices as folder didnt exist \n',currFeatureName);
     end
 end
+
+if(sentenceImgMatch)
 %% Need to make image and sentence vectors dimensions match for XQDA (THIS WILL BE PUT INTO A FUNCTION LATER, SO OPTIONAL DEPENDING ON CLASSIFICATION METHOD)
 %% Doing first 200 now, will do PCA later
-sentenceProbFea=sentenceProbFea(:,:,:,1:200);
-for ft= 1:size(sentenceProbFea,1)
-    for c=1:size(sentenceProbFea,2)
-sentenceProbFea2(=
-coeff = pca(X) 
+numDims=min(size(sentenceProbFea,4),size(sentenceGalFea,4));
+if(size(sentenceProbFea,4)  ~= size(sentenceGalFea,4))
+    if(size(sentenceProbFea,4) > size(sentenceGalFea,4))
+        switch dimensionMatchMethod
+            case 'first'
+                sentenceProbFea=sentenceProbFea(:,:,:,1:numDims);
+            case 'pca'
+                for ft= 1:size(sentenceProbFea,1)
+                    for c=1:size(sentenceProbFea,2)
+                        sentenceProbFea2(ft,c,:,:)= extractPCA(squeeze(sentenceProbFea(ft,c,:,:)), numDims);
+                    end
+                end
+                sentenceProbFea=sentenceProbFea2;        
+        end
+    else
+       switch dimensionMatchMethod
+            case 'first'
+                sentenceGalFea=sentenceGalFea(:,:,:,1:numDims);
+            case 'pca'
+                for ft= 1:size(sentenceGalFea,1)
+                    for c=1:size(sentenceGalFea,2)
+                        sentenceGalFea2(ft,c,:,:)= extractPCA(squeeze(sentenceGalFea(ft,c,:,:)), numDims);
+                    end
+                end
+                sentenceGalFea=sentenceGalFea2;        
+        end
+        
+    end
+end
 %returns the principal component coefficients,for the n-by-p data matrix X.
     %Rows of X correspond to observations and columns correspond to variables. The coefficient matrix is p-by-p. 
 
 
 
 %% Get results for image-sentence ranks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRanks=1790;
-noTests=length(classifiersRun)*size(sentenceGalFea,1);%%galfea i is number rows?
+numRanks=4000;
+%noTests=length(classifiersRun)*size(sentenceGalFea,1);%%galfea i is number rows?
 cms = zeros(numFolds, numRanks); %only need results within classification within features
 
 %%Select classifiers want to run
-if(sentenceImgMatch)
+
 for i=1:length(classifiersRun)
         idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
         currClassifierId=cell2mat(classifiers(idx,1));
@@ -302,6 +330,11 @@ for i=1:length(classifiersRun)
             %%For every set of features
             for ft=1:size(sentenceGalFea,1)
                 %%For every sentence configuration set
+                figure
+                title(sprintf('CMS Curve for Classifier %s, feature set %s,settings %s, dimension reduce method ', currClassifierName, currFeatureName, config, dimensionMatchMethod))
+                xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+                ylabel('% Sentences that contain match within that rank') % y-axis label
+                
                 for st=1:size(sentenceGalFea,2)
                     
                     %Repeat classification process numFolds times
@@ -351,7 +384,7 @@ for i=1:length(classifiersRun)
                         %probe images
                         %Next two are labels
                         %cms(ft, iter,:) = EvalCMC( -dist, 1 : int16(numImages / 2), 1 : int16(numImages / 2), numRanks );
-                        size(dist)
+                       
                         cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                         clear dist           
 
@@ -361,22 +394,23 @@ for i=1:length(classifiersRun)
                     end
                     %Mean for every feature set, classifier combination
                     meanCms = mean(cms(:,:));
-                    figure
+                    
                     plot(1 : numRanks, meanCms)
+                    
+                    legend(char(sentenceNames(:)));
+                    hold on;
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     config=sprintf('%d_%d_%d',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
 
-                    title(sprintf('CMS Curve for Classifier %s, feature set %s and settings %s and sentences %s', currClassifierName, currFeatureName, config, char(sentenceNames(st))))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                    
 
-                    csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_', sentenceNames(st));
+                    csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_',dimensionMatchMethod,'_', char(sentenceNames(st)));
                     csvwrite(csvFileName,meanCms)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
                     %%type csvlist.dat
 
                     fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,20]) * 100);
+                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100, Rank500, Rank1000\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,   %5.2f%%\n\n', (meanCms([1,5,10,15,20,100,500]) * 100));
                 
                 end
             end

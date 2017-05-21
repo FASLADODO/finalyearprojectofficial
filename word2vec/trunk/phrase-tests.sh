@@ -15,12 +15,13 @@ WINDOWS=( 2 3 5 )
 #1 2 3 5 7 10 15 20 50
 NUM=`expr ${#THRESHOLDS[@]} - 1`
 WIN=`expr ${#WINDOWS[@]} - 1`
+SIZE=50
 for t in `seq 0 $NUM`; do
 	for w in `seq 0 $WIN`; do
 		printf "\n" 
             	echo Executing test with threshold: ${THRESHOLDS[$t]} and window ${WINDOWS[$w]} and filein  "phrase-descriptions/"${FILES[$t]} and fileout "phrase-descriptions/"${FILES[$t+1]}
-		FILEOUT="phrasevectors-bin/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}".bin"
-		FILEOUT2="phrasevectors-txt/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}".txt"
+		FILEOUT="phrasevectors-bin/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"$SIZE".bin"
+		FILEOUT2="phrasevectors-txt/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"$SIZE".txt"
 		
 		#OUTPUT PHRASE ORGANISATIONS
 		if [ ${THRESHOLDS[$t]} != 0 ]; then
