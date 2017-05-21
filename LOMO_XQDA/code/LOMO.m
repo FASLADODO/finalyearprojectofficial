@@ -1,4 +1,4 @@
-function descriptors = LOMO(images, options)
+function [personIds,descriptors] = LOMO(images,personIdsIn, options)
 %% function Descriptors = LOMO(images, options)
 % Function for the Local Maximal Occurrence (LOMO) feature extraction
 %
@@ -47,6 +47,11 @@ tau = 0.3;
 R = [3, 5];
 numPoints = 4;
 
+READ_STD=1;
+READ_CENTRAL=2;
+READ_ALL=3;
+resizeMethodNames={'Standard','Central', 'All'};
+
 if nargin >= 2
     if isfield(options,'numScales') && ~isempty(options.numScales) && isscalar(options.numScales) && isnumeric(options.numScales) && options.numScales > 0
         numScales = options.numScales;
@@ -77,6 +82,32 @@ if nargin >= 2
         fprintf('numPoints = %d.\n', numPoints);
     end
 end
+
+%% set parameters, check system
+if nargin >= 2
+    if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(options.trainSplit) && isnumeric(options.trainSplit) && options.trainSplit > 0
+        trainSplit = options.trainSplit;
+        fprintf('Training percentage of images is %d.\n', trainSplit);
+    end
+    if isfield(options,'noImages') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
+        if(options.noImages==0)
+            noImages=size(images,4);
+        else
+            noImages = options.noImages;
+        end      
+        fprintf('Number of images used is %d.\n', noImages);
+    end
+    if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
+        imResizeMethod = options.imResizeMethod;
+        fprintf('Resizing method of images is %s.\n', resizeMethodNames{imResizeMethod});
+    end
+end
+fprintf('Number of images extracting features from is %d.\n', noImages);
+
+%%Pre-process images
+idx= randperm(size(images,4));
+personIds=personIdsIn(idx(1:noImages));
+images=images(:,:,:,idx(1:noImages));
 
 t0 = tic;
 

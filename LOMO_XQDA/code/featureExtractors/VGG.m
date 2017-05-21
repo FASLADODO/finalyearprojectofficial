@@ -36,7 +36,7 @@ if nargin >= 2
         fprintf('Resizing method of images is %s.\n', resizeMethodNames{imResizeMethod});
     end
 end
-fprintf('Number of images extracting features from is %d.\n', size(images,4));
+fprintf('Number of images extracting features from is %d.\n', noImages);
 t0 = tic;
 % Get GPU device information
 %deviceInfo = gpuDevice;

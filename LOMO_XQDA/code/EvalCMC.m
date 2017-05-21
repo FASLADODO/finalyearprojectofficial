@@ -37,6 +37,13 @@ if ~isrow(probLabels)
 end
 
 binaryLabels = bsxfun(@eq, galLabels, probLabels); % match / non-match labels corresponding to the score matrix
+%binary labels check if gal and prob labels are equal
+%all determine if all elements along a dimension are nonzero/true
+%check along down cols whether all binary labels are false
+%any along first dimension whether nonzero/true
+
+%if no label is equal, all false, if a galLabel matches no probe label,
+%problem. Need a match for every image
 
 if any( all(binaryLabels == false, 1) ); % check whether all probe samples belong to the gallery
     error('This is not a closed-set identification experiment.');
