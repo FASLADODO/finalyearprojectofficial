@@ -15,7 +15,7 @@ WINDOWS=( 2 3 5 )
 #1 2 3 5 7 10 15 20 50
 NUM=`expr ${#THRESHOLDS[@]} - 1`
 WIN=`expr ${#WINDOWS[@]} - 1`
-SIZE=50
+SIZE=5
 for t in `seq 0 $NUM`; do
 	for w in `seq 0 $WIN`; do
 		printf "\n" 

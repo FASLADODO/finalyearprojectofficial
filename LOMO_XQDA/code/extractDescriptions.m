@@ -2,6 +2,8 @@
 function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir, sentencesRun)
     
     ids=table2cell(readtable('../../word2vec/trunk/imageIds.txt'));
+    size(ids)
+    ids(1,:)
     n=length(ids);
     sentenceIds=zeros(n,1);
     for i=1:n
