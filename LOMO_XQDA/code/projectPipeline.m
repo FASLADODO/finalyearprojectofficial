@@ -70,6 +70,8 @@ classifierName={'XQDA'};
 dimensionMatchMethod='first'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
 
+preciseId=true; %If precise only match with exact same sentences
+
 features=[];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,32 +153,50 @@ end
 %% Extract all sentences listed in sentencesRun
 %%Store in sentences
 %%Create sentence probes and galleries for classification
+%%DONT KNOW HOW TO DEAL WITH 3 OCCURENCES OF SENTENCE WITH SAME ID, 
+%%Need to have a match and randomly selected with xqda, but sentence ids
+%%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('Loading sentences and their associated imageIds into matrices \n');
-[sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun);
+[sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId);
 
-
-
-
-
-%% Create sentence galleries and labels
-for st=1:size(sentences,1)
-    
-    %% Remove sentences that dont occur twice
-    matches=ismember(sentenceIds,person_ids); %returns logical 1 where sentenceid appears in presonIds
-    fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
-    sentenceIds=sentenceIds(find(matches));
-    sentences=sentences(:,find(matches),:);
-    
-    %sentences can occur 3 times??
     %% Order sentences
     [sentenceIds,idx]=sort(sentenceIds);
     sentences=sentences(:,idx,:);
+    
+    %% Remove sentences that dont occur twice
+    fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
+    occur=0;
+    indexes=[];
+    idx=1;
+    old=0;
+    for i=1:length(sentenceIds)
+        if(sentenceIds(i)~=old && occur>1)
+            for p=1:2%occur
+               indexes(idx)=i-p;
+               idx=idx+1;
+            end      
+            occur=1;
+            old=sentenceIds(i);
+        else
+            if(sentenceIds(i)==old)
+                occur=occur+1;
+            else
+               old=sentenceIds(i);
+               occur=1;
+            end
+        end
+    end
+    sentences2=sentences(:,indexes,:);
+    sentenceIds2=sentenceIds(indexes);
+    fprintf('\n After removing unique, sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
 
-    sentenceGalFea(st,:,:) = sentences(st,1:2:end, :);
-    sentenceProbFea(st,:,:) = sentences(st,2:2:end, :);
-    sentenceClassLabelGal(st,:)=sentenceIds(1:2:end);
-    sentenceClassLabelProb(st,:)=sentenceIds(2:2:end);
+    %% Create sentence galleries and labels
+for st=1:size(sentences2,1) 
+    sentenceGalFea(st,:,:) = sentences2(st,1:2:end, :);
+    sentenceProbFea(st,:,:) = sentences2(st,2:2:end, :);
+    sentenceClassLabelGal(st,:)=sentenceIds2(1:2:end);
+    sentenceClassLabelProb(st,:)=sentenceIds2(2:2:end);
 end        
 %Does not allowing there to be multiple matches within a same sentence so
 %only applies to first image version create a lack of application?
@@ -452,8 +472,8 @@ if(classifySentences)
                         cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                         clear dist           
 
-                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
-                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15,20]) * 100);
+                        fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
+                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15]) * 100);
 
                     end
                     %Mean for every feature set, classifier combination
@@ -470,8 +490,8 @@ if(classifySentences)
                     %%type csvlist.dat
 
                     fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50]) * 100);
+                    fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15]) * 100);
                 end
            % end
        % end

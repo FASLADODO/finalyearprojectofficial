@@ -1,5 +1,5 @@
 %%Can only load sentences with same vector length
-function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir, sentencesRun)
+function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir, sentencesRun, preciseId)
     
     ids=table2cell(readtable('../../word2vec/trunk/imageIds.txt'));
     size(ids)
@@ -8,8 +8,13 @@ function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir
     sentenceIds=zeros(n,1);
     for i=1:n
        name=strjoin(ids(i,:));%Format image=06_set=3_id=0001
-       temp= strsplit(name,{'image ','_set ','_id ','.png'});
-       sentenceIds(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+       if(preciseId)
+           temp= strsplit(name,{'image ','_set ','_id ','.png'});
+           sentenceIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
+       else
+           temp= strsplit(name,{'image ','_set ','_id ','.png'});
+           sentenceIds(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+       end
        %person_ids_char(i)= char(strcat(temp(3),temp(4)));
     end
     

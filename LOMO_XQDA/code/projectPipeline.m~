@@ -70,6 +70,8 @@ classifierName={'XQDA'};
 dimensionMatchMethod='first'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
 
+preciseId=true; %If precise only match with ex
+
 features=[];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -150,20 +152,51 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Extract all sentences listed in sentencesRun
 %%Store in sentences
+%%Create sentence probes and galleries for classification
+%%DONT KNOW HOW TO DEAL WITH 3 OCCURENCES OF SENTENCE WITH SAME ID, 
+%%Need to have a match and randomly selected with xqda, but sentence ids
+%%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('Loading sentences and their associated imageIds into matrices \n');
 [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun);
 
-%% Order sentences
-[sentenceIds,idx]=sort(sentenceIds);
-sentences=sentences(:,idx,:);
+    %% Order sentences
+    [sentenceIds,idx]=sort(sentenceIds);
+    sentences=sentences(:,idx,:);
+    
+    %% Remove sentences that dont occur twice
+    fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
+    occur=0;
+    indexes=[];
+    idx=1;
+    old=0;
+    for i=1:length(sentenceIds)
+        if(sentenceIds(i)~=old && occur>1)
+            for p=1:2%occur
+               indexes(idx)=i-p;
+               idx=idx+1;
+            end      
+            occur=1;
+            old=sentenceIds(i);
+        else
+            if(sentenceIds(i)==old)
+                occur=occur+1;
+            else
+               old=sentenceIds(i);
+               occur=1;
+            end
+        end
+    end
+    sentences2=sentences(:,indexes,:);
+    sentenceIds2=sentenceIds(indexes);
+    fprintf('\n After removing unique, sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
 
-%% Create sentence galleries and labels
-for st=1:size(sentences,1)
-    sentenceGalFea(st,:,:) = sentences(st,1:2:end, :);
-    sentenceProbFea(st,:,:) = sentences(st,2:2:end, :);
-    sentenceClassLabelGal(st,:)=sentenceIds(1:2:end);
-    sentenceClassLabelProb(st,:)=sentenceIds(2:2:end);
+    %% Create sentence galleries and labels
+for st=1:size(sentences2,1) 
+    sentenceGalFea(st,:,:) = sentences2(st,1:2:end, :);
+    sentenceProbFea(st,:,:) = sentences2(st,2:2:end, :);
+    sentenceClassLabelGal(st,:)=sentenceIds2(1:2:end);
+    sentenceClassLabelProb(st,:)=sentenceIds2(2:2:end);
 end        
 %Does not allowing there to be multiple matches within a same sentence so
 %only applies to first image version create a lack of application?
@@ -434,7 +467,7 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     for iter=1:numFolds
 
-                        [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(ft,:)),iter);
+                        [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter);
                       
                         cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                         clear dist           
