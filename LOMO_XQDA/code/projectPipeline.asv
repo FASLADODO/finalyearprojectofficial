@@ -53,8 +53,8 @@ featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
 
-featureForce=false; 
-featureExtractorsRun=[ALEX_F];%LOMO_F
+featureForce=true; 
+featureExtractorsRun=[VGG_F];%LOMO_F
 
 classifiers= [{XQDA_F, @XQDA}];
 classifiersRun=[XQDA_F];
@@ -307,7 +307,7 @@ for i=1:length(classifiersRun)
                 currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                 config=sprintf('%d_%d_%d',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
                 
-                title(sprintf('CMS Curve for Classifier %s and feature set %s and settings %s', currClassifierName, currFeatureName, config))
+                title(sprintf('CMS Curve for Classifier %s, feature set %s and settings %s', currClassifierName, currFeatureName, config))
                 xlabel('No. Ranks of ordered Gallery Images') % x-axis label
                 ylabel('% Gallery Images that contain match within that rank') % y-axis label
 
