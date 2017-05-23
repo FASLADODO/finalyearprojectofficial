@@ -19,7 +19,7 @@ print files
 for file_in in files:
 	phraseout_file="out"+file_in.replace('phrasevectors-txt/', '')
 	p,m=file_in.split("-threshold")
-	phrasefileindex,m=m.split(".")#threshold maps
+	phrasefileindex,m=m.split("-size")#threshold maps
         print phrasefileindex + " " + thresh_dict[phrasefileindex]  	
 
 	#file_name="vectors-phrase.txt"

@@ -25,7 +25,7 @@ function cms = EvalCMC( score, galLabels, probLabels, numRanks )
 
 %% preprocess
 if nargin >= 4
-    numRanks = min(100, min(size(score)));
+    numRanks = min(numRanks, min(size(score)));
 end
 
 if ~iscolumn(galLabels)
