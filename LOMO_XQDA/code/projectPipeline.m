@@ -42,9 +42,9 @@ options.noImages=0;%if 0 then all run
 
 %% What to run?
 featureForce=false; 
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
-classifySentences=true;
+classifySentences=false;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -70,7 +70,7 @@ classifierName={'XQDA'};
 dimensionMatchMethod='first'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
 
-preciseId=true; %If precise only match with exact same sentences
+preciseId=false; %If precise only match with exact same sentences
 
 features=[];
 
