@@ -1,0 +1,21 @@
+%Sentences are 4D sentenceConfig, sentence, word, wordvector
+%<images>: a set of n RGB color images. Size: [h, w, 3, n]
+%gives LOMO descriptors. Size: [d, n] 
+%gives features by no. sentences
+
+% so want to give no.sentences, but multiply word vars by 3
+
+function sentences=convertToSentenceFeatures(sentences, sentenceIds)
+
+    newSentences=zeros(size(sentences,3), size(sentences,4),3,size(sentences,2));
+    
+    for config= 1: size(sentences,1)
+        for s = 1:size(sentences,2)
+            
+            newSentences(:,:,:,s)= [sentences(config,s,:,:);sentences(config,s,:,:); sentences(config,s,:,:)];
+            
+        end
+        sentenceFeatures(config,:,:)=LOMO(newSentences);
+    end
+    
+end

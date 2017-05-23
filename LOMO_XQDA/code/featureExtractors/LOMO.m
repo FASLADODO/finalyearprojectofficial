@@ -1,4 +1,5 @@
 function descriptors = LOMO(images, options)
+    noImages=size(images,4);
 %% function Descriptors = LOMO(images, options)
 % Function for the Local Maximal Occurrence (LOMO) feature extraction
 %

@@ -42,9 +42,9 @@ options.noImages=0;%if 0 then all run
 
 %% What to run?
 featureForce=false; 
-classifyImages=true;
+classifyImages=false;
 classifySentenceImages=false;
-classifySentences=false;
+classifySentences=true;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -62,7 +62,9 @@ imgType={'Std','Ctrl','All'};
 
 
 
-sentencesRun={'mode0_norm1outvectors_phrase_win2_threshold10_size500.txt','mode0_norm1outvectors_phrase_win5_threshold50_size500.txt' }; %'all' leads to running every sentence vector
+sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
+sentencesRunType=3;
+
 featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN}];
 classifiersRun=[XQDA_F];
@@ -154,15 +156,17 @@ end
 %%Store in sentences
 %%Create sentence probes and galleries for classification
 %%DONT KNOW HOW TO DEAL WITH 3 OCCURENCES OF SENTENCE WITH SAME ID, 
-%%Need to have a match and randomly selected with xqda, but sentence ids
+%%Need to have a match and randomly selected with xqda,   but sentence ids
 %%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('Loading sentences and their associated imageIds into matrices \n');
-[sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId);
+[sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, options);
 
+
+    
     %% Order sentences
     [sentenceIds,idx]=sort(sentenceIds);
-    sentences=sentences(:,idx,:);
+    sentences=sentences(:,idx,:);%all the files, sentences,words, word vectors
     
     %% Remove sentences that dont occur twice
     fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));

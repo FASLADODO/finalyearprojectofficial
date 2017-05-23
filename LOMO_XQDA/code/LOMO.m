@@ -82,7 +82,7 @@ if nargin >= 2
         fprintf('numPoints = %d.\n', numPoints);
     end
 end
-
+noImages=size(images,4);
 %% set parameters, check system
 if nargin >= 2
     if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(options.trainSplit) && isnumeric(options.trainSplit) && options.trainSplit > 0
@@ -96,6 +96,8 @@ if nargin >= 2
             noImages = options.noImages;
         end      
         fprintf('Number of images used is %d.\n', noImages);
+    else
+        noImages=size(images,4);
     end
     if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
         imResizeMethod = options.imResizeMethod;
@@ -106,6 +108,7 @@ fprintf('Number of images extracting features from is %d.\n', noImages);
 
 %%Pre-process images
 idx= randperm(size(images,4));
+size(personIdsIn)
 personIds=personIdsIn(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 

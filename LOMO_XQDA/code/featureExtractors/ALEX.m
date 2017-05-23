@@ -30,6 +30,8 @@ if nargin >= 2
             noImages = options.noImages;
         end      
         fprintf('Number of images used is %d.\n', noImages);
+    else
+        noImages=size(images,4);
     end
     if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
         imResizeMethod = options.imResizeMethod;
