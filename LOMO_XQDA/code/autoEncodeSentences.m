@@ -169,7 +169,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %% Train autoencoder *2 , create deepnet, get classification results
             % do supervised learning
             autoenc1 = trainAutoencoder(sentencesTrainIn,hiddenSize1, ...
-            'MaxEpochs',400, ...
+            'MaxEpochs',20, ...%200
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
@@ -177,13 +177,15 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             view(autoenc1)
             features1=encode(autoenc1, sentencesTrainIn);
             autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                'MaxEpochs',100, ...
+                'MaxEpochs',10, ...%100
                 'L2WeightRegularization',0.002, ...
                 'SparsityRegularization',4, ...
                 'SparsityProportion',0.1, ...
                 'ScaleData', false);
             features2 = encode(autoenc2,features1);
-            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain,'MaxEpochs',400);
+            size(features2.')
+            size(sentencesIdsTrain)
+            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain.','MaxEpochs',100);
             deepnet = stack(autoenc1,autoenc2,softnet);
             
             % Turn the training images into vectors and put them in a matrix
