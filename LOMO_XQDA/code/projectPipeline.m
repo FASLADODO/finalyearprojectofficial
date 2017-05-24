@@ -44,9 +44,9 @@ options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 
 %% What to run?
 featureForce=false; 
-classifyImages=true;
+classifyImages=false;
 classifySentenceImages=false;
-classifySentences=false;
+classifySentences=true;
 
 %% Feature Extractors and Classifiers
 %%Features

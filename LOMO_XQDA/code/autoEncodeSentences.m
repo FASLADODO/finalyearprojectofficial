@@ -188,7 +188,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             softnet = trainSoftmaxLayer(features2,sentencesIdsTrain.','MaxEpochs',100);
             deepnet = stack(autoenc1,autoenc2,softnet);
             
-            % Turn the training images into vectors and put them in a matrix
+            % Turn the training sentences into vectors and put them in a matrix
             xTrain = zeros(inputSize,numel(sentencesTrainIn));
             for i = 1:numel(sentencesTrainIn)
                 xTrain(:,i) = sentencesTrainIn{i}(:);
@@ -202,16 +202,22 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             for i=1:numel(sentencesTrainIn)
                 xAll(:,i)= xTrain(:,i);
             end
-            for i=1+numel(sentencesTrainIn):(numel(sentencesTestIn)+numel(sentencesTrainIn))
-                xAll(:,i)= xTest(:,i);
+            fprintf('size train, test, all data')
+            size(xTrain)
+            size(xTest)
+            size(xAll)
+            
+            for i=(1+numel(sentencesTrainIn)):(numel(sentencesTestIn)+numel(sentencesTrainIn))
+                i
+                xAll(:,i)= xTest(:,i-numel(sentencesTrainIn));
             end
-            sentenceIds=[sentencesIdsTrain, sentenceIdsTest];
+            sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
             
             
             % Get prelim results of classifications in confusion matrix
             fprintf('Confusion matrix before fine tuning');
             testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdTest,testLabelPredictions);
+            plotconfusion(sentencesIdsTest,testLabelPredictions);
             
             % Perform fine tuning
             deepnet = train(deepnet,xTrain,sentencesIdTrain,'useParallel','yes','showResources','yes');
@@ -219,12 +225,12 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
             testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdTest,testLabelPredictions);
+            plotconfusion(sentencesIdsTest,testLabelPredictions.');
             
             deepnet.Layers
             featureLayer = 'fc2';
             fprintf('Now extracting all features from layer fc2');
-            allFeatures = activations(deepnet,imagesAll,featureLayer);
+            allFeatures = activations(deepnet,xAll,featureLayer);
             size(allFeatures)
             save('helloFeatures.mat','allFeatures');
             sentences4=allFeatures;
