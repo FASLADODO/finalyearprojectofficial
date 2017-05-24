@@ -38,15 +38,15 @@ READ_CENTRAL=2;
 READ_ALL=3;
 options.imResizeMethod=READ_ALL;
 options.trainSplit=0.6;
-options.sentenceSplit='oneofeach'; %'oneofeach' 'oneofeach+' 
+options.sentenceSplit='pairs'; %'oneofeach' 'oneofeach+' 
 options.noImages=0;%if 0 then all run
 options.featureExtractionMethod='AUTOENCODE2';%AUTOENCODE2, LOMO
 
 %% What to run?
 featureForce=false; 
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
-classifySentences=true;
+classifySentences=false;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -161,52 +161,53 @@ end
 %%Need to have a match and randomly selected with xqda,   but sentence ids
 %%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf('Loading sentences and their associated imageIds into matrices \n');
-[sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, options);
+if(classifySentenceImages | classifySentences)
+    fprintf('Loading sentences and their associated imageIds into matrices \n');
+    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, options);
 
 
-    
-    %% Order sentences
-    [sentenceIds,idx]=sort(sentenceIds);
-    sentences=sentences(:,idx,:);%all the files, sentences,words, word vectors
-    
-    %% Remove sentences that dont occur twice
-    fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
-    occur=0;
-    indexes=[];
-    idx=1;
-    old=0;
-    for i=1:length(sentenceIds)
-        if(sentenceIds(i)~=old && occur>1)
-            for p=1:2%occur
-               indexes(idx)=i-p;
-               idx=idx+1;
-            end      
-            occur=1;
-            old=sentenceIds(i);
-        else
-            if(sentenceIds(i)==old)
-                occur=occur+1;
+
+        %% Order sentences
+        [sentenceIds,idx]=sort(sentenceIds);
+        sentences=sentences(:,idx,:);%all the files, sentences,words, word vectors
+
+        %% Remove sentences that dont occur twice
+        fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
+        occur=0;
+        indexes=[];
+        idx=1;
+        old=0;
+        for i=1:length(sentenceIds)
+            if(sentenceIds(i)~=old && occur>1)
+                for p=1:2%occur
+                   indexes(idx)=i-p;
+                   idx=idx+1;
+                end      
+                occur=1;
+                old=sentenceIds(i);
             else
-               old=sentenceIds(i);
-               occur=1;
+                if(sentenceIds(i)==old)
+                    occur=occur+1;
+                else
+                   old=sentenceIds(i);
+                   occur=1;
+                end
             end
         end
-    end
-    sentences2=sentences(:,indexes,:);
-    sentenceIds2=sentenceIds(indexes);
-    fprintf('\n After removing unique, sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
+        sentences2=sentences(:,indexes,:);
+        sentenceIds2=sentenceIds(indexes);
+        fprintf('\n After removing unique, sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
 
-    %% Create sentence galleries and labels
-for st=1:size(sentences2,1) 
-    sentenceGalFea(st,:,:) = sentences2(st,1:2:end, :);
-    sentenceProbFea(st,:,:) = sentences2(st,2:2:end, :);
-    sentenceClassLabelGal(st,:)=sentenceIds2(1:2:end);
-    sentenceClassLabelProb(st,:)=sentenceIds2(2:2:end);
-end        
-%Does not allowing there to be multiple matches within a same sentence so
-%only applies to first image version create a lack of application?
-
+        %% Create sentence galleries and labels
+    for st=1:size(sentences2,1) 
+        sentenceGalFea(st,:,:) = sentences2(st,1:2:end, :);
+        sentenceProbFea(st,:,:) = sentences2(st,2:2:end, :);
+        sentenceClassLabelGal(st,:)=sentenceIds2(1:2:end);
+        sentenceClassLabelProb(st,:)=sentenceIds2(2:2:end);
+    end        
+    %Does not allowing there to be multiple matches within a same sentence so
+    %only applies to first image version create a lack of application?
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create sentence-->feature projections 
 %%Store in descriptions matrix with accompanying descriptions labels
@@ -251,51 +252,53 @@ for i=1:length(featureExtractorsRun)
         % Sentences are config, sentences, vector representation
         
         %% Remove sentences whose ids have no image match
-        matches=ismember(sentenceIds,personIds); %returns logical 1 where sentenceid appears in presonIds
-        fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
-        sentenceIds=sentenceIds(find(matches));
-        sentences=sentences(:,find(matches),:);
-        
-        %% Remove all images with no sentence match
-        %This is done later via, sentence id match organisation but will make things clearer
-        matches=ismember(personIds,sentenceIds);
-        fprintf('Input images %d with their associated personIds %d \n', size(descriptors,1),size(personIds,1));
-        personIds2=personIds(find(matches));
-        descriptors2=descriptors(find(matches),:);        
-        
-        %Now have sentences with their associated sentenceIds
-        %Have descriptors with their associated personIds
-        fprintf('Post sentence deletion Now have sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1))
-        fprintf('Post image deletion Now have descriptors %d with their associated personIds %d \n', size(descriptors2,1),size(personIds2,1))
-        fprintf('There are 2478 sentences and 2718 images originally \n')
+        %Only do if sentences mode
+        if(classifySentenceImages | classifySentences)
+            matches=ismember(sentenceIds,personIds); %returns logical 1 where sentenceid appears in presonIds
+            fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
+            sentenceIds=sentenceIds(find(matches));
+            sentences=sentences(:,find(matches),:);
 
-        %% Create sentenceImages that has all image features in same order as sentences
-        % Place both images that match single sentence descriptor id
-        sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
-        imageIds=zeros(size(sentences,2)*2,1);
-        for s= 1:size(sentences,2)
-            sId=sentenceIds(s);%sentence id need to find match in descriptors
-            for c=1:size(sentences,1)
-                temp=personIds2(find(personIds2==sId),:);
-                
-                imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                if(size(imagesMatch,1)~=2)
-                    fprintf('Error there are not two image matches for every sentenceId \n')
+            %% Remove all images with no sentence match
+            %This is done later via, sentence id match organisation but will make things clearer
+            matches=ismember(personIds,sentenceIds);
+            fprintf('Input images %d with their associated personIds %d \n', size(descriptors,1),size(personIds,1));
+            personIds2=personIds(find(matches));
+            descriptors2=descriptors(find(matches),:);        
+
+            %Now have sentences with their associated sentenceIds
+            %Have descriptors with their associated personIds
+            fprintf('Post sentence deletion Now have sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1))
+            fprintf('Post image deletion Now have descriptors %d with their associated personIds %d \n', size(descriptors2,1),size(personIds2,1))
+            fprintf('There are 2478 sentences and 2718 images originally \n')
+
+            %% Create sentenceImages that has all image features in same order as sentences
+            % Place both images that match single sentence descriptor id
+            sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
+            imageIds=zeros(size(sentences,2)*2,1);
+            for s= 1:size(sentences,2)
+                sId=sentenceIds(s);%sentence id need to find match in descriptors
+                for c=1:size(sentences,1)
+                    temp=personIds2(find(personIds2==sId),:);
+
+                    imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
+                    if(size(imagesMatch,1)~=2)
+                        fprintf('Error there are not two image matches for every sentenceId \n')
+                    end
+                    imageIds(s)=temp(1);
+                    imageIds(s+size(sentences,2))=temp(2);
+                    sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
+                    sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
                 end
-                imageIds(s)=temp(1);
-                imageIds(s+size(sentences,2))=temp(2);
-                sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
             end
+
+            %images are placed with matching id in begin and end in
+            %sentenceImages ids are repeated, sentences are similatly repeated
+            sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
+            sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
+            sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
+            fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
         end
-        
-        %images are placed with matching id in begin and end in
-        %sentenceImages ids are repeated, sentences are similatly repeated
-        sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
-        sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
-        sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
-        fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
-        
         %% Load image feature pairs into galFea, probFea, with associated class labels
 
         % Sort person Ids and images so can be split effectively for
