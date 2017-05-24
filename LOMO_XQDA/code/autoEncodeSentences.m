@@ -215,4 +215,6 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             sentences=sentences3;
         case 'AUTOENCODE3'       
             sentences=sentences4;
+    fprint('THe size of the features extracted sentences are');
+    size(sentences)
 end
