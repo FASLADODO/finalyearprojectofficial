@@ -40,7 +40,7 @@ options.imResizeMethod=READ_ALL;
 options.trainSplit=0.6;
 options.sentenceSplit='pairs'; %'oneofeach' 'oneofeach+' 
 options.noImages=0;%if 0 then all run
-options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
+options.featureExtractionMethod='AUTOENCODE1';%AUTOENCODE2, LOMO
 
 %% What to run?
 featureForce=false; 
