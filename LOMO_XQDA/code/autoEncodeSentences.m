@@ -1,12 +1,21 @@
 %THIS IS BASIC BY PRODUCING
 %Sentences are 4D sentenceConfig, sentence, word, wordvector
 %Want to produce 3D sentenceconfig, sentence, sentencevector
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DEFAULTS
+%HIDEENSIZE1 2*SIZE SENTENCES 4
+%hiddensize2 size sentences 4
+%'MaxEpochs',400, ...
+%'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
+%'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
+%'SparsityProportion',0.15,
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, options)
 
     %% Encoder parameters
     rng('default')%explicit set random seed, so results replicable
-    hiddenSize1 = 2*size(sentences,4);%size of hidden layer in autoencoder, want smaller than sentences
-    hiddenSize2=size(sentences,4);
+    hiddenSize1 = 4*size(sentences,4);%size of hidden layer in autoencoder, want smaller than sentences
+    hiddenSize2=2*size(sentences,4);
     
     
     for config = 1:size(sentences,1)
@@ -34,7 +43,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             'MaxEpochs',400, ...
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
-            'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
+            'SparsityProportion',0.1, ...%each hidden layer neuron proportion that output
             'ScaleData', false); 
             view(autoenc1)
             feat1=encode(autoenc1, sentencesIn);
