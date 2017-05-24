@@ -193,12 +193,8 @@ net = alexnet;
 
 
 %% Perform fine tuning
-net = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
-% Get prelim results of classifications in confusion matrix
+deepnet = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
 
-fprintf('Confusion matrix after fine tuning');
-testLabelPredictions = net(imagesTest);
-plotconfusion(imagesIdsTest,testLabelPredictions);
 
 
 %% extract Features: descriptors

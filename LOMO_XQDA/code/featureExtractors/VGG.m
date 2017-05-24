@@ -48,9 +48,13 @@ t0 = tic;
 
 %% create image datastores
 %%Display 20 sample images
-idx= randperm(size(images,4));
-personIds=personIdsIn(idx(1:noImages));
+%idx= randperm(size(images,4));
+%personIds=personIdsIn(idx(1:noImages));
+%images=images(:,:,:,idx(1:noImages));
+[personIds,idx]=sort(personIdsIn);
+personIds=personIds(1:noImages);
 images=images(:,:,:,idx(1:noImages));
+
 figure
 title('Pre normalising input images')
 for i = 1:min([20,noImages])
@@ -82,6 +86,18 @@ for i =  1:min([20,noImages])
 end
 fprintf('Images have been pre-processed. \n')
 
+%%Display 20 sample images
+figure
+for i = 1:min([20,noImages])
+    subplot(4,5,i)
+
+    %I = readimage(imagesTrain,i);
+    imshow(squeeze(images(:,:,:,i)));
+    drawnow
+end
+
+%% create net instance, get properties
+net = vgg16;
 
 %{
 switch imResizeMethod
@@ -96,24 +112,101 @@ end
 images=temp_images;
 %}
 split=int16(trainSplit*noImages);
-imagesTrain=images(:,:,:,1:split);
-imagesTest=images(:,:,:,split+1:end);
+%imagesTrain=images(:,:,:,1:split);
+%imagesTest=images(:,:,:,split+1:end);
 %[imagesTrain,imagesTest]= splitEachLabel(imageStore,trainSplit);
 
 
+%% Create imagesTrain, imagesTest, personIdsTrain, personIdsTest from personIds, images
+%imagesTrain=images(:,:,:,1:split);
+%imagesTest=images(:,:,:,split+1:end);
+            occur=0;
+            indexes=[];
+            idx=1;
+            old=0;
+            %%Construct sentencesTest and sentencesTrain based on settings,
+            % Get indexes for train data
+            switch options.sentenceSplit
+                case 'pairs'
+                        fprintf('Training data is all pairs that exist of sentenceData\n');
+                        for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                for p=1:2%occur
+                                   indexes(idx)=i-p;
+                                   idx=idx+1;                               
+                                end      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end   
+                case 'oneofeach'
+                        fprintf('Training data is one of each of all sentence data');
+                       for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                
+                                indexes(idx)=i-p;
+                                idx=idx+1;
+                                      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end
+                    
+                case 'oneofeach+'
+                       fprintf('Training data is one of each of all sentence data + extras');
+                       for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                
+                                indexes(idx)=i-p;
+                                idx=idx+1;
+                                      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end                   
+                        indexes= setdiff([1:size(images,1)],indexes);
+            end       
+            %create sentencesTrain and sentencesTest
+            %sentneceProcess is all current data in this configfile
+            imagesTrain=images(indexes,:,:);
+            imagesIdsTrain=personIds(indexes);
+            testIndexes= setdiff([1:size(images,1)],indexes);
+            imagesTest=images(testIndexes,:,:);
+            imagesIdsTest=personIds(testIndexes);
 
-%%Display 20 sample images
-figure
-for i = 1:min([20,noImages])
-    subplot(4,5,i)
 
-    %I = readimage(imagesTrain,i);
-    imshow(squeeze(images(:,:,:,i)));
-    drawnow
-end
 
-%% create net instance, get properties
-net = vgg16;
+%% Perform fine tuning
+net = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
+% Get prelim results of classifications in confusion matrix
+
+fprintf('Confusion matrix after fine tuning');
+testLabelPredictions =net(imagesTest);
+plotconfusion(imagesIdsTest,testLabelPredictions);
+
+
+
 
 %% extract Features: descriptors
 layer = 'fc8';
