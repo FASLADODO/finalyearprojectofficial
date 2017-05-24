@@ -44,7 +44,7 @@ options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 
 %% What to run?
 featureForce=false; 
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
 classifySentences=true;
 
@@ -67,7 +67,7 @@ imgType={'Std','Ctrl','All'};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3;
 
-featureExtractorsRun=[LOMO_F];%LOMO_F
+featureExtractorsRun=[ALEX_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN}];
 classifiersRun=[XQDA_F];
 classifierName={'XQDA'};

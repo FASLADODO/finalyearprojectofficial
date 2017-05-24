@@ -193,11 +193,11 @@ net = alexnet;
 
 
 %% Perform fine tuning
-deepnet = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
+net = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
 % Get prelim results of classifications in confusion matrix
 
-fprintf('Confusion matrix before fine tuning');
-testLabelPredictions = deepnet(imagesTest);
+fprintf('Confusion matrix after fine tuning');
+testLabelPredictions = net(imagesTest);
 plotconfusion(imagesIdsTest,testLabelPredictions);
 
 
