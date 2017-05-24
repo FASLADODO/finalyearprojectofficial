@@ -61,7 +61,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                     'SparsityRegularization',4, ...
                     'SparsityProportion',0.1, ...
                     'ScaleData', false);
-                feat2 = encode(autoenc2,squeeze(sentences2(config,:,:)));
+                feat2 = encode(autoenc2,feat1);
                 size(feat2)
                 sentences3(config,:,:)=feat2.';
 
