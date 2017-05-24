@@ -58,7 +58,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
         if(strcmp(options.featureExtractionMethod, 'AUTOENCODE3'))
             %% Order sentences
             [sentenceIdsProcess,idx]=sort(sentenceIds);
-            sentencesProcess=sentences(config,:,idx,:);%all the files, sentences,words, word vectors
+            sentencesProcess=squeeze(sentences(config,idx,:,:));%all the files, sentences,words, word vectors
+            fprintf('\nthe size of sentencesprocess is\n')
+            size(sentencesProcess)
             occur=0;
             indexes=[];
             idx=1;
@@ -67,7 +69,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             % Get indexes for train data
             switch options.sentenceSplit
                 case 'pairs'
-                        fprintf('Training data is all pairs that exist of sentenceData');
+                        fprintf('Training data is all pairs that exist of sentenceData\n');
                         for i=1:length(sentenceIdsProcess)
                             if(sentenceIdsProcess(i)~=old && occur>1)
                                 for p=1:2%occur
@@ -124,20 +126,28 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                                 end
                             end
                         end                   
-                        indexes= setdiff([1:size(sentencesProcess,2)],indexes);
+                        indexes= setdiff([1:size(sentencesProcess,1)],indexes);
             end       
             %create sentencesTrain and sentencesTest
-            sentencesTrain=sentencesProcess(:,indexes,:);
+            %sentneceProcess is all current data in this configfile
+            sentencesTrain=sentencesProcess(indexes,:,:);
             sentencesIdsTrain=sentenceIdsProcess(indexes);
-            testIndexes= setdiff([1:size(sentencesProcess,2)],indexes);
-            sentencesTest=sentencesProcess(:,testIndexes,:);
+            testIndexes= setdiff([1:size(sentencesProcess,1)],indexes);
+            sentencesTest=sentencesProcess(testIndexes,:,:);
             sentencesIdsTest=sentenceIdsProcess(testIndexes);
+            fprintf('the size of sentencestest is\n')
+            size(sentencesTest)
+            fprintf('the size of sentencestrain is\n')            
+            size(sentencesTrain)
             
             sentencesTrainIn=cell(size(sentencesTrain,1),1);
             sentencesTestIn=cell(size(sentencesTest,1),1);
+            fprintf('the size of sentencestrain is\n') 
+            size(sentencesTrainIn)
             for i=1:size(sentencesTrain,1)
                sentencesTrainIn{i}=squeeze(sentencesTrain(i,:,:));
             end
+            size(sentencesTrainIn)
             for i=1:size(sentencesTest,1)
                sentencesTestIn{i}=squeeze(sentencesTest(i,:,:));
             end
