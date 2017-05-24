@@ -184,16 +184,16 @@ net = alexnet;
             end       
             %create sentencesTrain and sentencesTest
             %sentneceProcess is all current data in this configfile
-            imagesTrain=images(indexes,:,:);
+            imagesTrain=images(:,:,:,indexes);
             imagesIdsTrain=personIds(indexes);
             testIndexes= setdiff([1:size(images,1)],indexes);
-            imagesTest=images(testIndexes,:,:);
+            imagesTest=images(:,:,:,testIndexes);
             imagesIdsTest=personIds(testIndexes);
 
 
 
 %% Perform fine tuning
-net = train(net,imagesTrain,imagesIdsTrain,'useParallel','yes','showResources','yes');
+net = train(net,imagesTrain,imagesIdsTrain);%,'useParallel','yes','showResources','yes'
 % Get prelim results of classifications in confusion matrix
 
 fprintf('Confusion matrix after fine tuning');
