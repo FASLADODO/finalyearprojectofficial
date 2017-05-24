@@ -31,16 +31,16 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             size(sentencesIn)
 
             autoenc1 = trainAutoencoder(sentencesIn,hiddenSize1, ...
-            'MaxEpochs',200, ...
+            'MaxEpochs',400, ...
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
             'ScaleData', false); 
             view(autoenc1)
-            temp=encode(autoenc1, sentencesIn);
+            feat1=encode(autoenc1, sentencesIn);
             fprintf('the size of the features generated is')
-            size(temp)
-            sentences2(config,:,:)=temp.';
+            size(feat1)
+            sentences2(config,:,:)=feat1.';
 
             %Take these features to next layer, then reduce down , then
             %backtrain to make features with labelled data more accurate
@@ -52,9 +52,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                     'SparsityRegularization',4, ...
                     'SparsityProportion',0.1, ...
                     'ScaleData', false);
-                temp = encode(autoenc2,squeeze(sentences2(config,:,:)));
-                size(temp)
-                sentences3(config,:,:)=temp;
+                feat2 = encode(autoenc2,squeeze(sentences2(config,:,:)));
+                size(feat2)
+                sentences3(config,:,:)=feat2.';
 
             end
         end
