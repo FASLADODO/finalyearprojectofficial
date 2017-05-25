@@ -232,26 +232,27 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             fprintf('Confusion matrix after fine tuning');
             %testLabelPredictions = deepnet(xTest);
             %plotconfusion(sentencesIdsTest.',testLabelPredictions);
-            results=deepnet(xAll);
             
-            deepnet
-            deepnet.Layers
-            deepnet.Outputs
+            
+            %deepnet
+            %deepnet.Layers
+            %deepnet.Outputs
             %deepnet.Outputs{1,1}
             %deepnet.Outputs{1,2}
             %deepnet.Outputs{1,3}
-            
-            featureLayer = 'fc2';
+            deepnet.outputConnect=[0, 1, 0];
+            features2=deepnet(xAll);
+            %featureLayer = 'fc2';
             fprintf('Now extracting all features from layer first');
-            layer1=deepnet.Layers{1}
-            layer2=deepnet.Layers{2}
-            resy=activations(deepnet, xAll, 2)
-            features1=layer1(xAll);
+            %layer1=deepnet.Layers{1}
+            %layer2=deepnet.Layers{2}
+            %resy=activations(deepnet, xAll, 2)
+            %features1=layer1(xAll);
             %features1 = encode(deepnet{1,1},xAll);non cell array obj apaz
-            size(features1)
-            features2=layer2(features1);
+            %5size(features1)
+            %features2=layer2(features1);
             %features2 = encode(deepnet{2,1},features1);
-            size(features2)
+            %size(features2)
             %allFeatures = activations(deepnet,xAll,featureLayer);
             %size(allFeatures)
             save('helloFeatures.mat','features2');
@@ -268,6 +269,6 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             sentences=sentences3;
         case 'AUTOENCODE3'       
             sentences=sentences4;
-    fprint('THe size of the features extracted sentences are');
+    fprintf('THe size of the features extracted sentences are');
     size(sentences)
 end
