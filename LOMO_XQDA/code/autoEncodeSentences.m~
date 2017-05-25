@@ -1,12 +1,21 @@
 %THIS IS BASIC BY PRODUCING
 %Sentences are 4D sentenceConfig, sentence, word, wordvector
 %Want to produce 3D sentenceconfig, sentence, sentencevector
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DEFAULTS
+%HIDEENSIZE1 2*SIZE SENTENCES 4
+%hiddensize2 size sentences 4
+%'MaxEpochs',400, ...
+%'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
+%'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
+%'SparsityProportion',0.15,
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, options)
 
     %% Encoder parameters
     rng('default')%explicit set random seed, so results replicable
-    hiddenSize1 = 2*size(sentences,4);%size of hidden layer in autoencoder, want smaller than sentences
-    hiddenSize2=size(sentences,4);
+    hiddenSize1 = 4*size(sentences,4);%size of hidden layer in autoencoder, want smaller than sentences
+    hiddenSize2=2*size(sentences,4);
     
     
     for config = 1:size(sentences,1)
@@ -31,16 +40,16 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             size(sentencesIn)
 
             autoenc1 = trainAutoencoder(sentencesIn,hiddenSize1, ...
-            'MaxEpochs',200, ...
+            'MaxEpochs',400, ...
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
-            'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
+            'SparsityProportion',0.1, ...%each hidden layer neuron proportion that output
             'ScaleData', false); 
             view(autoenc1)
-            temp=encode(autoenc1, sentencesIn);
+            feat1=encode(autoenc1, sentencesIn);
             fprintf('the size of the features generated is')
-            size(temp)
-            sentences2(config,:,:)=temp;
+            size(feat1)
+            sentences2(config,:,:)=feat1.';
 
             %Take these features to next layer, then reduce down , then
             %backtrain to make features with labelled data more accurate
@@ -52,9 +61,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                     'SparsityRegularization',4, ...
                     'SparsityProportion',0.1, ...
                     'ScaleData', false);
-                temp = encode(autoenc2,squeeze(sentences2(config,:,:)));
-                size(temp)
-                sentences3(config,:,:)=temp;
+                feat2 = encode(autoenc2,feat1);
+                size(feat2)
+                sentences3(config,:,:)=feat2.';
 
             end
         end
@@ -62,7 +71,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
         if(strcmp(options.featureExtractionMethod, 'AUTOENCODE3'))
             %% Order sentences
             [sentenceIdsProcess,idx]=sort(sentenceIds);
-            sentencesProcess=sentences(config,:,idx,:);%all the files, sentences,words, word vectors
+            sentencesProcess=squeeze(sentences(config,idx,:,:));%all the files, sentences,words, word vectors
+            fprintf('\nthe size of sentencesprocess is\n')
+            size(sentencesProcess)
             occur=0;
             indexes=[];
             idx=1;
@@ -71,7 +82,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             % Get indexes for train data
             switch options.sentenceSplit
                 case 'pairs'
-                        fprintf('Training data is all pairs that exist of sentenceData');
+                        fprintf('Training data is all pairs that exist of sentenceData\n');
                         for i=1:length(sentenceIdsProcess)
                             if(sentenceIdsProcess(i)~=old && occur>1)
                                 for p=1:2%occur
@@ -128,20 +139,28 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                                 end
                             end
                         end                   
-                        indexes= setdiff([1:size(sentencesProcess,2)],indexes);
+                        indexes= setdiff([1:size(sentencesProcess,1)],indexes);
             end       
             %create sentencesTrain and sentencesTest
-            sentencesTrain=sentencesProcess(:,indexes,:);
+            %sentneceProcess is all current data in this configfile
+            sentencesTrain=sentencesProcess(indexes,:,:);
             sentencesIdsTrain=sentenceIdsProcess(indexes);
-            testIndexes= setdiff([1:size(sentencesProcess,2)],indexes);
-            sentencesTest=sentencesProcess(:,testIndexes,:);
+            testIndexes= setdiff([1:size(sentencesProcess,1)],indexes);
+            sentencesTest=sentencesProcess(testIndexes,:,:);
             sentencesIdsTest=sentenceIdsProcess(testIndexes);
+            fprintf('the size of sentencestest is\n')
+            size(sentencesTest)
+            fprintf('the size of sentencestrain is\n')            
+            size(sentencesTrain)
             
             sentencesTrainIn=cell(size(sentencesTrain,1),1);
             sentencesTestIn=cell(size(sentencesTest,1),1);
+            fprintf('the size of sentencestrain is\n') 
+            size(sentencesTrainIn)
             for i=1:size(sentencesTrain,1)
                sentencesTrainIn{i}=squeeze(sentencesTrain(i,:,:));
             end
+            size(sentencesTrainIn)
             for i=1:size(sentencesTest,1)
                sentencesTestIn{i}=squeeze(sentencesTest(i,:,:));
             end
@@ -150,7 +169,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %% Train autoencoder *2 , create deepnet, get classification results
             % do supervised learning
             autoenc1 = trainAutoencoder(sentencesTrainIn,hiddenSize1, ...
-            'MaxEpochs',400, ...
+            'MaxEpochs',8, ...%200
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
@@ -158,16 +177,18 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             view(autoenc1)
             features1=encode(autoenc1, sentencesTrainIn);
             autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                'MaxEpochs',100, ...
+                'MaxEpochs',4, ...%100
                 'L2WeightRegularization',0.002, ...
                 'SparsityRegularization',4, ...
                 'SparsityProportion',0.1, ...
                 'ScaleData', false);
             features2 = encode(autoenc2,features1);
-            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain,'MaxEpochs',400);
+            size(features2.')
+            size(sentencesIdsTrain)
+            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain.','MaxEpochs',100);
             deepnet = stack(autoenc1,autoenc2,softnet);
             
-            % Turn the training images into vectors and put them in a matrix
+            % Turn the training sentences into vectors and put them in a matrix
             xTrain = zeros(inputSize,numel(sentencesTrainIn));
             for i = 1:numel(sentencesTrainIn)
                 xTrain(:,i) = sentencesTrainIn{i}(:);
@@ -181,32 +202,58 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             for i=1:numel(sentencesTrainIn)
                 xAll(:,i)= xTrain(:,i);
             end
-            for i=1+numel(sentencesTrainIn):(numel(sentencesTestIn)+numel(sentencesTrainIn))
-                xAll(:,i)= xTest(:,i);
+            fprintf('size train, test, all data')
+            size(xTrain)
+            size(xTest)
+            size(xAll)
+            
+            for i=(1+numel(sentencesTrainIn)):(numel(sentencesTestIn)+numel(sentencesTrainIn))
+                i
+                xAll(:,i)= xTest(:,i-numel(sentencesTrainIn));
             end
-            sentenceIds=[sentencesIdsTrain, sentenceIdsTest];
+            sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
             
             
             % Get prelim results of classifications in confusion matrix
             fprintf('Confusion matrix before fine tuning');
-            testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdTest,testLabelPredictions);
-            
+            %testLabelPredictions = deepnet(xTest);
+            size(sentencesIdsTest)
+            size(testLabelPredictions)
+            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            size(xTrain)
+            size(sentencesIdsTrain)
             % Perform fine tuning
-            deepnet = train(deepnet,xTrain,sentencesIdTrain,'useParallel','yes','showResources','yes');
-
+            deepnet = train(deepnet,xTrain,sentencesIdsTrain.','useParallel','yes','showResources','yes');
+            autoenc1.DecoderWeights=
+            autoenc1.DecoderBiases=
+            autoenc1.encoderWeights
+            autoenc1.encoderBiases
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
-            testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdTest,testLabelPredictions);
+            %testLabelPredictions = deepnet(xTest);
+            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            results=deepnet(xAll);
             
+            deepnet
             deepnet.Layers
+            deepnet.Outputs{1,1}
+            deepnet.Outputs{1,2}
+            deepnet.Outputs{1,3}
+            
             featureLayer = 'fc2';
-            fprintf('Now extracting all features from layer fc2');
-            allFeatures = activations(deepnet,imagesAll,featureLayer);
-            size(allFeatures)
-            save('helloFeatures.mat','allFeatures');
-            sentences4=allFeatures;
+            fprintf('Now extracting all features from layer first');
+            layer1=deepnet.Layers{1}
+            layer2=deepnet.Layers{2}
+            features1=layer1(xAll);
+            %features1 = encode(deepnet{1,1},xAll);non cell array obj apaz
+            size(features1)
+            features2=layer2(features1);
+            %features2 = encode(deepnet{2,1},features1);
+            size(features2)
+            %allFeatures = activations(deepnet,xAll,featureLayer);
+            %size(allFeatures)
+            save('helloFeatures.mat','features2');
+            sentences4=features2;
         end
             
         
