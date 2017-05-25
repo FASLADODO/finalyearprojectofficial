@@ -14,8 +14,8 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
 
     %% Encoder parameters
     rng('default')%explicit set random seed, so results replicable
-    hiddenSize1 = 4*size(sentences,4);%size of hidden layer in autoencoder, want smaller than sentences
-    hiddenSize2=2*size(sentences,4);
+    hiddenSize1 = size(sentences,4)%size of hidden layer in autoencoder, want smaller than sentences
+    hiddenSize2=50%int16(0.5*size(sentences,4))
     
     
     for config = 1:size(sentences,1)
@@ -144,10 +144,21 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %create sentencesTrain and sentencesTest
             %sentneceProcess is all current data in this configfile
             sentencesTrain=sentencesProcess(indexes,:,:);
-            sentencesIdsTrain=sentenceIdsProcess(indexes);
+            size(sentenceIdsProcess)
+            sentencesIdsTrain=cellstr(char(sentenceIdsProcess(indexes)));
+            %for dd= 1:length(indexes)
+               % temp=int2str(sentenceIdsProcess(indexes(dd)));
+              %  temp
+               % sentencesIdsTrain(dd,1)=temp;
+            %end
+            %sentencesIdsTrain=num2str(sentenceIdsProcess(indexes));
             testIndexes= setdiff([1:size(sentencesProcess,1)],indexes);
             sentencesTest=sentencesProcess(testIndexes,:,:);
-            sentencesIdsTest=sentenceIdsProcess(testIndexes);
+            %for dd= 1:length(testIndexes)
+             %   sentencesIdsTrain(dd)=int2str(sentenceIdsProcess(testIndexes(dd)));
+            %end
+            sentencesIdsTest= cellstr(char(sentenceIdsProcess(testIndexes)));
+            %sentencesIdsTest=num2str(sentenceIdsProcess(testIndexes));
             fprintf('the size of sentencestest is\n')
             size(sentencesTest)
             fprintf('the size of sentencestrain is\n')            
@@ -169,7 +180,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %% Train autoencoder *2 , create deepnet, get classification results
             % do supervised learning
             autoenc1 = trainAutoencoder(sentencesTrainIn,hiddenSize1, ...
-            'MaxEpochs',8, ...%200
+            'MaxEpochs',100, ...%200
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
@@ -177,7 +188,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             view(autoenc1)
             features1=encode(autoenc1, sentencesTrainIn);
             autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                'MaxEpochs',4, ...%100
+                'MaxEpochs',50, ...%100
                 'L2WeightRegularization',0.002, ...
                 'SparsityRegularization',4, ...
                 'SparsityProportion',0.1, ...
@@ -216,10 +227,10 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             
             % Get prelim results of classifications in confusion matrix
             fprintf('Confusion matrix before fine tuning');
-            %testLabelPredictions = deepnet(xTest);
-            size(sentencesIdsTest)
+            testLabelPredictions = deepnet(xTest);
+            %size(sentencesIdsTest)
             %size(testLabelPredictions)
-            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            plotconfusion(sentencesIdsTest.',testLabelPredictions);
             size(xTrain)
             %size(sentencesIdsTrain)
             % Perform fine tuning
@@ -230,8 +241,8 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %autoenc1.encoderBiases
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
-            %testLabelPredictions = deepnet(xTest);
-            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            testLabelPredictions = deepnet(xTest);
+            plotconfusion(sentencesIdsTest.',testLabelPredictions);
             
             
             %deepnet
@@ -256,7 +267,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %allFeatures = activations(deepnet,xAll,featureLayer);
             %size(allFeatures)
             save('helloFeatures.mat','features2');
-            sentences4=features2;
+            sentences4(config,:,:)=features2.';
         end
             
         
