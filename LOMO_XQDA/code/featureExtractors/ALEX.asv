@@ -1,5 +1,5 @@
 
-function descriptors = ALEX(images, options)
+function [personIds,descriptors] = ALEX(images,personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -23,12 +23,22 @@ if nargin >= 2
         trainSplit = options.trainSplit;
         fprintf('Training percentage of images is %d.\n', trainSplit);
     end
+    if isfield(options,'noImages') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
+        if(options.noImages==0)
+            noImages=size(images,4);
+        else
+            noImages = options.noImages;
+        end      
+        fprintf('Number of images used is %d.\n', noImages);
+    else
+        noImages=size(images,4);
+    end
     if isfield(options,'imResizeMethod') && ~isempty(options.imResizeMethod) && isscalar(options.imResizeMethod) && isnumeric(options.imResizeMethod) && options.imResizeMethod > 0
         imResizeMethod = options.imResizeMethod;
         fprintf('Resizing method of images is %s.\n', resizeMethodNames{imResizeMethod});
     end
 end
-fprintf('Number of images extracting features from is %d.\n', size(images,4));
+fprintf('Number of images extracting features from is %d.\n', noImages);
 t0 = tic;
 % Get GPU device information
 %deviceInfo = gpuDevice;
@@ -42,7 +52,6 @@ t0 = tic;
 %{
 
 %}
-noImages=size(images,4);
 
 %{
 switch imResizeMethod
@@ -60,32 +69,167 @@ end
 
 
 %%Display 20 sample images
-size(images,4)
-figure
-for i = 1:10
-    subplot(4,5,i)
+%idx= randperm(size(images,4));
+%personIds=personIdsIn(idx(1:noImages));
 
+[personIds,idx]=sort(personIdsIn);
+personIds=personIds(1:noImages);
+images=images(:,:,:,idx(1:noImages));
+figure
+title('Pre Zero centering and normalising input images')
+for i = 1:min([20,noImages])
+    subplot(4,5,i)
+    
     %I = readimage(imagesTrain,i);
     imshow(squeeze(images(:,:,:,i)));
     drawnow
 end
 
-fprintf('Post zero centering and normalising input images ')
+fprintf('Currently Zero centering and normalising input images \n')
+for i= 1:noImages
+    meany=im2double(repmat(mean(mean(squeeze(images(:,:,:,i)),1),2),size(images,1)));
+    I=squeeze(images(:,:,:,i));
+    images(:,:,:,i)=I-uint8(meany);
+    images(:,:,:,i)=(squeeze(im2double(images(:,:,:,i)))./std(squeeze(im2double(images(:,:,:,i))),0,1))./std(squeeze(im2double(images(:,:,:,i))),0,2);
+end
+ 
 
+
+
+figure
+title('Post Zero centering and normalising input images')
+for i =  1:min([20,noImages])
+    subplot(4,5,i)
+    
+    %I = readimage(imagesTrain,i);
+    imshow(uint8(squeeze(images(:,:,:,i))));
+    drawnow
+end
+fprintf('Images have been pre-processed. \n')
 %% create net instance, get properties
-net = alexnet;
 split=int16(trainSplit*noImages);
-imagesTrain=images(:,:,:,1:split);
-imagesTest=images(:,:,:,split+1:end);
+%Images and ids have been sorted, need to generate separation to allow
+%effective training of data
+net = alexnet;
+
+%% Create imagesTrain, imagesTest, personIdsTrain, personIdsTest from personIds, images
+%imagesTrain=images(:,:,:,1:split);
+%imagesTest=images(:,:,:,split+1:end);
+            occur=0;
+            indexes=[];
+            idx=1;
+            old=0;
+            %%Construct sentencesTest and sentencesTrain based on settings,
+            % Get indexes for train data
+            switch options.sentenceSplit
+                case 'pairs'
+                        fprintf('Training data is all pairs that exist of sentenceData\n');
+                        for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                for p=1:2%occur
+                                   indexes(idx)=i-p;
+                                   idx=idx+1;                               
+                                end      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end   
+                case 'oneofeach'
+                        fprintf('Training data is one of each of all sentence data');
+                       for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                
+                                indexes(idx)=i-p;
+                                idx=idx+1;
+                                      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end
+                    
+                case 'oneofeach+'
+                       fprintf('Training data is one of each of all sentence data + extras');
+                       for i=1:length(personIds)
+                            if(personIds(i)~=old && occur>1)
+                                
+                                indexes(idx)=i-p;
+                                idx=idx+1;
+                                      
+                                occur=1;
+                                old=personIds(i);
+                            else
+                                if(personIds(i)==old)
+                                    occur=occur+1;
+                                else
+                                   old=personIds(i);
+                                   occur=1;
+                                end
+                            end
+                        end                   
+                        indexes= setdiff([1:size(images,1)],indexes);
+            end       
+            %create sentencesTrain and sentencesTest
+            %sentneceProcess is all current data in this configfile
+            imagesTrain=images(:,:,:,indexes);
+            imagesIdsTrain=personIds(indexes);
+            testIndexes= setdiff([1:size(images,4)],indexes);
+            imagesTest=images(:,:,:,testIndexes);
+            imagesIdsTest=personIds(testIndexes);
+
+
+
+%% Perform fine tuning
+layersTransfer=net.Layers(1:end-3); %get last 3 layers to configure
+%create new layer array by combining transferred with new layers
+numClasses=length(unique(imagesIdsTrain));
+layers=[...
+        layersTransfer
+        fullyConnectedLayer(numClasses,'WeightLearnRateFactor',20,'BiasLearnRateFactor',20)
+        softmaxLayer
+        classificationLayer];
+optionsNet=trainingOptions('sgdm',...
+    'MiniBatchSize',5,...
+    'MaxEpochs',10,...
+    'InitialLearnRate',0.0001);
+size(imagesTrain)
+size(imagesIdsTrain)
+netTransfer=trainNetwork(layers,optionsNet,imagesTrain,imagesTrain)char(imagesIdsTrain));
+fprintf('Confusion matrix after fine tuning');
+predictedLabels= classify(netTransfer, imagesTest);
+plotconfusion(char(imagesIdsTest),predictedLabels);
+% net = train(net,imagesTrain,imagesIdsTrain);%,'useParallel','yes','showResources','yes'
+% NOT VALID ON ALEXNET
+% Get prelim results of classifications in confusion matrix
+
+%fprintf('Confusion matrix after fine tuning');
+%testLabelPredictions = net(imagesTest);
+%plotconfusion(imagesIdsTest,testLabelPredictions);
+fprintf('net transfer layers');
+netTransfer.Layers
 %% extract Features: descriptors
-layer = 'fc8';
+layer = 'fc7';
 sz=sprintf('%d ', size(squeeze(images(:,:,:,1))));
 fprintf('Input size is: 227 227 3 with zerocenter normalisation and layer input size is %s \n', sz)
-trainingFeatures = activations(net,imagesTrain,layer)
+fprintf('Now extracting training features');
+trainingFeatures = activations(netTransfer,imagesTrain,layer);
 sz=sprintf('%d ', size(trainingFeatures));
 fprintf('Training features extracted, size: %s\n', sz)
-
-testFeatures = activations(net,imagesTest,layer)
+fprintf('Now extracting test features');
+testFeatures = activations(netTransfer,imagesTest,layer);
 sz=sprintf('%d ', size(testFeatures));
 fprintf('Test features extracted, size: %s\n', sz)
 

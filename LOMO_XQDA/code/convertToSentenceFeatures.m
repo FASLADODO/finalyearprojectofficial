@@ -7,6 +7,9 @@
 
 function [sentences,sentenceIds]=convertToSentenceFeatures(sentences, sentenceIds, options)
 
+    
+    
+
     switch (options.featureExtractionMethod)
         case 'LOMO'
             newSentences=zeros(size(sentences,3), size(sentences,4),3,size(sentences,2));

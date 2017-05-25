@@ -186,31 +186,50 @@ net = alexnet;
             %sentneceProcess is all current data in this configfile
             imagesTrain=images(:,:,:,indexes);
             imagesIdsTrain=personIds(indexes);
-            testIndexes= setdiff([1:size(images,1)],indexes);
+            testIndexes= setdiff([1:size(images,4)],indexes);
             imagesTest=images(:,:,:,testIndexes);
             imagesIdsTest=personIds(testIndexes);
 
 
 
 %% Perform fine tuning
-net = train(net,imagesTrain,imagesIdsTrain);%,'useParallel','yes','showResources','yes'
+layersTransfer=net.Layers(1:end-3); %get last 3 layers to configure
+%create new layer array by combining transferred with new layers
+numClasses=length(unique(imagesIdsTrain));
+layers=[...
+        layersTransfer
+        fullyConnectedLayer(numClasses,'WeightLearnRateFactor',20,'BiasLearnRateFactor',20)
+        softmaxLayer
+        classificationLayer];
+optionsNet=trainingOptions('sgdm',...
+    'MiniBatchSize',5,...
+    'MaxEpochs',10,...
+    'InitialLearnRate',0.0001);
+size(imagesTrain)
+size(imagesIdsTrain)
+netTransfer=trainNetwork(imagesTrain,imagesIdsTrain,layers,optionsNet);%layers char(imagesIdsTrain));
+fprintf('Confusion matrix after fine tuning');
+predictedLabels= classify(netTransfer, imagesTest);
+plotconfusion(char(imagesIdsTest),predictedLabels);
+% net = train(net,imagesTrain,imagesIdsTrain);%,'useParallel','yes','showResources','yes'
+% NOT VALID ON ALEXNET
 % Get prelim results of classifications in confusion matrix
 
-fprintf('Confusion matrix after fine tuning');
-testLabelPredictions = net(imagesTest);
-plotconfusion(imagesIdsTest,testLabelPredictions);
-
-
+%fprintf('Confusion matrix after fine tuning');
+%testLabelPredictions = net(imagesTest);
+%plotconfusion(imagesIdsTest,testLabelPredictions);
+fprintf('net transfer layers');
+netTransfer.Layers
 %% extract Features: descriptors
-layer = 'fc8';
+layer = 'fc7';
 sz=sprintf('%d ', size(squeeze(images(:,:,:,1))));
 fprintf('Input size is: 227 227 3 with zerocenter normalisation and layer input size is %s \n', sz)
 fprintf('Now extracting training features');
-trainingFeatures = activations(net,imagesTrain,layer);
+trainingFeatures = activations(netTransfer,imagesTrain,layer);
 sz=sprintf('%d ', size(trainingFeatures));
 fprintf('Training features extracted, size: %s\n', sz)
 fprintf('Now extracting test features');
-testFeatures = activations(net,imagesTest,layer);
+testFeatures = activations(netTransfer,imagesTest,layer);
 sz=sprintf('%d ', size(testFeatures));
 fprintf('Test features extracted, size: %s\n', sz)
 

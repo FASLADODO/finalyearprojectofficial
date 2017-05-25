@@ -17,6 +17,7 @@ function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir
        end
        %person_ids_char(i)= char(strcat(temp(3),temp(4)));
     end
+    %% Convert sentenceIds to logical binary VERY IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     fprintf('THere are %d sentenceIds', size(sentenceIds))
     
     
