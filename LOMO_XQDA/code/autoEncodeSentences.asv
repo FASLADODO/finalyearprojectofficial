@@ -216,41 +216,27 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             
             % Get prelim results of classifications in confusion matrix
             fprintf('Confusion matrix before fine tuning');
-            %testLabelPredictions = deepnet(xTest);
+            testLabelPredictions = deepnet(xTest);
             size(sentencesIdsTest)
             size(testLabelPredictions)
-            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            plotconfusion(sentencesIdsTest.',testLabelPredictions);
             size(xTrain)
             size(sentencesIdsTrain)
             % Perform fine tuning
             deepnet = train(deepnet,xTrain,sentencesIdsTrain.','useParallel','yes','showResources','yes');
-            autoenc1
+        
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
-            %testLabelPredictions = deepnet(xTest);
-            %plotconfusion(sentencesIdsTest.',testLabelPredictions);
-            results=deepnet(xAll);
+            testLabelPredictions = deepnet(xTest);
+            plotconfusion(sentencesIdsTest.',testLabelPredictions);
             
-            deepnet
             deepnet.Layers
-            deepnet.Outputs{1,1}
-            deepnet.Outputs{1,2}
-            deepnet.Outputs{1,3}
-            
             featureLayer = 'fc2';
-            fprintf('Now extracting all features from layer first');
-            layer1=deepnet.Layers{1}
-            layer2=deepnet.Layers{2}
-            features1=layer1(xAll);
-            %features1 = encode(deepnet{1,1},xAll);non cell array obj apaz
-            size(features1)
-            features2=layer2(features1);
-            %features2 = encode(deepnet{2,1},features1);
-            size(features2)
-            %allFeatures = activations(deepnet,xAll,featureLayer);
-            %size(allFeatures)
-            save('helloFeatures.mat','features2');
-            sentences4=features2;
+            fprintf('Now extracting all features from layer fc2');
+            allFeatures = activations(deepnet,xAll,featureLayer);
+            size(allFeatures)
+            save('helloFeatures.mat','allFeatures');
+            sentences4=allFeatures;
         end
             
         

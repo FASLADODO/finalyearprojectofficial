@@ -117,41 +117,42 @@ end
 
 %%Perform feature extraction
 %%Save to data folder
-disp('Checking if features to Extract already exist or forced')
-for i=1:length(featureExtractorsRun)
-    %Check if features already exist 
-    featureList=dir([featuresDir, '*.mat']);
-    featuresAvail=[featureList.name];
-    currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=sprintf('%d_%d_%d_',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
-    currFeatureName=strrep(strcat(config,currFeatureName),' ', '');
-    %Run feature extraction function
-    %If being forced or features Available doesnt already exist
-    if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]))
-        idx=find(cell2mat(featureExtractors(:,1))==featureExtractorsRun(i),1);
-        %Could do error checking here to test match exists: 1x0
-        %featureID= cell2mat(featureExtractors(u,1));
-        featureFunct= cell2mat(featureExtractors(idx,2));
-        fprintf('Extracting current feature %s, place in data directory \n',currFeatureName)
+if(classifyImages | classifySentenceImages)
+    disp('Checking if features to Extract already exist or forced')
+    for i=1:length(featureExtractorsRun)
+        %Check if features already exist 
+        featureList=dir([featuresDir, '*.mat']);
+        featuresAvail=[featureList.name];
+        currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
+        config=sprintf('%d_%d_%d_',options.imResizeMethod,int16(options.trainSplit*100),options.noImages);
+        currFeatureName=strrep(strcat(config,currFeatureName),' ', '');
+        %Run feature extraction function
+        %If being forced or features Available doesnt already exist
+        if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]))
+            idx=find(cell2mat(featureExtractors(:,1))==featureExtractorsRun(i),1);
+            %Could do error checking here to test match exists: 1x0
+            %featureID= cell2mat(featureExtractors(u,1));
+            featureFunct= cell2mat(featureExtractors(idx,2));
+            fprintf('Extracting current feature %s, place in data directory \n',currFeatureName)
 
-        %Load images according to size of feature extraction process
-        imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
-        imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
-        %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
-        images = readInImages(imgDir, imgList, imgWidth, imgHeight, options.imResizeMethod);
+            %Load images according to size of feature extraction process
+            imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
+            imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
+            %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
+            images = readInImages(imgDir, imgList, imgWidth, imgHeight, options.imResizeMethod);
 
 
-        %RandonPerm depending on noImages, need to keep associated
-        %order of personIds or worthless
-        [personIds, features]=featureFunct(images,person_ids, options); %(:,:,:,1:options.noImages) done inside function 
+            %RandonPerm depending on noImages, need to keep associated
+            %order of personIds or worthless
+            [personIds, features]=featureFunct(images,person_ids, options); %(:,:,:,1:options.noImages) done inside function 
 
-        save(char(strcat(featuresDir,currFeatureName)),'features', 'personIds');
+            save(char(strcat(featuresDir,currFeatureName)),'features', 'personIds');
 
-    else
-      fprintf('Already exists. Not extracting current feature %s, config %d %d %d \n',currFeatureName,options.imResizeMethod,options.trainSplit,options.noImages)
+        else
+          fprintf('Already exists. Not extracting current feature %s, config %d %d %d \n',currFeatureName,options.imResizeMethod,options.trainSplit,options.noImages)
+        end
     end
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Extract all sentences listed in sentencesRun
