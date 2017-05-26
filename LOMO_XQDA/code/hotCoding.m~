@@ -1,0 +1,22 @@
+function [newIds]= hotCoding(sentenceIds)
+%function [newIds, newSentences]= hotcoding(sentenceIds, sentences)
+
+    numberIds= length(unique(sentenceIds))
+    [orderedIds, idx]= sort(sentenceIds)
+    %newSentences= sentences(:,idx,:,:);
+    temp=zeros(1, numberIds);
+    powow=0;
+    oldVal=orderedIds(1);
+    for i=1:numberIds
+        if(oldVal~=orderedIds(i))
+           for u=4:1
+               if(i-u>0)
+                   if(orderedIds(i-u)==oldVal)
+                       newIds(i-u)=dec2bi(temp)+dec2bi(2.^powow)
+                   end
+               end
+           end
+           oldVal=orderedIds(i);
+        end    
+    end
+end
