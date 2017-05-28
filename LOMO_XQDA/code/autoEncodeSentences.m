@@ -9,6 +9,8 @@
 %'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
 %'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
 %'SparsityProportion',0.15,
+%Added mat2cell, as trying to put inputs into cell array each cell contains
+%matrix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, options)
 
@@ -38,7 +40,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                sentencesIn{i}=squeeze(sentences(config,i,:,:));
             end
             size(sentencesIn)
-
+            %sentencesIn{1}
+            %sentencesIn{2} dont know why mat2cell doesnt work, maybe as it
+            %makes everything into a cell?? mat2cell(squeeze(sentences(config,i,:,:)),52,200);
             autoenc1 = trainAutoencoder(sentencesIn,hiddenSize1, ...
             'MaxEpochs',400, ...
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
@@ -146,6 +150,11 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             sentencesTrain=sentencesProcess(indexes,:,:);
             size(sentenceIdsProcess)
             sentencesIdsTrain=cellstr(char(sentenceIdsProcess(indexes)));
+            
+            %% NOW CONVERTING SENTENCE IDS TO HOTCODING
+            sentencesIdsHot=hotCoding(sentenceIdsProcess);
+            sentencesIdsTrain2=sentencesIdsHot(indexes,:);
+            
             %for dd= 1:length(indexes)
                % temp=int2str(sentenceIdsProcess(indexes(dd)));
               %  temp
@@ -158,6 +167,10 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
              %   sentencesIdsTrain(dd)=int2str(sentenceIdsProcess(testIndexes(dd)));
             %end
             sentencesIdsTest= cellstr(char(sentenceIdsProcess(testIndexes)));
+            sentencesIdsTest2=sentencesIdsHot(testIndexes,:);
+            
+            
+            
             %sentencesIdsTest=num2str(sentenceIdsProcess(testIndexes));
             fprintf('the size of sentencestest is\n')
             size(sentencesTest)
@@ -175,12 +188,12 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             for i=1:size(sentencesTest,1)
                sentencesTestIn{i}=squeeze(sentencesTest(i,:,:));
             end
-            inputSize = size(sentencesTest,2)*size(sentencesTest,3);
+            inputSize = size(sentencesTest,2)*size(sentencesTest,3);%number words, number vecs per word
             
             %% Train autoencoder *2 , create deepnet, get classification results
             % do supervised learning
             autoenc1 = trainAutoencoder(sentencesTrainIn,hiddenSize1, ...
-            'MaxEpochs',100, ...%200
+            'MaxEpochs',10, ...%200
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
@@ -188,15 +201,18 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             view(autoenc1)
             features1=encode(autoenc1, sentencesTrainIn);
             autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                'MaxEpochs',50, ...%100
+                'MaxEpochs',5, ...%100
                 'L2WeightRegularization',0.002, ...
                 'SparsityRegularization',4, ...
                 'SparsityProportion',0.1, ...
                 'ScaleData', false);
             features2 = encode(autoenc2,features1);
-            size(features2.')
-            size(sentencesIdsTrain)
-            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain.','MaxEpochs',100);
+          
+            size(features2)
+            size(sentencesIdsTrain2.')
+            %both meant to be kby n mby n data
+            %needs to be double/single format for ids
+            softnet = trainSoftmaxLayer(features2,sentencesIdsTrain2.','MaxEpochs',100);
             deepnet = stack(autoenc1,autoenc2,softnet);
             
             % Turn the training sentences into vectors and put them in a matrix
@@ -230,11 +246,11 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             testLabelPredictions = deepnet(xTest);
             %size(sentencesIdsTest)
             %size(testLabelPredictions)
-            plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            plotconfusion(sentencesIdsTest2.',testLabelPredictions);
             size(xTrain)
             %size(sentencesIdsTrain)
             % Perform fine tuning
-            deepnet = train(deepnet,xTrain,sentencesIdsTrain.','useParallel','yes','showResources','yes');
+            deepnet = train(deepnet,xTrain,sentencesIdsTrain2.','useParallel','yes','showResources','yes');
             %autoenc1.DecoderWeights=
             %autoenc1.DecoderBiases=
             %autoenc1.encoderWeights
@@ -242,7 +258,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
             testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdsTest.',testLabelPredictions);
+            plotconfusion(sentencesIdsTest2.',testLabelPredictions);
             
             
             %deepnet

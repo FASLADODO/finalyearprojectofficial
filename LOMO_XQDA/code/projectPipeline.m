@@ -44,9 +44,9 @@ options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 
 %% What to run?
 featureForce=true; 
-classifyImages=true;
+classifyImages=false;
 classifySentenceImages=false;
-classifySentences=false;
+classifySentences=true;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -98,7 +98,11 @@ for i=1:n
    person_ids(i)= str2double(strcat(temp(3),temp(4)));%str2double()
    %person_ids_char(i)= char(strcat(temp(3),temp(4)));
 end
+ %% Convert to hotcoding representation LATER WHEN LAST NEEDED AS EASIER TO SORT (better for regression)
 %options.noImages=n;
+%HOTCODING only comes into play for neural networks/autoencoding ,
+%otherwise more convenient to keep with human understandable labels
+%Only autoencode3 , image transfer learning for alexnet and vggnet
 
 images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
 %% read images
@@ -165,7 +169,7 @@ end
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
     [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, options);
-
+    
 
 
         %% Order sentences
@@ -354,7 +358,7 @@ if(classifySentenceImages)
                         for iter=1:numFolds
 
 
-                           [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter);
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter);
 
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
