@@ -11,6 +11,10 @@
 %'SparsityProportion',0.15,
 %Added mat2cell, as trying to put inputs into cell array each cell contains
 %matrix
+
+%TO DO:
+%ORGANISE FOR PLOTCONFUSION, FIRST 10 CLASSES HELD IN FIRST 10 EXAMPLES
+%MIGHT WANT TO SEE IF CLASSIFICATION DONE BY MAXIMUM OR BY DISTANCE.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, options)
     'sentenceIds are class'
