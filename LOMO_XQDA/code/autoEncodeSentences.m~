@@ -13,7 +13,8 @@
 %matrix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, options)
-
+    'sentenceIds are class'
+    class(sentenceIds)
     %% Encoder parameters
     rng('default')%explicit set random seed, so results replicable
     hiddenSize1 = size(sentences,4)%size of hidden layer in autoencoder, want smaller than sentences
@@ -149,7 +150,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %sentneceProcess is all current data in this configfile
             sentencesTrain=sentencesProcess(indexes,:,:);
             size(sentenceIdsProcess)
-            sentencesIdsTrain=cellstr(char(sentenceIdsProcess(indexes)));
+            sentencesIdsTrain=sentenceIdsProcess(indexes);
             
             %% NOW CONVERTING SENTENCE IDS TO HOTCODING
             sentencesIdsHot=hotCoding(sentenceIdsProcess);
@@ -166,7 +167,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %for dd= 1:length(testIndexes)
              %   sentencesIdsTrain(dd)=int2str(sentenceIdsProcess(testIndexes(dd)));
             %end
-            sentencesIdsTest= cellstr(char(sentenceIdsProcess(testIndexes)));
+            sentencesIdsTest= sentenceIdsProcess(testIndexes);
             sentencesIdsTest2=sentencesIdsHot(testIndexes,:);
             
             
@@ -207,7 +208,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                 'SparsityProportion',0.1, ...
                 'ScaleData', false);
             features2 = encode(autoenc2,features1);
-          
+            'sizes features2 and sentencesIdsTrain2 conjugate'
             size(features2)
             size(sentencesIdsTrain2.')
             %both meant to be kby n mby n data
@@ -230,12 +231,14 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
                 xAll(:,i)= xTrain(:,i);
             end
             fprintf('size train, test, all data')
+            'x train data size'
             size(xTrain)
+            'x test data size'
             size(xTest)
+            'x all datasize'
             size(xAll)
             
             for i=(1+numel(sentencesTrainIn)):(numel(sentencesTestIn)+numel(sentencesTrainIn))
-                i
                 xAll(:,i)= xTest(:,i-numel(sentencesTrainIn));
             end
             sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
@@ -244,9 +247,15 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             % Get prelim results of classifications in confusion matrix
             fprintf('Confusion matrix before fine tuning');
             testLabelPredictions = deepnet(xTest);
-            %size(sentencesIdsTest)
-            %size(testLabelPredictions)
-            plotconfusion(sentencesIdsTest2.',testLabelPredictions);
+            'size sentenceidstest2'
+            size(sentencesIdsTest2)%317 1360
+            'size testlabelpredictions'
+            size(testLabelPredictions)%1360 by 317
+            %sentencesIdsTest2(1,:).' %Orig 317 by 1360, each row represents an example. 1360 classes, 317 examples
+            origLabels=sentencesIdsTest2.';
+            %testLabelPredictions(:,1)
+            plotconfusion(origLabels(1:10,1:10),testLabelPredictions(1:10,1:10));
+            %N by M, number of classes, number of examples
             size(xTrain)
             %size(sentencesIdsTrain)
             % Perform fine tuning
@@ -257,8 +266,8 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %autoenc1.encoderBiases
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
-            testLabelPredictions = deepnet(xTest);
-            plotconfusion(sentencesIdsTest2.',testLabelPredictions);
+            %testLabelPredictions = deepnet(xTest);
+            %plotconfusion(sentencesIdsTest2(1:10,1:50).',testLabelPredictions(1:50,1:10));
             
             
             %deepnet
