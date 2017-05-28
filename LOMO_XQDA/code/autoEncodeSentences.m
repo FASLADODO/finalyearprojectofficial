@@ -49,7 +49,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %sentencesIn{2} dont know why mat2cell doesnt work, maybe as it
             %makes everything into a cell?? mat2cell(squeeze(sentences(config,i,:,:)),52,200);
             autoenc1 = trainAutoencoder(sentencesIn,hiddenSize1, ...
-            'MaxEpochs',400, ...
+            'MaxEpochs',400, ...%400
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.1, ...%each hidden layer neuron proportion that output
@@ -65,7 +65,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %% If AUTOENCODE2 reduce size of feature data further for more intense representation
             if(strcmp(options.featureExtractionMethod, 'AUTOENCODE2'))
                 autoenc2 = trainAutoencoder(feat1,hiddenSize2, ...
-                    'MaxEpochs',100, ...
+                    'MaxEpochs',100, ...%100
                     'L2WeightRegularization',0.002, ...
                     'SparsityRegularization',4, ...
                     'SparsityProportion',0.1, ...
@@ -198,7 +198,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %% Train autoencoder *2 , create deepnet, get classification results
             % do supervised learning
             autoenc1 = trainAutoencoder(sentencesTrainIn,hiddenSize1, ...
-            'MaxEpochs',10, ...%200
+            'MaxEpochs',20, ...%200
             'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
             'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
             'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
@@ -206,7 +206,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             view(autoenc1)
             features1=encode(autoenc1, sentencesTrainIn);
             autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                'MaxEpochs',5, ...%100
+                'MaxEpochs',10, ...%100
                 'L2WeightRegularization',0.002, ...
                 'SparsityRegularization',4, ...
                 'SparsityProportion',0.1, ...
@@ -259,11 +259,20 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             origLabels=sentencesIdsTest2.';
             %testLabelPredictions(:,1)
             
-            %reorganise using IDX SO THAT FIRST 10 CLASSES HELD IN FIRST 10
-            %EXAMPLES.
-            
-            plotconfusion(origLabels(1:10,1:10),testLabelPredictions(1:10,1:10));
+            %% reorganise using IDX SO THAT FIRST 10 CLASSES HELD IN FIRST 10
+            %EXAMPLES. i think already ordered
+            figure; 
+            %if the setting is pairs then test will be quite far down to
+            %start,
+            resultIndexes=zeros(20,1);
+            for i = 1:20%size(origLabels,2)
+                resultIndexes(i)= find(origLabels(:,i))
+            end
+            origLabels(resultIndexes,1:20)
+            testLabelPredictions(resultIndexes,1:20)
+             plotconfusion(origLabels(resultIndexes,1:20),testLabelPredictions(resultIndexes,1:20));
             %N by M, number of classes, number of examples
+            
             size(xTrain)
             %size(sentencesIdsTrain)
             % Perform fine tuning
@@ -274,8 +283,11 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, opt
             %autoenc1.encoderBiases
             %Confusion matrix after fine tuning
             fprintf('Confusion matrix after fine tuning');
-            %testLabelPredictions = deepnet(xTest);
-            %plotconfusion(sentencesIdsTest2(1:10,1:50).',testLabelPredictions(1:50,1:10));
+            testLabelPredictions = deepnet(xTest);
+            figure;
+            sentencesIdsTest2(1:20,resultIndexes).'
+            plotconfusion(sentencesIdsTest2(1:20,resultIndexes).',testLabelPredictions(resultIndexes,1:20));
+            
             
             
             %deepnet
