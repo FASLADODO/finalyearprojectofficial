@@ -184,18 +184,22 @@ net = alexnet;
             end       
             %create sentencesTrain and sentencesTest
             %sentneceProcess is all current data in this configfile
+            personIds2=categorical(personIds);
             imagesTrain=images(:,:,:,indexes);
-            imagesIdsTrain=personIds(indexes);
+            imagesIdsHot=hotCoding(personIds);
+            imagesIdsTrain=personIds2(indexes);
+            imagesIdsTrainHot=imagesIdsHot(indexes,:);
             testIndexes= setdiff([1:size(images,4)],indexes);
             imagesTest=images(:,:,:,testIndexes);
-            imagesIdsTest=personIds(testIndexes);
+            imagesIdsTest=personIds2(testIndexes);
+            imagesIdsTestHot=imagesIdsHot(testIndexes,:);
 
 
 
 %% Perform fine tuning
 layersTransfer=net.Layers(1:end-3); %get last 3 layers to configure
 %create new layer array by combining transferred with new layers
-numClasses=length(unique(imagesIdsTrain));
+numClasses=length(unique(personIds));%size(imagesIdsTrainHot,1);%length(unique(imagesIdsTrain));
 layers=[...
         layersTransfer
         fullyConnectedLayer(numClasses,'WeightLearnRateFactor',20,'BiasLearnRateFactor',20)
@@ -203,14 +207,37 @@ layers=[...
         classificationLayer];
 optionsNet=trainingOptions('sgdm',...
     'MiniBatchSize',5,...
-    'MaxEpochs',10,...
+    'MaxEpochs',1,...%10
     'InitialLearnRate',0.0001);
 size(imagesTrain)
 size(imagesIdsTrain)
-netTransfer=trainNetwork(imagesTrain,imagesIdsTrain,layers,optionsNet);%layers char(imagesIdsTrain));
+size(personIds)
+% labels are n-by-r numeric matrix, where n is the number of observations and r is the number of responses
+netTransfer=trainNetwork(imagesTrain,categorical(imagesIdsTrain),layers,optionsNet);%layers char(imagesIdsTrain));
 fprintf('Confusion matrix after fine tuning');
 predictedLabels= classify(netTransfer, imagesTest);
-plotconfusion(char(imagesIdsTest),predictedLabels);
+'size imagesids'
+size(imagesIdsTest)
+'size predictedlabels'
+size(predictedLabels)
+%only compare relevant subsection of predicted labels
+%resultIndexes=zeros(10,1);
+%for i = 1:10%size(origLabels,2)
+%	resultIndexes(i)= find(imagesIdsTestHot(:,i))
+%end
+%plotconfusion(categorical(imagesIdsTest),predictedLabels); NEED MATRIX OR
+%CELL ARRAY
+netTransfer.Layers
+total=0;
+predictedLabels
+imagesIdsTest
+for i = 1:length(predictedLabels)
+    if(predictedLabels(i)==imagesIdsTest(i))
+       total=total+1; 
+    end
+end
+accuracy = total/numel(predictedLabels)
+%plotconfusion(imagesIdsTestHot(resultIndexes,1:10),predictedLabels(resultIndexes,1:10));
 % net = train(net,imagesTrain,imagesIdsTrain);%,'useParallel','yes','showResources','yes'
 % NOT VALID ON ALEXNET
 % Get prelim results of classifications in confusion matrix
@@ -221,7 +248,7 @@ plotconfusion(char(imagesIdsTest),predictedLabels);
 fprintf('net transfer layers');
 netTransfer.Layers
 %% extract Features: descriptors
-layer = 'fc7';
+layer = 'fc';
 sz=sprintf('%d ', size(squeeze(images(:,:,:,1))));
 fprintf('Input size is: 227 227 3 with zerocenter normalisation and layer input size is %s \n', sz)
 fprintf('Now extracting training features');
