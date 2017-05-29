@@ -41,11 +41,11 @@ options.trainSplit=0.6;
 options.sentenceSplit='pairs'; %'oneofeach' 'oneofeach+' 
 options.noImages=0;%if 0 then all run
 options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
-
+options.falsePositiveRatio=1;
 %% What to run?
 featureForce=true; 
-classifyImages=true;
-classifySentenceImages=false;
+classifyImages=false;
+classifySentenceImages=true;
 classifySentences=false;
 
 %% Feature Extractors and Classifiers
@@ -55,6 +55,7 @@ ALEX_F=2;
 VGG_F=3;
 %%Classifiers
 XQDA_F=1;
+TWOCHANNEL_F=2;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
@@ -67,11 +68,11 @@ imgType={'Std','Ctrl','All'};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3;
 
-featureExtractorsRun=[ALEX_F];%LOMO_F
-classifiers= [{XQDA_F, @XQDARUN}];
-classifiersRun=[XQDA_F];
-classifierName={'XQDA'};
-dimensionMatchMethod='first'; %pca, first 
+featureExtractorsRun=[LOMO_F];%LOMO_F
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
+classifiersRun=[TWOCHANNEL_F];
+classifierName={'XQDA','twoChannel'};
+dimensionMatchMethod='pca'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
 
 preciseId=false; %If precise only match with exact same sentences
