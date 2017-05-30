@@ -1,4 +1,4 @@
-function [dist,classLabelGal2, classLabelProb2]=XQDARUN(galFea, probFea,galClassLabel,probClassLabel, iter)
+function [dist,classLabelGal2, classLabelProb2]=XQDARUN(galFea, probFea,galClassLabel,probClassLabel, iter, options)
                         
     numMatches=size(galFea,1);
     p = randperm(numMatches);

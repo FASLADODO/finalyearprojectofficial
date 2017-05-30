@@ -85,15 +85,17 @@ end
 noImages=size(images,4);
 %% set parameters, check system
 if nargin >= 2
-    if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(options.trainSplit) && isnumeric(options.trainSplit) && options.trainSplit > 0
+   %{ 
+if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(options.trainSplit) && isnumeric(options.trainSplit) && options.trainSplit > 0
         trainSplit = options.trainSplit;
         fprintf('Training percentage of images is %d.\n', trainSplit);
-    end
-    if isfield(options,'noImages') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
-        if(options.noImages==0)
+end
+%}
+    if isfield(options,'imageTrainSplit') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
+        if(options.imageTrainSplit==0)
             noImages=size(images,4);
         else
-            noImages = options.noImages;
+            noImages = options.imageTrainSplit;
         end      
         fprintf('Number of images used is %d.\n', noImages);
     else
