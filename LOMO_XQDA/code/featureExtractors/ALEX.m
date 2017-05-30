@@ -1,4 +1,6 @@
-
+%% CHANGE HOW TRAINING DONE NEED TO BE PAIRS, BUT SUBSET OF PAIRS.
+%% TEST NEEDS TO BE MORE, OTHER PAIRS
+%%IT IS NOT SENTENCES, THERE ARE NO IMAGES WITH >2 EXAMPLES FOR THE ID
 function [personIds,descriptors] = ALEX(images,personIdsIn, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
@@ -191,15 +193,41 @@ net = alexnet;
             imagesIdsTrainHot=imagesIdsHot(indexes,:);
             testIndexes= setdiff([1:size(images,4)],indexes);
             imagesTest=images(:,:,:,testIndexes);
-            imagesIdsTest=personIds2(testIndexes);
+            'test ids'
+            imagesIdsTest=personIds2(testIndexes)
             imagesIdsTestHot=imagesIdsHot(testIndexes,:);
 
-
-
+            %% ONLY WORKS WITH PAIRS
+            %%Reduce size of imagestrain so that all that exist with third
+            %%in testData
+            %%are included plus others up to 100
+            %ismember(A,B) returns an array containing logical 1 (true) where the data in A is found in B.
+            % PRESUMES IMAGETRAINSPLIT > OCCURENCE OF TRIPLES (WHICH IT
+            % SHOULD BE)
+            if(strcmp(options.sentenceSplit,'pairs'))
+                trainIdsThird=find(ismember(imagesIdsTest, imagesIdsTrain));
+                imagesSubIdsTrain=zeros(options.imageTrainSplit,1);
+                imagesSubTrain=zeros(227,227,3,options.imageTrainSplit);
+                imagesSubIdsTrain(1:length(trainIdsThird))=imagesIdsTrain(trainIdsThird);
+                imagesSubTrain(:,:,:,1:length(trainIdsThird))=imagesTrain(:,:,:,trainIdsThird);
+                imagesSubIdsTrain(length(trainIdsThird)+1:end)=imagesIdsTrain(1:options.imageTrainSplit-length(trainIdsThird));
+                imagesSubTrain(:,:,:,length(trainIdsThird)+1:end)=imagesTrain(:,:,:,1:options.imageTrainSplit-length(trainIdsThird));
+                imagesSubTest=imagesTest;
+                imagesSubIdsTest=imagesIdsTest;
+            %In this case do first 100, should have example of each, 
+            else
+                %imagesSubIdsTrain=zeros(options.imageTrainSplit,1);
+                %imagesSubTrain=zeros(227,227,3,options.imageTrainSplit); 
+                imagesSubIdsTrain=imagesIdsTrain(1:options.imagesTrainSplit);
+                imagesSubTrain=imagesTrain(:,:,:,1:options.imagesTrainSplit);
+                testSubIndexes=find(ismember(imagesSubIdsTrain,imagesIdsTest));
+                imagesSubIdsTest=imagesIdsTest(testSubIndexes(1:options.imagesTrainSplit));
+                imagesSubTest=imagesTest(:,:,:,testSubIndexes(1:options.imagesTrainSplit));
+            end
 %% Perform fine tuning
 layersTransfer=net.Layers(1:end-3); %get last 3 layers to configure
 %create new layer array by combining transferred with new layers
-numClasses=length(unique(personIds));%size(imagesIdsTrainHot,1);%length(unique(imagesIdsTrain));
+numClasses=length(unique(imagesSubIdsTrain));%size(imagesIdsTrainHot,1);%length(unique(imagesIdsTrain));personids
 layers=[...
         layersTransfer
         fullyConnectedLayer(numClasses,'WeightLearnRateFactor',20,'BiasLearnRateFactor',20)
@@ -207,17 +235,21 @@ layers=[...
         classificationLayer];
 optionsNet=trainingOptions('sgdm',...
     'MiniBatchSize',5,...
-    'MaxEpochs',1,...%10
+    'MaxEpochs',5,...%10
     'InitialLearnRate',0.0001);
-size(imagesTrain)
-size(imagesIdsTrain)
-size(personIds)
+size(imagesSubTrain)
+size(imagesSubIdsTrain)
+%size(personIds)
+size(imagesSubTest)
+size(imagesSubIdsTest)
 % labels are n-by-r numeric matrix, where n is the number of observations and r is the number of responses
-netTransfer=trainNetwork(imagesTrain,categorical(imagesIdsTrain),layers,optionsNet);%layers char(imagesIdsTrain));
+netTransfer=trainNetwork(imagesSubTrain,categorical(imagesSubIdsTrain),layers,optionsNet);%layers char(imagesIdsTrain));
 fprintf('Confusion matrix after fine tuning');
-predictedLabels= classify(netTransfer, imagesTest);
-'size imagesids'
-size(imagesIdsTest)
+predictedLabels= classify(netTransfer, imagesSubTest);
+%DONT BOTHER AS CATEGORICAL CHANGES VALUES AND TEST IMAGES ONLY HAVE 2
+%EXAMPLES OF EACH ANYWAYS
+'size imagesSubids'
+size(imagesSubIdsTest)
 'size predictedlabels'
 size(predictedLabels)
 %only compare relevant subsection of predicted labels
@@ -230,9 +262,9 @@ size(predictedLabels)
 netTransfer.Layers
 total=0;
 predictedLabels
-imagesIdsTest
+imagesSubIdsTest
 for i = 1:length(predictedLabels)
-    if(predictedLabels(i)==imagesIdsTest(i))
+    if(predictedLabels(i)==imagesSubIdsTest(i))
        total=total+1; 
     end
 end
