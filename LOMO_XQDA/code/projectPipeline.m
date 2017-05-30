@@ -71,11 +71,11 @@ numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
-imageoptions.imResizeMethod=READ_ALL;
-imageoptions.imageTrainSplit=200;
-imageoptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
+imageOptions.imResizeMethod=READ_ALL;
+imageOptions.imageTrainSplit=200;
+imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 %options.noImages=0;%if 0 then all run
-imageoptions.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
+%options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
 options.dimensionMatchMethod='pca'; %first
 
@@ -172,7 +172,7 @@ if(classifyImages | classifySentenceImages)
         featureList=dir([imageFeaturesDir '*.mat']);
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-        config=sprintf('_%d_%d',imageoptions.imResizeMethod,imageoptions.imageTrainSplit);
+        config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
         currFeatureName=strrep(strcat(currFeatureName,config),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
@@ -187,17 +187,17 @@ if(classifyImages | classifySentenceImages)
             imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
             imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
             %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
-            images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageoptions.imResizeMethod);
+            images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageOptions.imResizeMethod);
 
 
             %RandonPerm depending on noImages, need to keep associated
             %order of personIds or worthless
-            [personIds, features]=featureFunct(images,person_ids, imageoptions); %(:,:,:,1:options.noImages) done inside function 
+            [personIds, features]=featureFunct(images,person_ids, imageOptions); %(:,:,:,1:options.noImages) done inside function 
             
             save(char(strcat(imageFeaturesDir,currFeatureName)),'features', 'personIds');
 
         else
-          fprintf('Already exists. Not extracting current feature %s, config %d %d \n',currFeatureName,imageoptions.imResizeMethod,imageoptions.imageTrainSplit)
+          fprintf('Already exists. Not extracting current feature %s, config %d %d \n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
         end
     end
 end
@@ -212,7 +212,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
-    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, imageoptions);
+    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, imageOptions);
     
 
 
@@ -279,7 +279,7 @@ featuresAvail=[featureList.name];
 %%For every image feature set
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=sprintf('_%d_%d',imageoptions.imResizeMethod,imageoptions.imageTrainSplit);
+    config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
     currFeatureName=strrep(strcat(config,currFeatureName,config),' ', '');
     
     %% If feature file exists 
@@ -402,7 +402,7 @@ if(classifySentenceImages)
                         for iter=1:numFolds
 
 
-                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,imageoptions);
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,imageOptions);
 
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
@@ -419,7 +419,7 @@ if(classifySentenceImages)
                         legend(char(sentenceNames(:)));
                         hold on;
                         currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                        config=sprintf('_%d_%d',imageoptions.imResizeMethod,imageoptions.imageTrainSplit);
+                        config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
 
                         csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_',dimensionMatchMethod,'_', char(sentenceNames(st)));
                         csvwrite(strrep(csvFileName,'.txt','.csv'),meanCms)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
@@ -480,7 +480,7 @@ if(classifyImages)
                     figure
                     plot(1 : numRanks, meanCms)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                    config=sprintf('_%d_%d',imageoptions.imResizeMethod,imageoptions.imageTrainSplit);
+                    config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
 
                     title(sprintf('CMS Curve for Classifier %s, feature set %s and settings %s', currClassifierName, currFeatureName, config))
                     xlabel('No. Ranks of ordered Gallery Images') % x-axis label
