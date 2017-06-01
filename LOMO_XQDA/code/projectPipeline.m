@@ -20,7 +20,8 @@
 %% Sentence feature settings - created via bash script already noted like this
 % window, threshold, size (wordvec processing), 
 %normalise, mode (python processing), 
-% net format
+% net format -->which autoencodesentences1/2, autoencodelevel, sentencesplit, hiddensize1,
+%hiddensize2, maxepoch1 maxepoch2, maxepoch3, numSentences
 
 %% classifier settings continue with twoChannels2 etc to change structure
 %xqda,   pca/first
@@ -79,9 +80,17 @@ imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+'
 options.falsePositiveRatio=1;
 options.dimensionMatchMethod='pca'; %first
 
-sentenceOptions.featureExtractionMethod='AUTOENCODE3';
-autoEncodeSentences autoencodelevel, sentencesplit, hiddensize1,
-%hiddensize2, maxepoch1 maxepoch2, maxepoch3, numSentences
+sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
+sentenceOptions.featureExtractionName='autoEncodeSentences';
+sentenceOptions.trainLevel=3; %autoEncode3
+sentenceOptions.sentenceSplit='pairs';
+sentenceOptions.hiddensize1=200;
+sentenceOptions.hiddensize2=100;
+sentenceOptions.maxepoch1=10;
+sentenceOptions.maxepoch2=20;
+sentenceOptions.maxepoch3=50;
+sentenceOptions.sentenceTrainSplit=200; %no.sentences used to train system
+
 
 
 %% What to run?
@@ -106,10 +115,15 @@ featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
 featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
 imgType={'Std','Ctrl','All'};
 
+%Used for running multiple sentence extraction methods
+AUTOENCODE_F=1;
+sentenceExtractions=[{AUTOENCODE_F, @autoEncodeSentences}];
+sentenceName={'AUTOENCODER'};
+sentenceFeatureRun={AUTOENCODE_F};
 
-
+%Used for sentence input type
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
-sentencesRunType=3;
+sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
@@ -118,7 +132,8 @@ classifierName={'XQDA','twoChannel'};
 %dimensionMatchMethod='pca'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
 
-preciseId=false; %If precise only match with exact same sentences
+preciseId=false; %If precise only match with exact same sentences, important when training image-sentnece association
+%passed to sentences to determine how sentenceIds loaded are formatted
 
 features=[];
 
@@ -212,7 +227,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
-    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, preciseId, sentencesRunType, imageOptions);
+    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, preciseId, sentenceOptions);
     
 
 

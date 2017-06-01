@@ -7,10 +7,8 @@
 
 function [sentences,sentenceIds]=convertToSentenceFeatures(sentences, sentenceIds, options)
 
-    
-    
-
-    switch (options.featureExtractionMethod)
+    %switch (options.featureExtractionMethod)
+        %{
         case 'LOMO'
             newSentences=zeros(size(sentences,3), size(sentences,4),3,size(sentences,2));
 
@@ -31,10 +29,7 @@ function [sentences,sentenceIds]=convertToSentenceFeatures(sentences, sentenceId
             end
             sentences=sentenceFeatures;
             sentenceIds=sentenceIds2;
-        case 'AUTOENCODE1'
-            [sentences, sentenceIds]=autoEncodeSentences(sentences, sentenceIds,options);
-        case 'AUTOENCODE2'
-            [sentences, sentenceIds]=autoEncodeSentences(sentences, sentenceIds,options);
-        case 'AUTOENCODE3'
-            [sentences, sentenceIds]=autoEncodeSentences(sentences, sentenceIds,options);
+        %}
+        extractionFunct=options.featureExtractionMethod;
+        [sentences, sentenceIds]=extractionFunct(sentences, sentenceIds,options);
 end

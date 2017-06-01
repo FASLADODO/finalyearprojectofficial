@@ -69,17 +69,30 @@ function [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentenceDir
                     if(contains(strfind(name,'norm3')) && sentencesRunType==3)
                         %Prepare names to save sentences
                         name
-                        saveSentences(i)=strrep(name,'.txt','');
+                        saveSentences(i)=strrep(name,'.txt','.mat');
                         saveSentences(i)=char(strrep(saveSentences(i),sentenceDir, ''))
-                        saveSentences(i)= char(strcat( '../data/sentences/', saveSentences(i),  options.featureExtractionName, '_trainLevel', ...
+                        saveSentences(i)= strcat( '../data/sentences/', saveSentences(i),  options.featureExtractionName, '_trainLevel', ...
                                                     options.trainLevel, '_',options.sentenceSplit, '_hiddensizes', ...
                                                     options.hiddensize1, options.hiddensize2,'_maxepochs',...
                                                     options.maxepoch1,options.maxepoch2,options.maxepoch3,'_trainsplit', ...
-                                                    options.sentenceTrainSplit, '.mat'));
+                                                    options.sentenceTrainSplit);
+                        sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
+sentenceOptions.featureExtractionName='autoEncodeSentences';
+sentenceOptions.trainLevel=3; %autoEncode3
+sentenceOptions.sentenceSplit='pairs';
+sentenceOptions.hiddensize1=200;
+sentenceOptions.hiddensize2=100;
+sentenceOptions.maxepoch1=10;
+sentenceOptions.maxepoch2=20;
+sentenceOptions.maxepoch3=50;
+sentenceOptions.sentenceTrainSplit=200;
 
-                        netSentences(i)=strrep(name,'.txt','');
-                        netSentences(i)=strcat('../data/nets/', 
-
+                        saveSentences(i)=char(strcat( '../data/sentences/',saveSentences(i)))
+                        
+                        
+                        
+                        
+                        
                         %convert sentences names to data held to check
                         %existence
                         storedSentences=strrep(name,'.txt','.mat');
