@@ -91,11 +91,11 @@ if isfield(options,'trainSplit') && ~isempty(options.trainSplit) && isscalar(opt
         fprintf('Training percentage of images is %d.\n', trainSplit);
 end
 %}
-    if isfield(options,'imageTrainSplit') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
-        if(options.imageTrainSplit==0)
+    if isfield(options,'noImages') && ~isempty(options.noImages) && isscalar(options.noImages) && isnumeric(options.noImages) 
+        if(options.noImages==0)
             noImages=size(images,4);
         else
-            noImages = options.imageTrainSplit;
+            noImages = options.noImages;
         end      
         fprintf('Number of images used is %d.\n', noImages);
     else
@@ -110,7 +110,7 @@ fprintf('Number of images extracting features from is %d.\n', noImages);
 
 %%Pre-process images
 idx= randperm(size(images,4));
-size(personIdsIn)
+size(personIdsIn);
 personIds=personIdsIn(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 

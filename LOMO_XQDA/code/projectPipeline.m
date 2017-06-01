@@ -1,6 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Final Year Project Pipeline to handle all available classification,
 %%feature extraction methods automatically
+%NEED PCA FOR WORDS, VGG NET FINISH, ANOTHER SENTENCE-IMAGE METHOD, SCRIPT TO SHOW CMS GRPAHS 
+
+%have added methods to skip alex, imageSentence twosentences and autoencode
+%sentneces net generation
+%image features only extracted if dont already exist, (TO CHANGE NET
+%STRUCTURE GET NEW FILES)
+%sentences only extract if dont exist, MIGHT NEED SENTENCEFORCE OVERRIDE
+%LATER
+%mean and mode run by auto as quick
+%classification only performed if results dont already exist, 
+%determined no case where wont need to run net but will classification
+%process?
 
 %% Where to save 
 %data/images, data/sentences
@@ -12,16 +24,17 @@
 % classifier, settings, image settings
 % classifier, settings, sentences, settings
 
-%% Image feature settings %create other layer configurations using alex2, vgg2 etc
-%lomo, resizemethod, imagetrainsplit yup
-%alex, resizemethod, imagesTrainSplit yup
-%vgg, resizemethod, imagesTrainSplit yup
+%% Image feature settings %create other layer configurations using alex2, vgg2 etc yup
+%lomo, resizemethod, imagetrainsplit , imageOptions.noImagesyup 
+%alex, resizemethod, imagesTrainSplit, imageOptions.noImages yup
+%vgg, resizemethod, imagesTrainSplit, imageOptions.noImages yup
 
-%% Sentence feature settings - created via bash script already noted like this
+%% Sentence feature settings - created via bash script already noted like this yup
 % window, threshold, size (wordvec processing), 
 %normalise, mode (python processing), 
-% net format -->which autoencodesentences1/2, autoencodelevel, sentencesplit, hiddensize1,
-%hiddensize2, maxepoch1 maxepoch2, maxepoch3, numSentences
+% net format -->which autoencodesentences1/2, autoencodelevel,
+% sentencesplit, hiddensize1, yup
+%hiddensize2, maxepoch1 maxepoch2, maxepoch3, numSentences yup
 
 %% classifier settings continue with twoChannels2 etc to change structure
 %xqda,   pca/first
@@ -61,6 +74,7 @@ featuresDir='../data/';
 
 featureExts='*.mat';
 resultsDir='../results/';
+
 addpath(imgDir);
 addpath(featDir);
 addpath(classifyDir);
@@ -72,9 +86,11 @@ numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
+imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_ALL;
 imageOptions.imageTrainSplit=200;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
+
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
@@ -82,23 +98,23 @@ options.dimensionMatchMethod='pca'; %first
 
 sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
 sentenceOptions.featureExtractionName='autoEncodeSentences';
-sentenceOptions.trainLevel=3; %autoEncode3
+sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
-sentenceOptions.hiddensize1=200;
-sentenceOptions.hiddensize2=100;
+sentenceOptions.hiddensize1=20;%200
+sentenceOptions.hiddensize2=10;%100
 sentenceOptions.maxepoch1=10;
 sentenceOptions.maxepoch2=20;
 sentenceOptions.maxepoch3=50;
 sentenceOptions.sentenceTrainSplit=200; %no.sentences used to train system
-
+sentenceOptions.force=false;
 
 
 %% What to run?
 featureForce=false;
-sentenceForce=false;
+sentenceForce=true;
 classifyImages=false;
-classifySentenceImages=true;
-classifySentences=false;
+classifySentenceImages=false;
+classifySentences=true;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -112,7 +128,7 @@ TWOCHANNEL_F=2;
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
 featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
-featureName={'LOMO.mat', 'ALEX.mat', 'VGG.mat'};
+featureName={'LOMO', 'ALEX', 'VGG'};
 imgType={'Std','Ctrl','All'};
 
 %Used for running multiple sentence extraction methods
@@ -122,12 +138,13 @@ sentenceName={'AUTOENCODER'};
 sentenceFeatureRun={AUTOENCODE_F};
 
 %Used for sentence input type
+%mean, mode, matrix
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
-classifiersRun=[TWOCHANNEL_F];
+classifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel'};
 %dimensionMatchMethod='pca'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
@@ -187,8 +204,8 @@ if(classifyImages | classifySentenceImages)
         featureList=dir([imageFeaturesDir '*.mat']);
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-        config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
-        currFeatureName=strrep(strcat(currFeatureName,config),' ', '');
+        config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+        currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
         if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]))
@@ -209,10 +226,10 @@ if(classifyImages | classifySentenceImages)
             %order of personIds or worthless
             [personIds, features]=featureFunct(images,person_ids, imageOptions); %(:,:,:,1:options.noImages) done inside function 
             
-            save(char(strcat(imageFeaturesDir,currFeatureName)),'features', 'personIds');
+            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds');
 
         else
-          fprintf('Already exists. Not extracting current feature %s, config %d %d \n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
+          fprintf('Already exists. Not extracting current feature %s, config %d %d\n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
         end
     end
 end
@@ -227,7 +244,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
-    [sentenceNames,sentences, sentenceIds]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, preciseId, sentenceOptions);
+    [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, preciseId, sentenceOptions);
     
 
 
@@ -289,20 +306,20 @@ end
 % sentenceGalFea and sentenceProbFea for image-sentence classification
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-featureList = dir(strcat(featuresDir,featureExts));
+featureList = dir(strcat(featuresDir,'images/',featureExts));
 featuresAvail=[featureList.name];
 %%For every image feature set
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
-    currFeatureName=strrep(strcat(config,currFeatureName,config),' ', '');
-    
+    config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+    currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
+    fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
     if(~isequal(strfind(featuresAvail,currFeatureName),[]))
         
         %% Load image feature variables from file  
         fprintf('Currently loading features %s into matrices \n',currFeatureName);
-        load(char(strcat(featuresDir,currFeatureName)));%originally saved as features, personIds
+        load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
         if(size(features,1) ~= length(imgList))
             descriptors=features.';
         else
@@ -394,6 +411,14 @@ if(classifySentenceImages)
     numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
 
+    figure
+    title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+
+    matchingConfig=sprintf('fpr_%ddmm_%d',options.falsePositiveRatio,options.dimensionMatchMethod);
+    
+    labels=cell(length(classifiersRun)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2),1);   
     %%Select classifiers want to run
     for i=1:length(classifiersRun)
                 idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
@@ -413,44 +438,49 @@ if(classifySentenceImages)
                     %%For every sentence configuration set
                     for st=1:size(sentenceImgGalFea,2)
 
-                        %Repeat classification process numFolds times
-                        for iter=1:numFolds
-
-
-                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,imageOptions);
-
-                            cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
-                            clear dist           
-
-                            fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
-                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15,20]) * 100);
-
-                        end
-                        %Mean for every feature set, classifier combination
-                        meanCms = mean(cms(:,:));
-
-                        plot(1 : numRanks, meanCms)
-
-                        legend(char(sentenceNames(:)));
-                        hold on;
                         currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                        config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
+                        config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+                        csvFileName=char(strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, resultSentences(st),'.csv'));
+                        
+                        labels(((i-1)*ft*st)+ (st*(ft-1))+st)=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, resultSentences(st)));
+                        
+                        %if there exists no results for this sentence
+                        %config, images extracted
+                        if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                            %Repeat classification process numFolds times
+                            for iter=1:numFolds
 
-                        csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_',dimensionMatchMethod,'_', char(sentenceNames(st)));
-                        csvwrite(strrep(csvFileName,'.txt','.csv'),meanCms)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                        %%type csvlist.dat
+
+                                [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,options);
+
+                                cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
+                                clear dist           
+
+                                fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
+                                fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15,20]) * 100);
+
+                            end
+                            %Mean for every feature set, classifier combination
+                            meanCms = mean(cms(:,:));
+                            save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
+                        else
+                           load( char(strrep(csvFileName,'.csv','.mat')));
+                        end
+                        plot(1 : numRanks, meanCms)
+                        hold on;
+
+                        %csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_',dimensionMatchMethod,'_', char(sentenceNames(st)));
+                        csvwrite(csvFileName,meanCms) 
 
                         fprintf('The average performance:\n');
                         fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100, Rank500, Rank1000\n');
                         fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,   %5.2f%%,   %5.2f%%\n\n', (meanCms([1,5,10,15,20,100,500,1000]) * 100));
 
                     end
-                    title(sprintf('CMS Curve for Classifier %s, feature set %s,settings %s, dimension reduce method ', currClassifierName, currFeatureName, config, dimensionMatchMethod))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Sentences that contain match within that rank') % y-axis label
+
                 end
-       % end
     end
+    legend(labels);
 end
 
 
@@ -469,7 +499,11 @@ end
 if(classifyImages)
     numRanks=int16(size(galFea,2)/2-1);
     cms = zeros(numFolds, numRanks);
-    
+    figure
+    title(sprintf('CMS Curve for CUHK03 Image Matching'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    labels=cell(length(classifiersRun)*size(galFea,1),1);
     for i=1:length(classifiersRun)
             idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
             currClassifierId=cell2mat(classifiers(idx,1));
@@ -478,33 +512,40 @@ if(classifyImages)
             fprintf('Currently running classifier %s \n',currClassifierName)
                 %%For every set of features
                 for ft=1:size(galFea,1)
-                    %Repeat classification process numFolds times
-                    for iter=1:numFolds
-
-                        [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter);
-                      
-                        cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
-                        clear dist           
-
-                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
-                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15,20]) * 100);
-
-                    end
-                    %Mean for every feature set, classifier combination
-                    meanCms = mean(cms(:,:));
-                    figure
-                    plot(1 : numRanks, meanCms)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                    config=sprintf('_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit);
+                    config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
+                    labels{(ft*(i-1))+i}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
-                    title(sprintf('CMS Curve for Classifier %s, feature set %s and settings %s', currClassifierName, currFeatureName, config))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                    csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
+                    
+                    
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                        %Repeat classification process numFolds times
+                        for iter=1:numFolds
 
-                    csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config);
-                    csvwrite(csvFileName,meanCms)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter);
+
+                            cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
+                            clear dist           
+
+                            fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
+                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15,20]) * 100);
+
+                        end        
+                        %Mean for every feature set, classifier combination
+                        meanCms = mean(cms(:,:));          
+                        save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
+                    else
+                        load( char(strrep(csvFileName,'.csv','.mat')));
+                    end                       
+
+                    
+                    plot(1 : numRanks, meanCms)
+                    hold on;
+                    csvwrite(csvFileName,meanCms); 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
                     %%type csvlist.dat
-
+                    
                     fprintf('The average performance:\n');
                     fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50\n');
                     fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50]) * 100);
@@ -512,6 +553,8 @@ if(classifyImages)
            % end
        % end
     end
+    legend(labels);
+    
 end
 
 
@@ -528,6 +571,11 @@ end
 if(classifySentences)
     numRanks=int16(size(sentenceGalFea,2)/2-1);
     cms = zeros(numFolds, numRanks);
+    figure    
+    title(sprintf('CMS Curve for sentence matches'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    labels=cell(length(classifiersRun)*size(sentenceGalFea,1),1);
     
     for i=1:length(classifiersRun)
             idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
@@ -538,29 +586,34 @@ if(classifySentences)
                 %%For every sentence configuration set
                 for st=1:size(sentenceGalFea,1)
                     %Repeat classification process numFolds times
-                    for iter=1:numFolds
+                    temp=strrep(resultSentences(st),'../results/sentences/','');
+                    csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
+                    labels{(st*(i-1))+i}=char(strrep(csvFileName,'.csv',''));
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                        for iter=1:numFolds
 
-                        [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter);
-                      
-                        cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
-                        clear dist           
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter);
 
-                        fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
-                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15]) * 100);
+                            cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
+                            clear dist           
 
-                    end
-                    %Mean for every feature set, classifier combination
-                    meanCms = mean(cms(:,:));
-                    figure
-                    plot(1 : numRanks, meanCms)
+                            fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
+                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15]) * 100);
+
+                        end
+                        %Mean for every feature set, classifier combination
+                        meanCms = mean(cms(:,:));
+                        save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
+                    else
+                        load( char(strrep(csvFileName,'.csv','.mat')));
+                    end   
                     
-                    title(sprintf('CMS Curve for Classifier %s,sentences %s', currClassifierName, char(sentenceNames(st))))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                   
+                    plot(1 : numRanks, meanCms)
+                    hold on;
+                    
 
-                    csvFileName=strcat(resultsDir,currClassifierName,'_',char(sentenceNames(st)),'_', config);
-                    csvwrite(csvFileName,meanCms)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                    %%type csvlist.dat
+                    csvwrite(csvFileName,meanCms)   
 
                     fprintf('The average performance:\n');
                     fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
@@ -569,6 +622,7 @@ if(classifySentences)
            % end
        % end
     end
+    legend(labels);
 end
 
 

@@ -13,7 +13,7 @@ function [dist,classLabelGal2, classLabelProb2]=XQDARUN(galFea, probFea,galClass
     xqdaOptions.verboes=true;
                        
     [W, M] = XQDA(galFea1, probFea1, classLabelGal1', classLabelProb1', xqdaOptions);
-    fprintf('The computed subspace dimension %d', size(W,2));
+    fprintf('The computed subspace dimension %d \n', size(W,2));
     
     clear galFea1 probFea1
     trainTime = toc(t0);
