@@ -188,14 +188,13 @@ net = alexnet;
             %sentneceProcess is all current data in this configfile
             personIds2=categorical(personIds);
             imagesTrain=images(:,:,:,indexes);
-            imagesIdsHot=hotCoding(personIds);
+            %imagesIdsHot=hotCoding(personIds);
             imagesIdsTrain=personIds2(indexes);
-            imagesIdsTrainHot=imagesIdsHot(indexes,:);
+            %imagesIdsTrainHot=imagesIdsHot(indexes,:);
             testIndexes= setdiff([1:size(images,4)],indexes);
             imagesTest=images(:,:,:,testIndexes);
-            'test ids'
             imagesIdsTest=personIds2(testIndexes)
-            imagesIdsTestHot=imagesIdsHot(testIndexes,:);
+            %imagesIdsTestHot=imagesIdsHot(testIndexes,:);
 
             %% ONLY WORKS WITH PAIRS
             %%Reduce size of imagestrain so that all that exist with third

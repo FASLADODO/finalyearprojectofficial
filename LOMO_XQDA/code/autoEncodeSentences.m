@@ -173,40 +173,44 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 %create sentencesTrain and sentencesTest
                 %sentneceProcess is all current data in this configfile
                 sentencesTrain=sentencesProcess(indexes,:,:);
-                size(sentenceIdsProcess)
-                sentencesIdsTrain=sentenceIdsProcess(indexes);
+                %sentencesIdsTrain=sentenceIdsProcess(indexes);
 
                 %% NOW CONVERTING SENTENCE IDS TO HOTCODING
                 sentencesIdsHot=hotCoding(sentenceIdsProcess);
-                sentencesIdsTrain2=sentencesIdsHot(indexes,:);
+                sentencesIdsTrain=sentencesIdsHot(indexes,:);
                 testIndexes= setdiff([1:size(sentencesProcess,1)],indexes);
                 sentencesTest=sentencesProcess(testIndexes,:,:);
-                sentencesIdsTest= sentenceIdsProcess(testIndexes);
-                sentencesIdsTest2=sentencesIdsHot(testIndexes,:);
+                %sentencesIdsTest= sentenceIdsProcess(testIndexes);
+                sentencesIdsTest=sentencesIdsHot(testIndexes,:);
 
-                %% adapt to size sentenceidtest
-                sentencesIdsTrain2=sentencesIdsTrain2(1:options.sentenceTrainSplit,:);
+                %% adapt to size sentenceidtest set two is for new created test adn train
+                sentencesIdsTrain2=sentencesIdsTrain(1:options.sentenceTrainSplit,:);
                 sentencesTrain2=sentencesTrain(1:options.sentenceTrainSplit,:);
-
+                positions=ismember(sentencesIdsTrain2, sentencesIdsTest);
+                sentencesTest2=sentencesTest(positions,:);
+                sentencesIdsTest2=sentencesIdsTest(positions,:);
+                
+                
                 %sentencesIdsTest=num2str(sentenceIdsProcess(testIndexes));
                 fprintf('The size of sentencesTest is (%d %d)\n', size(sentencesTest,1), size(sentencesTest,2))
                 fprintf('The size of sentencesTrain is (%d %d)\n', size(sentencesTrain,1), size(sentencesTrain,2))           
                
-               
+
                 sentencesTrainIn=cell(size(sentencesTrain2,1),1);
-                sentencesTestIn=cell(size(sentencesTest,1),1);
+                sentencesTestIn=cell(size(sentencesTest2,1),1);
                 fprintf('The size of sentencesTrainIn is (%d %d)\n', size(sentencesTrainIn,1), size(sentencesTrainIn,2))  
                
-           
+                %trainingIn and testingIn based off subset
+                %options.sentenceTrainSplit
                 for i=1:size(sentencesTrain2,1)
                    sentencesTrainIn{i}=squeeze(sentencesTrain2(i,:,:));
                 end
                 
                 size(sentencesTrainIn);
-                for i=1:size(sentencesTest,1)
-                   sentencesTestIn{i}=squeeze(sentencesTest(i,:,:));
+                for i=1:size(sentencesTest2,1)
+                   sentencesTestIn{i}=squeeze(sentencesTest2(i,:,:));
                 end
-                inputSize = size(sentencesTest,2)*size(sentencesTest,3);%number words, number vecs per word
+                inputSize = size(sentencesTest2,2)*size(sentencesTest2,3);%number words, number vecs per word
 
                 %% Train autoencoder *2 , create deepnet, get classification results
                 % do supervised learning
@@ -244,8 +248,10 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 for i = 1:numel(sentencesTestIn)
                     xTest(:,i) = sentencesTestIn{i}(:);
                 end
+                
                 %Create all input to get features at end of training
                 xAll=zeros(inputSize,(numel(sentencesTestIn)+numel(sentencesTrainIn)));
+                %%%xAll=zeros(inputSize,(numel(sentencesTestIn)+numel(sentencesTrainIn)));
                 for i=1:numel(sentencesTrainIn)
                     xAll(:,i)= xTrain(:,i);
                 end
