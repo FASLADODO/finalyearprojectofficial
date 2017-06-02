@@ -25,8 +25,6 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     classLabelGal1=galClassLabel(p(1:int16(numMatches/2)));
     classLabelProb1=probClassLabel(p(1:int16(numMatches/2)));
     matchResults=ones(numMatches,1);
-    int16(numMatches/2)
-    options.falsePositiveRatio
     temp=zeros((int16(numMatches/2)*options.falsePositiveRatio),1);
     matchResults((1+int16(numMatches/2)):((1+options.falsePositiveRatio)*int16(numMatches/2)),1)=temp;
     
@@ -46,9 +44,9 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     %trainingPairs= cat(3,galFea1,probFea1);
     for i=1:int16(numMatches/2)*(options.falsePositiveRatio+1)
         trainingPairs(:,1,i)=galFea1(i,:);
-        size(trainingPairs(:,1,i))
-        size(galFea1(i,:))
-        size(probFea1(i,:))
+        size(trainingPairs(:,1,i));
+        size(galFea1(i,:));
+        size(probFea1(i,:));
         trainingPairs(:,2,i)=probFea1(i,:);
     end
     t0 = tic;

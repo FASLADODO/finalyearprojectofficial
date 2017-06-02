@@ -59,6 +59,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc;
 close all;
+set(0,'DefaultTextInterpreter','none');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Setup- set directories, number of experiment repeats
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,14 +95,14 @@ imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+'
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first
+options.dimensionMatchMethod='first'; %first pca
 
 sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
 sentenceOptions.featureExtractionName='autoEncodeSentences';
 sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
-sentenceOptions.hiddensize1=20;%200
-sentenceOptions.hiddensize2=10;%100
+sentenceOptions.hiddensize1=200;%200
+sentenceOptions.hiddensize2=100;%100
 sentenceOptions.maxepoch1=10;
 sentenceOptions.maxepoch2=20;
 sentenceOptions.maxepoch3=50;
@@ -111,10 +112,10 @@ sentenceOptions.force=false;
 
 %% What to run?
 featureForce=false;
-sentenceForce=true;
+sentenceForce=false;
 classifyImages=false;
-classifySentenceImages=false;
-classifySentences=true;
+classifySentenceImages=true;
+classifySentences=false;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -144,7 +145,7 @@ sentencesRunType=3; %very important to clarify the kind of sentences we want to 
 
 featureExtractorsRun=[LOMO_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
-classifiersRun=[XQDA_F];
+classifiersRun=[TWOCHANNEL_F];
 classifierName={'XQDA','twoChannel'};
 %dimensionMatchMethod='pca'; %pca, first 
 generaliseMatching=false; %If true every sentence is matched to both images that match its id
@@ -201,7 +202,7 @@ if(classifyImages | classifySentenceImages)
     disp('Checking if features to Extract already exist or forced')
     for i=1:length(featureExtractorsRun)
         %Check if features already exist 
-        featureList=dir([imageFeaturesDir '*.mat']);
+        featureList=dir([strcat(featuresDir,'images/') '*.mat']);
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
         config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
@@ -410,12 +411,6 @@ end
 if(classifySentenceImages)
     numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
-
-    figure
-    title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
-
     matchingConfig=sprintf('fpr_%ddmm_%d',options.falsePositiveRatio,options.dimensionMatchMethod);
     
     labels=cell(length(classifiersRun)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2),1);   
@@ -429,8 +424,9 @@ if(classifySentenceImages)
                 
                 %Adjust sentence and images dimensions/projections
                 %depending on dimensionMatchmethod and classification method
-                [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea, dimensionMatchMethod, currClassifierName);
-
+                fprintf('Adjusting image and sentence feature dimensions so they match %s \n',options.dimensionMatchMethod)
+                [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea, options.dimensionMatchMethod, currClassifierName);
+                fprintf('Dimension Matching Completed \n')
                 %%For every set of features
                 for ft=1:size(sentenceImgGalFea,1)
                     figure
@@ -439,10 +435,11 @@ if(classifySentenceImages)
                     for st=1:size(sentenceImgGalFea,2)
 
                         currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
+                        temp=strrep(resultSentences(st),'../results/sentences/','');
                         config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
-                        csvFileName=char(strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, resultSentences(st),'.csv'));
-                        
-                        labels(((i-1)*ft*st)+ (st*(ft-1))+st)=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, resultSentences(st)));
+                        csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
+                        %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
+                        labels{((i-1)*ft*st)+ (st*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
                         
                         %if there exists no results for this sentence
                         %config, images extracted
@@ -470,7 +467,7 @@ if(classifySentenceImages)
                         hold on;
 
                         %csvFileName=strcat(resultsDir,currClassifierName,'_',currFeatureName,'_', config,'_',dimensionMatchMethod,'_', char(sentenceNames(st)));
-                        csvwrite(csvFileName,meanCms) 
+                        csvwrite(char(csvFileName),meanCms) 
 
                         fprintf('The average performance:\n');
                         fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100, Rank500, Rank1000\n');
@@ -480,6 +477,9 @@ if(classifySentenceImages)
 
                 end
     end
+     title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
 end
 
@@ -500,9 +500,7 @@ if(classifyImages)
     numRanks=int16(size(galFea,2)/2-1);
     cms = zeros(numFolds, numRanks);
     figure
-    title(sprintf('CMS Curve for CUHK03 Image Matching'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+
     labels=cell(length(classifiersRun)*size(galFea,1),1);
     for i=1:length(classifiersRun)
             idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
@@ -553,6 +551,9 @@ if(classifyImages)
            % end
        % end
     end
+   title(sprintf('CMS Curve for CUHK03 Image Matching'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
     
 end
@@ -572,9 +573,7 @@ if(classifySentences)
     numRanks=int16(size(sentenceGalFea,2)/2-1);
     cms = zeros(numFolds, numRanks);
     figure    
-    title(sprintf('CMS Curve for sentence matches'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+
     labels=cell(length(classifiersRun)*size(sentenceGalFea,1),1);
     
     for i=1:length(classifiersRun)
@@ -622,6 +621,9 @@ if(classifySentences)
            % end
        % end
     end
+    title(sprintf('CMS Curve for sentence matches'))
+    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+    ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
 end
 

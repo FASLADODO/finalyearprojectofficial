@@ -185,9 +185,9 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
 
                 %% adapt to size sentenceidtest set two is for new created test adn train
                 sentencesIdsTrain2=sentencesIdsTrain(1:options.sentenceTrainSplit,:);
-                sentencesTrain2=sentencesTrain(1:options.sentenceTrainSplit,:);
-                positions=ismember(sentencesIdsTrain2, sentencesIdsTest);
-                sentencesTest2=sentencesTest(positions,:);
+                sentencesTrain2=sentencesTrain(1:options.sentenceTrainSplit,:,:);
+                positions=ismember(sentencesIdsTrain2, sentencesIdsTest, 'rows');
+                sentencesTest2=sentencesTest(positions,:,:);
                 sentencesIdsTest2=sentencesIdsTest(positions,:);
                 
                 
@@ -198,15 +198,18 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
 
                 sentencesTrainIn=cell(size(sentencesTrain2,1),1);
                 sentencesTestIn=cell(size(sentencesTest2,1),1);
+                sentencesAllIn=cell(size(sentencesProcess,1),1);
                 fprintf('The size of sentencesTrainIn is (%d %d)\n', size(sentencesTrainIn,1), size(sentencesTrainIn,2))  
                
+                for i=1:size(sentencesProcess,1)
+                   sentencesAllIn{i}=squeeze(sentencesProcess(i,:,:));
+                end
                 %trainingIn and testingIn based off subset
                 %options.sentenceTrainSplit
                 for i=1:size(sentencesTrain2,1)
                    sentencesTrainIn{i}=squeeze(sentencesTrain2(i,:,:));
                 end
                 
-                size(sentencesTrainIn);
                 for i=1:size(sentencesTest2,1)
                    sentencesTestIn{i}=squeeze(sentencesTest2(i,:,:));
                 end
@@ -250,58 +253,51 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 end
                 
                 %Create all input to get features at end of training
-                xAll=zeros(inputSize,(numel(sentencesTestIn)+numel(sentencesTrainIn)));
+                xAll=zeros(inputSize,numel(sentencesAllIn));
                 %%%xAll=zeros(inputSize,(numel(sentencesTestIn)+numel(sentencesTrainIn)));
-                for i=1:numel(sentencesTrainIn)
-                    xAll(:,i)= xTrain(:,i);
+                for i=1:numel(sentencesAllIn)
+                    xAll(:,i)= sentencesAllIn{i}(:);
                 end
 
-                fprintf('Training sizes (%d %d)test data size (%d %d) \n', size(xTrain,1), size(xTrain,2), size(xTest,1), size(xTest,2));
 
-                for i=(1+numel(sentencesTrainIn)):(numel(sentencesTestIn)+numel(sentencesTrainIn))
-                    xAll(:,i)= xTest(:,i-numel(sentencesTrainIn));
-                end
-                sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
+                %sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
+                sentenceIds=sentenceIdsProcess;
 
                 %If pre-trained network does not exist, train it
                 if (exist(netSentences{config}, 'file') ~= 2 || options.force)
                 % Get prelim results of classifications in confusion matrix
                     fprintf('Confusion matrix before fine tuning');
-                    testLabelPredictions = deepnet(xTest);
-                    %'size sentenceidstest2'
-                   % size(sentencesIdsTest2)%317 1360
-                   % 'size testlabelpredictions'
-                    %size(testLabelPredictions)%1360 by 317
-                    %sentencesIdsTest2(1,:).' %Orig 317 by 1360, each row represents an example. 1360 classes, 317 examples
-                    origLabels=sentencesIdsTest2.';
-                    %testLabelPredictions(:,1)
+                    if(size(xTest,2)~=0)
+                        testLabelPredictions = deepnet(xTest);
+                        origLabels=sentencesIdsTest2.';           
 
-                    %% reorganise using IDX SO THAT FIRST 10 CLASSES HELD IN FIRST 10
-                    %EXAMPLES. i think already ordered
-                    figure; 
-                    %if the setting is pairs then test will be quite far down to
-                    %start,
-                    resultIndexes=zeros(20,1);
-                    for i = 1:20%size(origLabels,2)
-                        resultIndexes(i)= find(origLabels(:,i));
+                        %% reorganise using IDX SO THAT FIRST 10 CLASSES HELD IN FIRST 10
+                        %EXAMPLES. i think already ordered
+                        figure; 
+                        %if the setting is pairs then test will be quite far down to
+                        %start,
+                        noPlots=min(20, size(origLabels,2));
+                        resultIndexes=zeros(noPlots,1);
+                        for i = 1:noPlots%size(origLabels,2)
+                            resultIndexes(i)= find(origLabels(:,i));
+                        end
+
+                        plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
+                        %N by M, number of classes, number of examples
+                    else
+                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing');
                     end
-                    origLabels(resultIndexes,1:20);
-                    testLabelPredictions(resultIndexes,1:20);
-                    plotconfusion(origLabels(resultIndexes,1:20),testLabelPredictions(resultIndexes,1:20));
-                    %N by M, number of classes, number of examples
-
-                    %size(xTrain)
                     fprintf(' Training autoencoders with examples...\n');
                     % Perform fine tuning
                     deepnet = train(deepnet,xTrain,sentencesIdsTrain2.','useParallel','yes','showResources','yes');
-
-                    %Confusion matrix after fine tuning
-                    fprintf('Confusion matrix after fine tuning');
-                    testLabelPredictions = deepnet(xTest);
-                    figure;
-                    sentencesIdsTest2(1:20,resultIndexes).';
-                    plotconfusion(sentencesIdsTest2(1:20,resultIndexes).',testLabelPredictions(resultIndexes,1:20));
-
+                    if(size(xTest,2)~=0)
+                        %Confusion matrix after fine tuning
+                        fprintf('Confusion matrix after fine tuning');
+                        testLabelPredictions = deepnet(xTest);
+                        figure;
+                        sentencesIdsTest2(1:noPlots,resultIndexes).';
+                        plotconfusion(sentencesIdsTest2(1:noPlots,resultIndexes).',testLabelPredictions(resultIndexes,1:noPlots));
+                    end
                     deepnet.outputConnect=[0, 1, 0];
                     fprintf('Net %s already exists, loading...\n',netSentences{config});
                     save(netSentences{config}, 'deepnet');
@@ -314,7 +310,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 fprintf('Now extracting all features from layer first\n');
                 save(saveSentences{config}, 'features2');
             else
-                fprintf('Sentences %s already exists, loading...\n',saveSentences(config));
+                fprintf('Sentences %s already exists, loading...\n',saveSentences{config});
                 load(saveSentences{config});
             end
             sentences4(config,:,:)=features2.';
