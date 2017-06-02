@@ -110,8 +110,8 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     %results=net(testPairs);
     results=predict(net,testPairs);
     %distance between correct and predicted
-    results=abs(testMatches-results);
-    dist=reshape(results, size(testResults));
+    testResults=abs(testMatches-results);
+    dist=reshape(testResults, size(testResults));
     matchTime = toc(t0);      
 
     %% Verbose feedback
