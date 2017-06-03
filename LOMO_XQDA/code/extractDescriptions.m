@@ -3,25 +3,24 @@
 %sentences saved and loaded as variables sss
 %%  SAVE WHEN DATA EXTRACTED, SAVE INTERMEDIATE RUNTYPE 3 SENTENCES, 
 %% CAN LOAD ALL AND EXTRACT CORRECTLY, CANT DO ALL ALONE, MUST DO ALL AND RUNTYPE, AS CANT LOAD CONTINGUOUSLY OTHERWISE
-function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, preciseId, options)
+function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, options)
     
     ids=table2cell(readtable('../../word2vec/trunk/imageIds.txt'));
     size(ids);
     ids(1,:);
     n=length(ids);
     sentenceIds=zeros(n,1);
-    
+    preciseSentenceIds=zeros(n,1);
     
     %n is number of sentence ids should be in order
     for i=1:n
        name=strjoin(ids(i,:));%Format image=06_set=3_id=0001
-       if(preciseId)
-           temp= strsplit(name,{'image ','_set ','_id ','.png'});
-           sentenceIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
-       else
-           temp= strsplit(name,{'image ','_set ','_id ','.png'});
-           sentenceIds(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+       temp= strsplit(name,{'image ','_set ','_id ','.png'});
+       if(options.preciseId)
+           preciseSentenceIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
        end
+       sentenceIds(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+      
        %person_ids_char(i)= char(strcat(temp(3),temp(4)));
     end
     %% Convert sentenceIds to logical binary VERY IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -58,7 +57,7 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                                                     num2str(options.trainLevel), '_',options.sentenceSplit, '_hiddensizes', ...
                                                     num2str(options.hiddensize1), num2str(options.hiddensize2),'_maxepochs',...
                                                     num2str(options.maxepoch1),num2str(options.maxepoch2),num2str(options.maxepoch3),'_trainsplit', ...
-                                                    num2str(options.sentenceTrainSplit), '.mat'));
+                                                    num2str(options.sentenceTrainSplit),'_precise',num2str(options.preciseId), '.mat'));
 
                         netSentences(i)=char(strrep(saveSentences(i),'../data/sentences/','../data/nets/sentences/'));
                         resultSentences(i)=char(strrep(saveSentences(i),'../data/sentences/',''));
@@ -97,7 +96,7 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                                                     num2str(options.trainLevel), '_',options.sentenceSplit, '_hiddensizes', ...
                                                     num2str(options.hiddensize1), num2str(options.hiddensize2),'_maxepochs',...
                                                     num2str(options.maxepoch1),num2str(options.maxepoch2),num2str(options.maxepoch3),'_trainsplit', ...
-                                                    num2str(options.sentenceTrainSplit), '.mat'));
+                                                    num2str(options.sentenceTrainSplit),'_precise',num2str(options.preciseId), '.mat'));
 
                         netSentences(i)=(strrep(saveSentences(i),'../data/sentences/','../data/nets/sentences/'));
                         resultSentences(i)=(strrep(saveSentences(i),'../data/sentences/','../results/sentences/'));
@@ -109,7 +108,7 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                         storedSentences=char(strrep(storedSentences, sentenceDir, '../data/sentences/'));
                         size(storedSentences);
                         %if file exists
-                        if exist(storedSentences, 'file') == 2
+                        if exist(storedSentences, 'file') == 2 
                             fprintf('Sentences %s already exists. Loading .mat \n', storedSentences);
                             load(storedSentences);
                             sentences(i,:,:,:)=sss;
@@ -140,7 +139,7 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
             %% Sentences are saved HERE
             fprintf('Calling sentence feature representation extraction function\n');
             extractionFunct=options.featureExtractionMethod;
-            [sentences, sentenceIds]=extractionFunct(sentences, sentenceIds, netSentences, saveSentences, options);
+            [sentences, sentenceIds]=extractionFunct(sentences, sentenceIds,preciseSentenceIds, netSentences, saveSentences, options);
             
     end
     
