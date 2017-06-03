@@ -182,11 +182,13 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 sentencesTest=sentencesProcess(testIndexes,:,:);
                 %sentencesIdsTest= sentenceIdsProcess(testIndexes);
                 sentencesIdsTest=sentencesIdsHot(testIndexes,:);
-
+                %size(sentencesIdsTest)
+                %size(sentencesTest)
                 %% adapt to size sentenceidtest set two is for new created test adn train
-                sentencesIdsTrain2=sentencesIdsTrain(1:options.sentenceTrainSplit,:);
-                sentencesTrain2=sentencesTrain(1:options.sentenceTrainSplit,:,:);
-                positions=ismember(sentencesIdsTrain2, sentencesIdsTest, 'rows');
+                sentencesIdsTrain2=sentencesIdsTrain(1:min(options.sentenceTrainSplit,size(sentencesIdsTrain,1)),:);
+                sentencesTrain2=sentencesTrain(1:min(options.sentenceTrainSplit,size(sentencesTrain,1)),:,:);
+                positions=ismember(sentencesIdsTest,sentencesIdsTrain2, 'rows');
+                
                 sentencesTest2=sentencesTest(positions,:,:);
                 sentencesIdsTest2=sentencesIdsTest(positions,:);
                 

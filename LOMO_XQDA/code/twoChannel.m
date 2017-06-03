@@ -11,7 +11,7 @@
 %Training images are indexed by their last index
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galClassLabel,probClassLabel, iter, options)
-    
+    testSize=options.testSize;
     
     %% Assert that gal and probe labels match (they should)
     'WHether the gal and prob, sentences and images are matching labels'
@@ -76,11 +76,11 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     regressionLayer];
 
     options = trainingOptions('sgdm','InitialLearnRate',0.001, ...
-        'MaxEpochs',15);
+        'MaxEpochs',5);
     size(trainingPairs)
     size(matchResults)
     net = trainNetwork(trainingPairs,matchResults,layers,options)
-    
+
 
 
 
@@ -88,10 +88,10 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     trainTime = toc(t0);
     
     %% Squeeze removes singleton dimensions
-    galFea2 = galFea(p(int16(numMatches/2)+1 : end), : );
-    probFea2 = probFea(p(int16(numMatches/2)+1 : end), : );
-    classLabelGal2=galClassLabel(p(int16(numMatches/2)+1 : end));
-    classLabelProb2=probClassLabel(p(int16(numMatches/2)+1 : end));
+    galFea2 = galFea(p(int16(numMatches/2)+1 :int16(numMatches/2)+ testSize), : );
+    probFea2 = probFea(p(int16(numMatches/2)+1 : int16(numMatches/2)+testSize), : );
+    classLabelGal2=galClassLabel(p(int16(numMatches/2)+1 : int16(numMatches/2)+testSize));
+    classLabelProb2=probClassLabel(p(int16(numMatches/2)+1 :int16(numMatches/2)+ testSize));
     
     %% Create test pairs
     testPairs=zeros(size(galFea2,2),2,1,size(galFea2,1).^2);
@@ -108,9 +108,16 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     
     testResults=zeros(size(galFea2,1),size(galFea2,1));
     %results=net(testPairs);
+    size(testPairs)
     results=predict(net,testPairs);
     %distance between correct and predicted
-    results=abs(testMatches-results);
+    %results=abs(testMatches-results); DONT WANT, CLOSER TO 1=BETTER
+    %we do distance and it is a measure of 0-nomatch 1-match therefore
+    %abs(1-result)
+    results=abs(1-results);
+    for i=1:length(results)
+       results(i)=abs(1-results(i));
+    end
     dist=reshape(results, size(testResults));
     matchTime = toc(t0);      
 

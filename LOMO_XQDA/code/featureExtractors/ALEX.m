@@ -109,7 +109,7 @@ for i =  1:min([20,noImages])
 end
 fprintf('Images have been pre-processed. \n')
 %% create net instance, get properties
-split=int16(trainSplit*noImages);
+%split=int16(options.imageTrainSplit*noImages);
 %Images and ids have been sorted, need to generate separation to allow
 %effective training of data
 net = alexnet;
@@ -123,7 +123,7 @@ net = alexnet;
             old=0;
             %%Construct sentencesTest and sentencesTrain based on settings,
             % Get indexes for train data
-            switch options.sentenceSplit
+            switch options.imageSplit
                 case 'pairs'
                         fprintf('Training data is all pairs that exist of sentenceData\n');
                         for i=1:length(personIds)
@@ -203,7 +203,7 @@ net = alexnet;
             %ismember(A,B) returns an array containing logical 1 (true) where the data in A is found in B.
             % PRESUMES IMAGETRAINSPLIT > OCCURENCE OF TRIPLES (WHICH IT
             % SHOULD BE)
-            if(strcmp(options.sentenceSplit,'pairs'))
+            if(strcmp(options.imageSplit,'pairs'))
                 trainIdsThird=find(ismember(imagesIdsTest, imagesIdsTrain));
                 imagesSubIdsTrain=zeros(options.imageTrainSplit,1);
                 imagesSubTrain=zeros(227,227,3,options.imageTrainSplit);
