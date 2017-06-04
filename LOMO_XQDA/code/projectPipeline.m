@@ -91,6 +91,13 @@ imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_ALL;
 imageOptions.imageTrainSplit=500;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
+imageOptions.trainLevel=3; %autoEncode3 autoencoder level
+imageOptions.hiddensize1=2000;%199
+imageOptions.hiddensize2=500;%100
+imageOptions.maxepoch1=200;
+imageOptions.maxepoch2=100;
+imageOptions.maxepoch3=1000;
+
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
@@ -112,25 +119,26 @@ sentenceOptions.force=false;
 
 
 %% What to run?
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
 classifyImages=true;
-classifySentenceImages=true;
-classifySentences=true;
+classifySentenceImages=false;
+classifySentences=false;
 
 %% Feature Extractors and Classifiers
 %%Features
 LOMO_F=1;
 ALEX_F=2;
 VGG_F=3;
+AUTOENCODEIMG_F=4;
 %%Classifiers
 XQDA_F=1;
 TWOCHANNEL_F=2;
 %%Which feature extractors to run
 %%Which classifiers to run
-featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
-featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
-featureName={'LOMO', 'ALEX', 'VGG'};
+featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages}];%%,{MACH, @MACH}
+featureImgDimensions=[128,48; 227,227; 224,224; 128, 48]; %100 40
+featureName={'LOMO', 'ALEX', 'VGG', 'autoEncode'};
 imgType={'Std','Ctrl','All'};
 
 %Used for running multiple sentence extraction methods
@@ -144,7 +152,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[ALEX_F];%LOMO_F
+featureExtractorsRun=[AUTOENCODEIMG_F];%LOMO_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
 classifiersRun=[TWOCHANNEL_F];
 sentenceClassifiersRun=[XQDA_F];
