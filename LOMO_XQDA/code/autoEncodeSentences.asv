@@ -19,7 +19,7 @@
 %NEED TO FIX TRAINING SO TRAINING DATA AND TEST DATA CREATED, AND CULUM
 %KEPT TO PRODUCE OUTPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, netSentences, saveSentences, options)
+function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds,preciseSentenceIds, netSentences, saveSentences, options)
    % 'sentenceIds are class'
     %class(sentenceIds)
     %% Encoder parameters
@@ -101,6 +101,12 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 %% Order sentences
                 [sentenceIdsProcess,idx]=sort(sentenceIds);
                 sentencesProcess=squeeze(sentences(config,idx,:,:));%all the files, sentences,words, word vectors
+                matchingSentences=sentencesProcess;
+                matchingSentencesIds=sentenceIdsProcess;
+                if(options.preciseId)
+                    [matchingSentencesIds,idx]=sort(preciseSentenceIds);
+                    matchingSentences=squeeze(sentences(config,idx,:,:));
+                end
                 fprintf('\nthe size of sentencesprocess is (%d, %d)\n', size(sentencesProcess,1),size(sentencesProcess,2));
                 
                 occur=0;
@@ -109,41 +115,42 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
                 old=0;
                 %%Construct sentencesTest and sentencesTrain based on settings,
                 % Get indexes for train data
+                
                 switch options.sentenceSplit
                     case 'pairs'
                             fprintf('Training data is all pairs that exist of sentenceData\n');
-                            for i=1:length(sentenceIdsProcess)
-                                if(sentenceIdsProcess(i)~=old && occur>1)
+                            for i=1:length(matchingSentencesIds)
+                                if(matchingSentencesIds(i)~=old && occur>1)
                                     for p=1:2%occur
                                        indexes(idx)=i-p;
                                        idx=idx+1;                               
                                     end      
                                     occur=1;
-                                    old=sentenceIdsProcess(i);
+                                    old=matchingSentencesIds(i);
                                 else
-                                    if(sentenceIdsProcess(i)==old)
+                                    if(matchingSentencesIds(i)==old)
                                         occur=occur+1;
                                     else
-                                       old=sentenceIdsProcess(i);
+                                       old=matchingSentencesIds(i);
                                        occur=1;
                                     end
                                 end
                             end   
                     case 'oneofeach'
                             fprintf('Training data is one of each of all sentence data');
-                           for i=1:length(sentenceIdsProcess)
-                                if(sentenceIdsProcess(i)~=old && occur>1)
+                           for i=1:length(matchingSentencesIds)
+                                if(matchingSentencesIds(i)~=old && occur>1)
 
                                     indexes(idx)=i-p;
                                     idx=idx+1;
 
                                     occur=1;
-                                    old=sentenceIdsProcess(i);
+                                    old=matchingSentencesIds(i);
                                 else
-                                    if(sentenceIdsProcess(i)==old)
+                                    if(matchingSentencesIds(i)==old)
                                         occur=occur+1;
                                     else
-                                       old=sentenceIdsProcess(i);
+                                       old=matchingSentencesIds(i);
                                        occur=1;
                                     end
                                 end
@@ -151,42 +158,44 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds, net
 
                     case 'oneofeach+'
                            fprintf('Training data is one of each of all sentence data + extras');
-                           for i=1:length(sentenceIdsProcess)
-                                if(sentenceIdsProcess(i)~=old && occur>1)
+                           for i=1:length(matchingSentencesIds)
+                                if(matchingSentencesIds(i)~=old && occur>1)
 
                                     indexes(idx)=i-p;
                                     idx=idx+1;
 
                                     occur=1;
-                                    old=sentenceIdsProcess(i);
+                                    old=matchingSentencesIds(i);
                                 else
-                                    if(sentenceIdsProcess(i)==old)
+                                    if(matchingSentencesIds(i)==old)
                                         occur=occur+1;
                                     else
-                                       old=sentenceIdsProcess(i);
+                                       old=matchingSentencesIds(i);
                                        occur=1;
                                     end
                                 end
                             end                   
-                            indexes= setdiff([1:size(sentencesProcess,1)],indexes);
+                            indexes= setdiff([1:size(matchingSentences,1)],indexes);
                 end       
                 %create sentencesTrain and sentencesTest
                 %sentneceProcess is all current data in this configfile
-                sentencesTrain=sentencesProcess(indexes,:,:);
+                sentencesTrain=matchingSentences(indexes,:,:);
                 %sentencesIdsTrain=sentenceIdsProcess(indexes);
 
                 %% NOW CONVERTING SENTENCE IDS TO HOTCODING
-                sentencesIdsHot=hotCoding(sentenceIdsProcess);
+                sentencesIdsHot=hotCoding(matchingSentencesIds);
                 sentencesIdsTrain=sentencesIdsHot(indexes,:);
-                testIndexes= setdiff([1:size(sentencesProcess,1)],indexes);
+                testIndexes= setdiff([1:size(matchingSentences,1)],indexes);
                 sentencesTest=sentencesProcess(testIndexes,:,:);
                 %sentencesIdsTest= sentenceIdsProcess(testIndexes);
                 sentencesIdsTest=sentencesIdsHot(testIndexes,:);
-                size(
+                %size(sentencesIdsTest)
+                %size(sentencesTest)
                 %% adapt to size sentenceidtest set two is for new created test adn train
                 sentencesIdsTrain2=sentencesIdsTrain(1:min(options.sentenceTrainSplit,size(sentencesIdsTrain,1)),:);
                 sentencesTrain2=sentencesTrain(1:min(options.sentenceTrainSplit,size(sentencesTrain,1)),:,:);
-                positions=ismember(sentencesIdsTrain2, sentencesIdsTest, 'rows');
+                positions=ismember(sentencesIdsTest,sentencesIdsTrain2, 'rows');
+                
                 sentencesTest2=sentencesTest(positions,:,:);
                 sentencesIdsTest2=sentencesIdsTest(positions,:);
                 

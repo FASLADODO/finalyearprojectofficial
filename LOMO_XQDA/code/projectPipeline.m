@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Final Year Project Pipeline to handle all available classification,
 %%feature extraction methods automatically
@@ -82,7 +83,7 @@ addpath(classifyDir);
 addpath(evalDir);
 
 %% Experiment parameters
-numFolds=2; %Number of times to repeat experiment
+numFolds=5; %Number of times to repeat experiment
 numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
@@ -109,13 +110,22 @@ sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
 sentenceOptions.featureExtractionName='autoEncodeSentences';
 sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
-sentenceOptions.hiddensize1=200;%199
-sentenceOptions.hiddensize2=50;%100
+sentenceOptions.hiddensize1=100;%200,100,150,175,100,50
+sentenceOptions.hiddensize2=40;%100,50,100,150,25,25
 sentenceOptions.maxepoch1=20;
 sentenceOptions.maxepoch2=10;
 sentenceOptions.maxepoch3=100;
 sentenceOptions.sentenceTrainSplit=2000; %no.sentences used to train system
 sentenceOptions.force=false;
+sentenceOptions.preciseId=false;
+ %If precise only match with exact same sentences, important when training image-sentnece association
+%passed to sentences to determine how sentenceIds loaded are formatted
+%preciseIds means when the representation of sentences is learned only
+%by correlating exact matches, then retrieve all sentences representations
+%using this trained network
+%when options.preciseId only correlate images with exact match sentences
+%calculate correlation using this
+%images matching always need to be general as no double examples
 
 
 %% What to run?
@@ -159,10 +169,6 @@ sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel'};
 %dimensionMatchMethod='pca'; %pca, first 
-generaliseMatching=false; %If true every sentence is matched to both images that match its id
-
-preciseId=false; %If precise only match with exact same sentences, important when training image-sentnece association
-%passed to sentences to determine how sentenceIds loaded are formatted
 
 features=[];
 
@@ -180,10 +186,12 @@ imgHeight=100;
 
 %% read categories
 person_ids=zeros(n,1);
+precisePersonIds=zeros(n,1);
 for i=1:n
    name=imgList(i).name;%Format image=06_set=3_id=0001
    temp= strsplit(name,{'image=','_set=','_id=','.png'});
    person_ids(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+   precisePersonIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
    %person_ids_char(i)= char(strcat(temp(3),temp(4)));
 end
  %% Convert to hotcoding representation LATER WHEN LAST NEEDED AS EASIER TO SORT (better for regression)
@@ -256,7 +264,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
-    [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, preciseId, sentenceOptions);
+    [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, sentenceOptions);
     
 
 
@@ -371,17 +379,21 @@ for i=1:length(featureExtractorsRun)
             imageIds=zeros(size(sentences,2)*2,1);
             for s= 1:size(sentences,2)
                 sId=sentenceIds(s);%sentence id need to find match in descriptors
+                %for every sentence config
                 for c=1:size(sentences,1)
-                    temp=personIds2(find(personIds2==sId),:);
+                    %ids of imageMatches, bit pointless
+                    %temp=personIds2(find(personIds2==sId),:);
 
                     imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                    if(size(imagesMatch,1)~=2)
-                        fprintf('Error there are not two image matches for every sentenceId \n')
+                    if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
+                        fprintf('Error there are not two image matches for every sentenceId with generalId \n')
                     end
-                    imageIds(s)=temp(1);
-                    imageIds(s+size(sentences,2))=temp(2);
+                    imageIds(s)=sId;%temp(1);
                     sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                    sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                    %if(~preciseId)
+                        imageIds(s+size(sentences,2))=sId;%temp(2);                        
+                        sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                    %end
                 end
             end
 
@@ -655,8 +667,6 @@ if(classifySentences)
     ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
 end
-
-
 
 
 
