@@ -8,8 +8,8 @@ sed -e "s/’/'/g" -e "s/′/'/g" -e "s/''/ /g" < descriptions.txt | tr "A-Z,.'_
 #-c replace SET1 with its compliment/set2 (all not in SET1) tr SET1 SET2
 # 0-9'_ \n
 #time ./word2vec -train word-descriptions.txt -output vectors.bin -cbow 1 -size 200 -window 8 -negative 20 -hs 0 -sample 0 -threads 20 -binary 1 -iter 15
-time ./word2vec -train word-descriptions.txt -output vectors.txt -cbow 1 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 -threads 20 -binary 0 -iter 15 
-time ./word2vec -train word-descriptions.txt -output vectors.bin -cbow 1 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 -threads 20 -binary 1 -iter 15 -save-vocab word-vocab.txt
+time ./word2vec -train word-descriptions.txt -output vectors.txt -cbow 1 -size 200 -window 8 -negative 20 -hs 0 -sample 1e-4 -threads 20 -binary 0 -iter 15 
+time ./word2vec -train word-descriptions.txt -output vectors.bin -cbow 1 -size 200 -window 8 -negative 20 -hs 0 -sample 1e-4 -threads 20 -binary 1 -iter 15 -save-vocab word-vocab.txt
 ./distance vectors.bin
 
 #size is layer1_size 200, 785 UNIQUE WORDS 157000

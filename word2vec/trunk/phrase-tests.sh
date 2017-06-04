@@ -11,7 +11,7 @@ FILES=("phrase-descriptions.txt" "phrase0" "phrase1" "phrase2" "phrase3" "phrase
 THRESHOLDS=(200 150 100 50 25 10 0)
 VECTFILES=("vectors-phrase0.bin" "vectors-phrase1.bin" "vectors-phrase2.bin" "vectors-phrase3.bin" "vectors-phrase4.bin" "vectors-phrase5.bin")
 #150 100 50 25 10
-WINDOWS=( 2 3 5 )
+WINDOWS=( 5 )
 #1 2 3 5 7 10 15 20 50
 NUM=`expr ${#THRESHOLDS[@]} - 1`
 WIN=`expr ${#WINDOWS[@]} - 1`
