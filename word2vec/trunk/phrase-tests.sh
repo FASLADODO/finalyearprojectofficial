@@ -7,21 +7,24 @@ sed -e "s/’/'/g" -e "s/′/'/g" -e "s/''/ /g" < descriptions.txt | tr "A-Z'_.,
 #time ./word2phrase -train phrase2 -output phrase3 -threshold 50 -debug 2
 #time ./word2phrase -train phrase3 -output phrase4 -threshold 25 -debug 2
 #time ./word2phrase -train phrase4 -output phrase5 -threshold 10 -debug 2
+#thresh 200 filein phrase0 thresh 150 phrase1 0 descriptions.txt
 FILES=("phrase-descriptions.txt" "phrase0" "phrase1" "phrase2" "phrase3" "phrase4" "phrase5" "phrase-descriptions.txt")
 THRESHOLDS=(200 150 100 50 25 10 0)
 VECTFILES=("vectors-phrase0.bin" "vectors-phrase1.bin" "vectors-phrase2.bin" "vectors-phrase3.bin" "vectors-phrase4.bin" "vectors-phrase5.bin")
 #150 100 50 25 10
-WINDOWS=( 5 )
+WINDOWS=( 1 2 3 5 7 10 15 20 50)
+SIZES=(100 200 300 400 500)
 #1 2 3 5 7 10 15 20 50
 NUM=`expr ${#THRESHOLDS[@]} - 1`
 WIN=`expr ${#WINDOWS[@]} - 1`
-SIZE=5
+SIZ=`expr ${#SIZES[@]} - 1`
 for t in `seq 0 $NUM`; do
+for s in `seq 0 $SIZ`; do
 	for w in `seq 0 $WIN`; do
 		printf "\n" 
-            	echo Executing test with threshold: ${THRESHOLDS[$t]} and window ${WINDOWS[$w]} and filein  "phrase-descriptions/"${FILES[$t]} and fileout "phrase-descriptions/"${FILES[$t+1]}
-		FILEOUT="phrasevectors-bin/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"$SIZE".bin"
-		FILEOUT2="phrasevectors-txt/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"$SIZE".txt"
+            	echo Executing test with threshold: ${THRESHOLDS[$t]},window ${WINDOWS[$w]},size ${SIZES[$s]}  >> windsizthreshresults.txt
+		FILEOUT="phrasevectors-bin/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"${SIZES[$s]}".bin"
+		FILEOUT2="phrasevectors-txt/vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}"-size"${SIZES[$s]}".txt"
 		
 		#OUTPUT PHRASE ORGANISATIONS
 		if [ ${THRESHOLDS[$t]} != 0 ]; then
@@ -30,12 +33,14 @@ for t in `seq 0 $NUM`; do
 		fi
 		
 		#WORD VECTOR BIN OUTPUT FOR ACCURACY ANALYSIS
-		time ./word2vec -train "phrase-descriptions/"${FILES[$t+1]} -output $FILEOUT -cbow 1 -size 200 -window ${WINDOWS[$w]} -negative 25 -hs 0 -sample 0 -threads 20 -binary 1 -iter 15 
+		time ./word2vec -train "phrase-descriptions/"${FILES[$t+1]} -output $FILEOUT -cbow 1 -size ${SIZES[$s]} -window ${WINDOWS[$w]} -negative 20 -hs 0 -sample 0 -threads 20 -binary 1 -iter 15 
 		
 		#WORD VECTOR TXT OUTPUT FOR MATLAB
-		time ./word2vec -train "phrase-descriptions/"${FILES[$t+1]} -output $FILEOUT2 -cbow 1 -size 200 -window ${WINDOWS[$w]} -negative 25 -hs 0 -sample 0 -threads 20 -binary 0 -iter 15
-	        ./compute-accuracy $FILEOUT < questions-phrases.txt
+		time ./word2vec -train "phrase-descriptions/"${FILES[$t+1]} -output $FILEOUT2 -cbow 1 -size ${SIZES[$s]} -window ${WINDOWS[$w]} -negative 20 -hs 0 -sample 0 -threads 20 -binary 0 -iter 15
+	        ./compute-accuracy $FILEOUT < questions-phrases2.txt >> windsizthreshresults.txt
+		
 	done
+done
 done
 
 #time ./word2phrase -train news.2012.en.shuffled-norm0-phrase0 -output news.2012.en.shuffled-norm0-phrase1 -threshold 100 -debug 2
