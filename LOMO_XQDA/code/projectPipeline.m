@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Final Year Project Pipeline to handle all available classification,
 %%feature extraction methods automatically
@@ -93,11 +92,11 @@ imageOptions.imResizeMethod=READ_ALL;
 imageOptions.imageTrainSplit=500;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=2000;%199
-imageOptions.hiddensize2=500;%100
-imageOptions.maxepoch1=200;
-imageOptions.maxepoch2=100;
-imageOptions.maxepoch3=1000;
+imageOptions.hiddensize1=200;%199 2000
+imageOptions.hiddensize2=50;%100 500
+imageOptions.maxepoch1=2;
+imageOptions.maxepoch2=1;
+imageOptions.maxepoch3=10;
 
 
 %options.noImages=0;%if 0 then all run
@@ -141,14 +140,15 @@ LOMO_F=1;
 ALEX_F=2;
 VGG_F=3;
 AUTOENCODEIMG_F=4;
+AUTOENCODEIMG2_F=5;
 %%Classifiers
 XQDA_F=1;
 TWOCHANNEL_F=2;
 %%Which feature extractors to run
 %%Which classifiers to run
-featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages}];%%,{MACH, @MACH}
-featureImgDimensions=[128,48; 227,227; 224,224; 128, 48]; %100 40
-featureName={'LOMO', 'ALEX', 'VGG', 'autoEncode'};
+featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
+featureImgDimensions=[128,48; 227,227; 224,224; 128, 48; 224, 224]; %100 40
+featureName={'LOMO', 'ALEX', 'VGG', 'autoEncode', 'autoEncode2d'};
 imgType={'Std','Ctrl','All'};
 
 %Used for running multiple sentence extraction methods
@@ -162,7 +162,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG_F];%LOMO_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
 classifiersRun=[TWOCHANNEL_F];
 sentenceClassifiersRun=[XQDA_F];
@@ -225,6 +225,8 @@ if(classifyImages | classifySentenceImages)
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
         config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+        config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'_');
+        
         currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
@@ -331,7 +333,8 @@ featuresAvail=[featureList.name];
 %%For every image feature set
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+    %config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+    config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'_');
     currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
@@ -547,7 +550,8 @@ if(classifyImages)
                 %%For every set of features
                 for ft=1:size(galFea,1)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                    config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
+                    %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
+                    config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                     labels{(ft*(i-1))+i}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');

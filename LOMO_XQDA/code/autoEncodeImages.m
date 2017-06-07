@@ -93,7 +93,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                                 end
                             end   
                     case 'oneofeach'
-                            fprintf('Training data is one of each of all image data');
+                            fprintf('Training data is one of each of all image data\n');
                            for i=1:length(imagesIdsProcess)
                                 if(imagesIdsProcess(i)~=old && occur>1)
 
@@ -113,7 +113,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                             end
 
                     case 'oneofeach+'
-                           fprintf('Training data is one of each of all image data + extras');
+                           fprintf('Training data is one of each of all image data + extras\n');
                            for i=1:length(imagesIdsProcess)
                                 if(imagesIdsProcess(i)~=old && occur>1)
 
@@ -239,7 +239,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                 %If pre-trained network does not exist, train it
                 %if (exist(netSentences{config}, 'file') ~= 2 || options.force)
                 % Get prelim results of classifications in confusion matrix
-                    fprintf('Confusion matrix before fine tuning');
+                    fprintf('Confusion matrix before fine tuning\n');
                     if(size(xTest,2)~=0)
                         testLabelPredictions = deepnet(xTest);
                         origLabels=imagesIdsTest2.';           
@@ -258,7 +258,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                         plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
                         %N by M, number of classes, number of examples
                     else
-                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing');
+                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing\n');
                     end
                     fprintf(' Training autoencoders with examples...\n');
                     % Perform fine tuning
@@ -269,7 +269,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                     deepnet = train(deepnet,xTrain,imagesIdsTrain2.');
                     if(size(xTest,2)~=0)
                         %Confusion matrix after fine tuning
-                        fprintf('Confusion matrix after fine tuning');
+                        fprintf('Confusion matrix after fine tuning\n');
                         testLabelPredictions = deepnet(xTest);
                         figure;
                         imagesIdsTest2(1:noPlots,resultIndexes).';
@@ -306,6 +306,6 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
             images=images3;
         case 3       
             images=images4;
-    fprintf('THe size of the features extracted images are');
+    fprintf('THe size of the features extracted images are\n');
     size(images)
 end

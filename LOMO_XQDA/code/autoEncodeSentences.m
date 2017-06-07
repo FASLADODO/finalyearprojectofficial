@@ -275,7 +275,7 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds,prec
                 %If pre-trained network does not exist, train it
                 if (exist(netSentences{config}, 'file') ~= 2 || options.force)
                 % Get prelim results of classifications in confusion matrix
-                    fprintf('Confusion matrix before fine tuning');
+                    fprintf('Confusion matrix before fine tuning\n');
                     if(size(xTest,2)~=0)
                         testLabelPredictions = deepnet(xTest);
                         origLabels=sentencesIdsTest2.';           
@@ -294,14 +294,14 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds,prec
                         plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
                         %N by M, number of classes, number of examples
                     else
-                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing');
+                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing\n');
                     end
                     fprintf(' Training autoencoders with examples...\n');
                     % Perform fine tuning
                     deepnet = train(deepnet,xTrain,sentencesIdsTrain2.','useParallel','yes','showResources','yes');
                     if(size(xTest,2)~=0)
                         %Confusion matrix after fine tuning
-                        fprintf('Confusion matrix after fine tuning');
+                        fprintf('Confusion matrix after fine tuning\n');
                         testLabelPredictions = deepnet(xTest);
                         figure;
                         sentencesIdsTest2(1:noPlots,resultIndexes).';
