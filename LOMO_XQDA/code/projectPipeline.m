@@ -87,16 +87,18 @@ numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
+READ_DISTORT=4;
 imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_ALL;
 imageOptions.imageTrainSplit=500;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=200;%199 2000
-imageOptions.hiddensize2=50;%100 500
-imageOptions.maxepoch1=2;
-imageOptions.maxepoch2=1;
-imageOptions.maxepoch3=10;
+imageOptions.hiddensize1=1000;%199 2000
+imageOptions.hiddensize2=500;%100 500
+imageOptions.maxepoch1=20;
+imageOptions.maxepoch2=10;
+imageOptions.maxepoch3=100;
+imageOptions.retinexy=true;
 
 
 %options.noImages=0;%if 0 then all run
@@ -162,7 +164,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
+featureExtractorsRun=[LOMO_F];%LOMO_FAUTOENCODEIMG_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
 classifiersRun=[TWOCHANNEL_F];
 sentenceClassifiersRun=[XQDA_F];
@@ -241,7 +243,7 @@ if(classifyImages | classifySentenceImages)
             imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
             imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
             %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
-            images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageOptions.imResizeMethod);
+            images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageOptions.imResizeMethod, imageOptions);
 
 
             %RandonPerm depending on noImages, need to keep associated

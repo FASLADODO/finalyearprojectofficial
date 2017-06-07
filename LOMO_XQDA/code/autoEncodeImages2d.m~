@@ -145,10 +145,8 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                 imagesIdsTrain=imagesIdsHot(indexes,:);
                 testIndexes= setdiff([1:size(imagesProcess,3)],indexes);
                 imagesTest=imagesProcess(:,:,testIndexes);
-                %sentencesIdsTest= sentenceIdsProcess(testIndexes);
                 imagesIdsTest=imagesIdsHot(testIndexes,:);
-                %size(sentencesIdsTest)
-                %size(sentencesTest)
+
                 %% adapt to size sentenceidtest set two is for new created test adn train
                 imagesIdsTrain2=imagesIdsTrain(1:min(options.imageTrainSplit,size(imagesIdsTrain,1)),:);
                 imagesTrain2=imagesTrain(:,:,1:min(options.imageTrainSplit,size(imagesTrain,3)));
@@ -157,43 +155,36 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                 imagesTest2=imagesTest(:,:,positions);
                 imagesIdsTest2=imagesIdsTest(positions,:);
                
-               
-                
-                %sentencesIdsTest=num2str(sentenceIdsProcess(testIndexes));
                 fprintf('The size of imagesTest is (%d %d)\n', size(imagesTest,1), size(imagesTest,2))
                 fprintf('The size of imagesTrain is (%d %d)\n', size(imagesTrain,1), size(imagesTrain,2))           
                
+                imagesTrainIn2=cell(size(imagesTrain2,3),1);
 
-                imagesTrainIn=cell(size(imagesTrain2,1),1);
-                imagesTestIn=cell(size(imagesTest2,1),1);
-                imagesAllIn=cell(size(imagesProcess,1),1);
-                imagesTrainIdsIn=cell(size(imagesIdsTrain2,2),1);
+                imagesAllIn=cell(size(imagesProcess,1),3);
+
                 fprintf('The size of imagesTrainIn is (%d %d)\n', size(imagesTrainIn,1), size(imagesTrainIn,2))  
                 % imgheight by 1 cell array Each element X{i,ts} is an width-by-noExamples matrix.
                 %T	noClasses by 1 cell array Each element T{i,ts} is a 1-by-noExamples matrix.
-                for i=1:size(imagesProcess,1)
-                   imagesAllIn{i}=squeeze(imagesProcess(i,:,:));
+                for i=1:size(imagesProcess,3)
+                   imagesAllIn{i}=squeeze(imagesProcess(:,:,i));
                 end
+
                 %trainingIn and testingIn based off subset
                 %options.sentenceTrainSplit
-                for i=1:size(imagesTrain2,1)
-                   imagesTrainIn{i}=squeeze(imagesTrain2(i,:,:));
-                end
-                for i=1:size(imagesTrain2,1)
-                   imagesTrainIn{i}=squeeze(imagesTrain2(i,:,:));
-                end
-                for i=1:size(imagesTrain2,1)
-                   imagesTrainIn{i}=squeeze(imagesTrain2(i,:,:));
-                end
-                for i=1:size(imagesTest2,1)
-                   imagesTestIn{i}=squeeze(imagesTest2(i,:,:));
-                end
-                inputSize = size(imagesTest2,1)*size(imagesTest2,2);%number words, number vecs per word
+                 for i=1:size(imagesTrain2,3)
+                   imagesTrainIn2{i}=squeeze(imagesTrain2(:,:,i));
+                 end
+
+
 
                 %% Train autoencoder *2 , create deepnet, get classification results
                 % do supervised learning
+                'size imagesTrainIn2'
+                size(imagesTrainIn2)
+                'size imagesIdsTrain2'
+                size(imagesIdsTr
                 fprintf('Running autoencoder1...\n');
-                autoenc1 = trainAutoencoder(imagesTrainIn.',hiddenSize1, ...
+                autoenc1 = trainAutoencoder(imagesTrainIn2,hiddenSize1, ...
                 'MaxEpochs',options.maxepoch1, ...%200
                 'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
                 'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
@@ -201,7 +192,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                 'ScaleData', false); 
                 view(autoenc1)
                 fprintf('Running autoencoder2...\n');
-                features1=encode(autoenc1, imagesTrainIn);
+                features1=encode(autoenc1, imagesTrainIn2);
                 autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
                     'MaxEpochs',options.maxepoch2, ...%100
                     'L2WeightRegularization',0.002, ...
@@ -209,101 +200,40 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                     'SparsityProportion',0.1, ...
                     'ScaleData', false);
                 features2 = encode(autoenc2,features1);
-                %'sizes features2 and sentencesIdsTrain2 conjugate'
-               % size(features2)
-               % size(sentencesIdsTrain2.')
-                %both meant to be kby n mby n data
-                %needs to be double/single format for ids
+                'size features2'
                 size(features2)
-                size(imagesIdsTrain2.')
+                'size imagesTraiIn2'
+                size(imagesTrainIn2)
+                'size imagesIdsTrain2'
+                size(imagesIdsTrain2)
                 softnet = trainSoftmaxLayer(features2,imagesIdsTrain2.','MaxEpochs',options.maxepoch3);
                 deepnet = stack(autoenc1,autoenc2,softnet);
 
-                size(imagesTrainIn{1})
                 
-                % Turn the training sentences into vectors and put them in a matrix
-                %xTrain = zeros(inputSize,numel(imagesTrainIn));
-                xTrain = zeros(inputSize,numel(imagesTrainIn));
-                for i = 1:numel(imagesTrainIn)
-                    xTrain(:,i) = imagesTrainIn{i}(:);
-                end
-                %xTrain=imagesTrain2;
-                xTest = zeros(inputSize,numel(imagesTestIn));
-                for i = 1:numel(imagesTestIn)
-                    xTest(:,i) = imagesTestIn{i}(:);
-                end
-                %xTest=imagesTest2;
-                %Create all input to get features at end of training
-                xAll=zeros(inputSize,numel(imagesAllIn));
-                %%%xAll=zeros(inputSize,(numel(sentencesTestIn)+numel(sentencesTrainIn)));
-                for i=1:numel(imagesAllIn)
-                    xAll(:,i)= imagesAllIn{i}(:);
-                end
-                %xAll=imagesProcess;
-
-                %sentenceIds=[sentencesIdsTrain; sentencesIdsTest];
-                personIds=imagesIdsProcess;
-
-                %If pre-trained network does not exist, train it
-                %if (exist(netSentences{config}, 'file') ~= 2 || options.force)
-                % Get prelim results of classifications in confusion matrix
-                    fprintf('Confusion matrix before fine tuning\n');
-                    if(size(xTest,2)~=0)
-                        testLabelPredictions = deepnet(xTest);
-                        origLabels=imagesIdsTest2.';           
-
-                        %% reorganise using IDX SO THAT FIRST 10 CLASSES HELD IN FIRST 10
-                        %EXAMPLES. i think already ordered
-                        figure; 
-                        %if the setting is pairs then test will be quite far down to
-                        %start,
-                        noPlots=min(20, size(origLabels,2));
-                        resultIndexes=zeros(noPlots,1);
-                        for i = 1:noPlots%size(origLabels,2)
-                            resultIndexes(i)= find(origLabels(:,i));
-                        end
-
-                        plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
-                        %N by M, number of classes, number of examples
-                    else
-                        fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing\n');
-                    end
                     fprintf(' Training autoencoders with examples...\n');
-                    % Perform fine tuning
-                    %size(xTrain)
-                    size(imagesTrainIn.')
-                    temp=imagesTrainIn;
-                    class(temp{1})
-                    size(temp{1})
-                    size(imagesIdsTrain2.')
-                    %deepnet.numInputs
-                    deepnet = train(deepnet,imagesTrainIn.',imagesIdsTrain2.');
-                    if(size(xTest,2)~=0)
-                        %Confusion matrix after fine tuning
-                        fprintf('Confusion matrix after fine tuning');
-                        testLabelPredictions = deepnet(xTest);
-                        figure;
-                        imagesIdsTest2(1:noPlots,resultIndexes).';
-                        plotconfusion(imagesIdsTest2(1:noPlots,resultIndexes).',testLabelPredictions(resultIndexes,1:noPlots));
+                    inputSize = size(imagesTrain2,1)*size(imagesTrain2,2);
+                    % Turn the training images into vectors and put them in a matrix
+                    xTrain = zeros(inputSize,size(imagesTrainIn2,1));
+                    for i = 1:size(imagesTrainIn2,1)
+                        xTrain(:,i) = imagesTrainIn2{i}(:);
                     end
+                    xAll = zeros(inputSize,numel(imagesAllIn));
+                    for i = 1:numel(imagesAllIn)
+                        xTrain(:,i) = imagesAllIn{i}(:);
+                    end
+
+                    %deepnet.numInputs
+                    size(xTrain)
+                    size(imagesIdsTrain2.')
+                    deepnet = train(deepnet,xTrain,imagesIdsTrain2.');
                     deepnet.outputConnect=[0, 1, 0];
-                    %fprintf('Net %s already exists, loading...\n',netSentences{config});
-                    %save(netSentences{config}, 'deepnet');
-                %else
-                    
-                  % load( netSentences{config});
-                %end
-                
+
                 features2=deepnet(xAll);
-                size(xAll)
+
                 size(features2)
-                %featureLayer = 'fc2';
+
                 fprintf('Now extracting all features from layer first\n');
-                %save(saveSentences{config}, 'features2');
-            %else
-             %   fprintf('Sentences %s already exists, loading...\n',saveSentences{config});
-             %   load(saveSentences{config});
-           % end
+
             images4=features2.';
         end
             

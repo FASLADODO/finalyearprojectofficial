@@ -82,39 +82,58 @@ addpath(classifyDir);
 addpath(evalDir);
 
 %% Experiment parameters
-numFolds=10; %Number of times to repeat experiment
+numFolds=5; %Number of times to repeat experiment
 numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
+READ_DISTORT=4;
 imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_ALL;
-imageOptions.imageTrainSplit=200;
+imageOptions.imageTrainSplit=500;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
+imageOptions.trainLevel=3; %autoEncode3 autoencoder level
+imageOptions.hiddensize1=1000;%199 2000
+imageOptions.hiddensize2=500;%100 500
+imageOptions.maxepoch1=20;
+imageOptions.maxepoch2=10;
+imageOptions.maxepoch3=100;
+imageOptions.retinexy=true;
+
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='first'; %first pca
+options.dimensionMatchMethod='pca'; %first pca
+options.testSize=1000; %used for twoChannel, as matches go to 16,000,000 otherwise
 
 sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
 sentenceOptions.featureExtractionName='autoEncodeSentences';
 sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
-sentenceOptions.hiddensize1=200;%200
-sentenceOptions.hiddensize2=100;%100
-sentenceOptions.maxepoch1=10;
-sentenceOptions.maxepoch2=20;
-sentenceOptions.maxepoch3=50;
-sentenceOptions.sentenceTrainSplit=200; %no.sentences used to train system
+sentenceOptions.hiddensize1=100;%200,100,150,175,100,50
+sentenceOptions.hiddensize2=40;%100,50,100,150,25,25
+sentenceOptions.maxepoch1=20;
+sentenceOptions.maxepoch2=10;
+sentenceOptions.maxepoch3=100;
+sentenceOptions.sentenceTrainSplit=2000; %no.sentences used to train system
 sentenceOptions.force=false;
+sentenceOptions.preciseId=false;
+ %If precise only match with exact same sentences, important when training image-sentnece association
+%passed to sentences to determine how sentenceIds loaded are formatted
+%preciseIds means when the representation of sentences is learned only
+%by correlating exact matches, then retrieve all sentences representations
+%using this trained network
+%when options.preciseId only correlate images with exact match sentences
+%calculate correlation using this
+%images matching always need to be general as no double examples
 
 
 %% What to run?
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
-classifyImages=false;
-classifySentenceImages=true;
+classifyImages=true;
+classifySentenceImages=false;
 classifySentences=false;
 
 %% Feature Extractors and Classifiers
@@ -122,14 +141,16 @@ classifySentences=false;
 LOMO_F=1;
 ALEX_F=2;
 VGG_F=3;
+AUTOENCODEIMG_F=4;
+AUTOENCODEIMG2_F=5;
 %%Classifiers
 XQDA_F=1;
 TWOCHANNEL_F=2;
 %%Which feature extractors to run
 %%Which classifiers to run
-featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG}];%%,{MACH, @MACH}
-featureImgDimensions=[128,48; 227,227; 224,224]; %100 40
-featureName={'LOMO', 'ALEX', 'VGG'};
+featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
+featureImgDimensions=[128,48; 227,227; 224,224; 128, 48; 224, 224]; %100 40
+featureName={'LOMO', 'ALEX', 'VGG', 'autoEncode', 'autoEncode2d'};
 imgType={'Std','Ctrl','All'};
 
 %Used for running multiple sentence extraction methods
@@ -143,15 +164,13 @@ sentenceFeatureRun={AUTOENCODE_F};
 sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[LOMO_F];%LOMO_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
-classifiersRun=[XQDA_F];
+classifiersRun=[TWOCHANNEL_F];
+sentenceClassifiersRun=[XQDA_F];
+imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel'};
 %dimensionMatchMethod='pca'; %pca, first 
-generaliseMatching=false; %If true every sentence is matched to both images that match its id
-
-preciseId=false; %If precise only match with exact same sentences, important when training image-sentnece association
-%passed to sentences to determine how sentenceIds loaded are formatted
 
 features=[];
 
@@ -169,10 +188,12 @@ imgHeight=100;
 
 %% read categories
 person_ids=zeros(n,1);
+precisePersonIds=zeros(n,1);
 for i=1:n
    name=imgList(i).name;%Format image=06_set=3_id=0001
    temp= strsplit(name,{'image=','_set=','_id=','.png'});
    person_ids(i)= str2double(strcat(temp(3),temp(4)));%str2double()
+   precisePersonIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
    %person_ids_char(i)= char(strcat(temp(3),temp(4)));
 end
  %% Convert to hotcoding representation LATER WHEN LAST NEEDED AS EASIER TO SORT (better for regression)
@@ -206,6 +227,8 @@ if(classifyImages | classifySentenceImages)
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
         config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+        config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'_');
+        
         currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
@@ -245,7 +268,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(classifySentenceImages | classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
-    [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, preciseId, sentenceOptions);
+    [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, sentenceOptions);
     
 
 
@@ -312,7 +335,8 @@ featuresAvail=[featureList.name];
 %%For every image feature set
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-    config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+    %config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+    config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'_');
     currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
@@ -360,17 +384,21 @@ for i=1:length(featureExtractorsRun)
             imageIds=zeros(size(sentences,2)*2,1);
             for s= 1:size(sentences,2)
                 sId=sentenceIds(s);%sentence id need to find match in descriptors
+                %for every sentence config
                 for c=1:size(sentences,1)
-                    temp=personIds2(find(personIds2==sId),:);
+                    %ids of imageMatches, bit pointless
+                    %temp=personIds2(find(personIds2==sId),:);
 
                     imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                    if(size(imagesMatch,1)~=2)
-                        fprintf('Error there are not two image matches for every sentenceId \n')
+                    if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
+                        fprintf('Error there are not two image matches for every sentenceId with generalId \n')
                     end
-                    imageIds(s)=temp(1);
-                    imageIds(s+size(sentences,2))=temp(2);
+                    imageIds(s)=sId;%temp(1);
                     sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                    sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                    %if(~preciseId)
+                        imageIds(s+size(sentences,2))=sId;%temp(2);                        
+                        sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                    %end
                 end
             end
 
@@ -409,9 +437,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if(classifySentenceImages)
-    numRanks=size(sentenceImgGalFea,3)/2-1;
+    if(options.testSize~=0 && classifiersRun(i)~=XQDA_F)
+        numRanks=options.testSize;
+    else
+        numRanks=size(sentenceImgGalFea,3)/2-1;
+    end
+   
+    %numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
-    matchingConfig=sprintf('fpr_%ddmm_%d',options.falsePositiveRatio,options.dimensionMatchMethod);
+    matchingConfig=sprintf('fpr_%ddmm_%dts_%d',options.falsePositiveRatio,options.dimensionMatchMethod, options.testSize);
     
     labels=cell(length(classifiersRun)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2),1);   
     %%Select classifiers want to run
@@ -449,7 +483,9 @@ if(classifySentenceImages)
 
 
                                 [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,options);
-
+                                size(dist)
+                                size(classLabelGal2)
+                                size(classLabelProb2)
                                 cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                                 clear dist           
 
@@ -470,8 +506,8 @@ if(classifySentenceImages)
                         csvwrite(char(csvFileName),meanCms) 
 
                         fprintf('The average performance:\n');
-                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100, Rank500, Rank1000\n');
-                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,   %5.2f%%,   %5.2f%%\n\n', (meanCms([1,5,10,15,20,100,500,1000]) * 100));
+                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100\n');
+                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,15,20,100]) * 100));
 
                     end
 
@@ -497,13 +533,18 @@ end
 
 %%Select classifiers want to run
 if(classifyImages)
-    numRanks=int16(size(galFea,2)/2-1);
+    
+    if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
+        numRanks=options.testSize;
+    else
+        numRanks=int16(size(galFea,2)/2-1);
+    end
     cms = zeros(numFolds, numRanks);
     figure
 
-    labels=cell(length(classifiersRun)*size(galFea,1),1);
-    for i=1:length(classifiersRun)
-            idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
+    labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
+    for i=1:length(imageClassifiersRun)
+            idx=find(cell2mat(classifiers(:,1))==imageClassifiersRun(i),1);
             currClassifierId=cell2mat(classifiers(idx,1));
             currClassifierFunct=cell2mat(classifiers(idx,2));
             currClassifierName=cell2mat(classifierName(currClassifierId));
@@ -511,7 +552,8 @@ if(classifyImages)
                 %%For every set of features
                 for ft=1:size(galFea,1)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
-                    config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
+                    %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
+                    config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                     labels{(ft*(i-1))+i}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
@@ -521,7 +563,7 @@ if(classifyImages)
                         %Repeat classification process numFolds times
                         for iter=1:numFolds
 
-                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter);
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
 
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
@@ -570,14 +612,19 @@ end
 
 %%Select classifiers want to run
 if(classifySentences)
-    numRanks=int16(size(sentenceGalFea,2)/2-1);
+    if(options.testSize~=0 && sentenceClassifiersRun(i)~=XQDA_F)
+        numRanks=options.testSize;
+    else
+        numRanks=int16(size(sentenceGalFea,2)/2-1);
+    end
+    
     cms = zeros(numFolds, numRanks);
     figure    
 
-    labels=cell(length(classifiersRun)*size(sentenceGalFea,1),1);
+    labels=cell(length(sentenceClassifiersRun)*size(sentenceGalFea,1),1);
     
-    for i=1:length(classifiersRun)
-            idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
+    for i=1:length(sentenceClassifiersRun)
+            idx=find(cell2mat(classifiers(:,1))==sentenceClassifiersRun(i),1);
             currClassifierId=cell2mat(classifiers(idx,1));
             currClassifierFunct=cell2mat(classifiers(idx,2));
             currClassifierName=cell2mat(classifierName(currClassifierId));
@@ -591,7 +638,7 @@ if(classifySentences)
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
                         for iter=1:numFolds
 
-                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter);
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter, options);
 
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
@@ -626,8 +673,6 @@ if(classifySentences)
     ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
 end
-
-
 
 
 
