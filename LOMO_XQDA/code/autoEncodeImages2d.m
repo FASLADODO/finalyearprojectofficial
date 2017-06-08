@@ -229,7 +229,9 @@ function [personIds2,images]=autoEncodeImages2d(images, personIds, options)
                     size(imagesIdsTrain2.')
                     deepnet = train(deepnet,xTrain,imagesIdsTrain2.');
                     deepnet.outputConnect=[0, 1, 0];
-                
+
+                personIds=imagesIdsProcess;
+
                 features2=deepnet(xAll);
 
                 size(features2)
