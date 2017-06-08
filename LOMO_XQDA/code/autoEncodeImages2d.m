@@ -160,7 +160,7 @@ function [personIds,images]=autoEncodeImages(images, personIds, options)
                
                 imagesTrainIn2=cell(size(imagesTrain2,3),1);
 
-                imagesAllIn=cell(size(imagesProcess,1),3);
+                imagesAllIn=cell(size(imagesProcess,3),1);
 
                 for i=1:size(imagesProcess,3)
                    imagesAllIn{i}=squeeze(imagesProcess(:,:,i));

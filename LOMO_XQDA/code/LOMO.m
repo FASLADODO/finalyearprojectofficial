@@ -50,7 +50,8 @@ numPoints = 4;
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
-resizeMethodNames={'Standard','Central', 'All'};
+READ_DISTORT=4;
+resizeMethodNames={'Standard','Central', 'All', 'Distort'};
 
 if nargin >= 2
     if isfield(options,'numScales') && ~isempty(options.numScales) && isscalar(options.numScales) && isnumeric(options.numScales) && options.numScales > 0
@@ -153,7 +154,7 @@ function descriptors = PyramidMaxJointHist( oriImgs, numScales, blockSize, block
     % color transformation
     for i = 1 : numImgs
         I = oriImgs(:,:,:,i);
-        I = Retinex(I);
+        %I = Retinex(I);
 
         I = rgb2hsv(I);
         I(:,:,1) = min( floor( I(:,:,1) * colorBins(1) ), colorBins(1)-1 );

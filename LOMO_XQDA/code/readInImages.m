@@ -15,10 +15,11 @@ function newImages = readInImages(imgDir, imgList, imgWidth, imgHeight, imResize
             case READ_ALL
                 newImages(:,:,:,i)=imageResizeAll(temp, imgWidth, imgHeight);
             case READ_DISTORT
-                newImages(:,:,:,i)=imresize(temp, imgWidth, imgHeight);
+                t=imresize(temp, [imgHeight imgWidth]);
+                newImages(:,:,:,i)=t;
         end
         if(options.retinexy)
-            newImages(:,:,:,i) = Retinex(newImages(:,:,:,i));
+            newImages(:,:,:,i) = Retinex(squeeze(newImages(:,:,:,i)));
         end
 
         %newImages(:,:,:,i) = imresize(temp,[imgHeight imgWidth]);   
