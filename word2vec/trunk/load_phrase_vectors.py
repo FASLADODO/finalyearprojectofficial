@@ -2,24 +2,39 @@ import numpy as np
 import glob
 import os
 NONE=0
-COLOR=1
+SIMWORDS=1
+USELESSWORDS=2
+LOWFREQWORDS=3
 
-WEIGHT_MODE=NONE
+
+sim_mappings={'brownish': 'brown','all-black':'black', 'elderly': 'old', 'grayed':'grey', 'trainers':'sneakers', '20':'twenties',  "rucksack":"backpack", "tshirt":"t-shirt", "-":"","t_shirt":"t-shirt", "ruck_sack":"backpack","back_pack":"back_pack","wristwatch":"watch", "tee":"t-shirt", "flabby":"large", "plumpy":"large", "fat":"large", "mobile":"phone", "hand_bag":"handbag", "sport":"sports", "cellphone":"phone", "mobilephone":"phone"}
+useless_words=["a","the","is","with","of","probably","definitely","perfectly","almost","super", "appears", "this", "an", "that", "seen", "at", "as", "s", "also", "while", "early", "may", "either","see", "but", "there", "well", "so","here", "what","we","by"];
+WEIGHT_MODE=USELESSWORDS
 NORMALISE=3#1 IS MEAN, 2 IS MAX, 0 is matrix form
 
+fileFrequencies="word-vocab.txt"
 
 #Load all word vector associations
 #FILEOUT2="vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}".txt"
 #print glob.glob("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/vectors-phrase-win*.txt")                                  vectors-phrase-win
-files=["phrasevectors-txt/"+i for i in os.listdir("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/phrasevectors-txt") if i.find("vectors-phrase-win3-threshold100")!=-1 and i.find(".txt")!=-1]
+files=["phrasevectors-txt/"+i for i in os.listdir("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/phrasevectors-txt") if i.find(".txt")!=-1]
+#i.find("vectors-phrase-win3-threshold100")!=-1 and , how to pick specific ones
 thresh_dict={"200": "phrase-descriptions/phrase0","150": "phrase-descriptions/phrase1", "100" : "phrase-descriptions/phrase2", "50": "phrase-descriptions/phrase3", "25": "phrase-descriptions/phrase4", "10": "phrase-descriptions/phrase5", "0": "phrase-descriptions/phrase-descriptions.txt"}
 print files
 #phrase_files= ["phrase0", "phrase1", "phrase2", "phrase3", "phrase4", "phrase5"]
 #phraseout_files= ["phrase0-vects.txt", "phrase1-vects.txt", "phrase2-vects.txt", "phrase3-vects.txt", "phrase4-vects.txt", "phrase5-vects.txt"]
+wordFreqDict={}
+with open(fileFrequencies, "r") as f:
+	for line in f:
+		w,freq=line.split(" ")
+                freq=freq.replace("\n","")
+		wordFreqDict[w] = freq
+print wordFreqDict
 for file_in in files:
 	phraseout_file="out"+file_in.replace('phrasevectors-txt/', '')
 	p,m=file_in.split("-threshold")
 	phrasefileindex,m=m.split("-size")#threshold maps
+	#size=int( m.replace(c,'')
         print phrasefileindex + " " + thresh_dict[phrasefileindex]  	
 
 	#file_name="vectors-phrase.txt"
@@ -57,8 +72,19 @@ for file_in in files:
 	for p in xrange(len(phrases)):
 		vec=[]#vec is array of word vectors that form a phrase
 		for w in phrases[p]:
-			if w in word_vec_dict:
-				vec.append(word_vec_dict[w])
+			temp=w
+			if(WEIGHT_MODE==SIMWORDS):
+				if w in sim_mappings:
+					temp=sim_mappings[w]
+			if(WEIGHT_MODE==USELESSWORDS):
+				if w in useless_words:
+					temp=""
+			if(WEIGHT_MODE==LOWFREQWORDS):
+				word_freq=wordFreqDict[w]
+ 				if(int(word_freq)<20):
+					temp=""
+			if temp in word_vec_dict:
+				vec.append(word_vec_dict[temp])
 		if(vec!=[]):
 			#print len(phrases[p]), counts chars
 			
@@ -74,10 +100,10 @@ for file_in in files:
 	for p in xrange(len(phrases)):
 		vec=[]#vec is array of word vectors that form a phrase
 		for w in phrases[p]:
-			print len(vec)
+			
 			if w in word_vec_dict:
 				vec.append(word_vec_dict[w])
-				print len(vec)
+				
 		if(vec==[]):
 			print "no words in line in dict"
 			print phrases[p]
@@ -87,9 +113,9 @@ for file_in in files:
 			if(NORMALISE==1):
 				length=vec.shape[0]
 				normal_vec=np.sum(vec,axis=0)/length
-				sum_vectors[p]=vec
+				sum_vectors[p]=normal_vec
 			elif(NORMALISE==2):
-				sum_vectors[p]=vec
+				sum_vectors[p]=np.amax(vec,axis=0)
 			
 			else:
 				#print vec
@@ -102,12 +128,12 @@ for file_in in files:
 					sum_vectors[p]=vec[0:mean_length]
 					#sum_vectors=np.append(sum_vectors,vec[0:mean_length-1], axis=0)
 				else:
-					print "length difference %d" % (mean_length-vec.shape[0])
-					zero_vec= np.array([[0 for col in range(200)] for row in range( int(mean_length-len(vec)))])
-					print "zero_vec size %d %d" % (len(zero_vec), len(zero_vec[0]))
-					print "vec size %d %d" % (vec.shape[0], vec[0].shape[0])
+					#print "length difference %d" % (mean_length-vec.shape[0])
+					zero_vec= np.array([[0 for col in range(vector_size)] for row in range( int(mean_length-len(vec)))])
+					#print "zero_vec size %d %d" % (len(zero_vec), len(zero_vec[0]))
+					#print "vec size %d %d" % (vec.shape[0], vec[0].shape[0])
 					vec=np.append(vec, zero_vec, axis=0)
-					print "vec new size %d %d" % (len(vec), len(vec[1]))
+					#print "vec new size %d %d" % (len(vec), len(vec[1]))
 					sum_vectors[p]=vec
 		
 	print "The shape of sum_vectors is %s" % str(np.shape(sum_vectors))
@@ -122,8 +148,9 @@ for file_in in files:
 			#print range(len(sum_vectors))
 			#print phrase
 			#print sum_vectors[phrase]
-		if(NORMALISE==0 or NORMALISE==1):
-			for n in np.shape(sum_vectors[phrase])[0]:
+		if(NORMALISE==1 or NORMALISE==2):
+
+			for n in xrange(np.shape(sum_vectors[phrase])[0]):
 				#print n
 				f.write(str(sum_vectors[phrase][n]))
 				f.write(" ")

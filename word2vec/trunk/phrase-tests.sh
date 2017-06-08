@@ -8,11 +8,13 @@ sed -e "s/’/'/g" -e "s/′/'/g" -e "s/''/ /g" < descriptions.txt | tr "A-Z'_.,
 #time ./word2phrase -train phrase3 -output phrase4 -threshold 25 -debug 2
 #time ./word2phrase -train phrase4 -output phrase5 -threshold 10 -debug 2
 #thresh 200 filein phrase0 thresh 150 phrase1 0 descriptions.txt
-FILES=("phrase-descriptions.txt" "phrase0" "phrase1" "phrase2" "phrase3" "phrase4" "phrase5" "phrase-descriptions.txt")
-THRESHOLDS=(200 150 100 50 25 10 0)
+#FILES=("phrase-descriptions.txt" "phrase0" "phrase1" "phrase2" "phrase3" "phrase4" "phrase5" "phrase-descriptions.txt")
+FILES=("phrase-descriptions.txt" "phrase0" "phrase1" "phrase-descriptions.txt")
+#THRESHOLDS=(200 150 100 50 25 10 0)
+THRESHOLDS=(200 150 0)
 VECTFILES=("vectors-phrase0.bin" "vectors-phrase1.bin" "vectors-phrase2.bin" "vectors-phrase3.bin" "vectors-phrase4.bin" "vectors-phrase5.bin")
 #150 100 50 25 10
-WINDOWS=( 1 2 3 5 7 10 15 20 50)
+WINDOWS=( 3 5 7 10 )
 SIZES=(100 200 300 400 500)
 #1 2 3 5 7 10 15 20 50
 NUM=`expr ${#THRESHOLDS[@]} - 1`
@@ -37,7 +39,7 @@ for s in `seq 0 $SIZ`; do
 		
 		#WORD VECTOR TXT OUTPUT FOR MATLAB
 		time ./word2vec -train "phrase-descriptions/"${FILES[$t+1]} -output $FILEOUT2 -cbow 1 -size ${SIZES[$s]} -window ${WINDOWS[$w]} -negative 20 -hs 0 -sample 0 -threads 20 -binary 0 -iter 15
-	        ./compute-accuracy $FILEOUT < questions-phrases2.txt >> windsizthreshresults.txt
+	        #./compute-accuracy $FILEOUT < questions-phrases2.txt >> windsizthreshresults.txt
 		
 	done
 done
