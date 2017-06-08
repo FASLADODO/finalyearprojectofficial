@@ -109,10 +109,12 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                         size(storedSentences);
                         %if file exists
                         if exist(storedSentences, 'file') == 2 
+                            
                             fprintf('Sentences %s already exists. Loading .mat \n', storedSentences);
                             load(storedSentences);
                             sentences(i,:,:,:)=sss;
                         else
+                            tic
                             fprintf('Loading sentences %s \n', char(name));
                             temp=table2cell(readtable(char(name),'Delimiter','comma'));
                             for st=1:size(temp,1)-1
@@ -127,6 +129,8 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                             sss=sentences(i,:,:,:);
                             size(sss);
                             save(storedSentences, 'sss');
+                            timey=toc;
+                            fprintf('Time taken to load and save raw txt sentences to data is: %d',timey)
                         end
                         %temp=table2array(readtable(char(name),'Delimiter','comma'));
                         %sentences(i,:,:)=temp(:,1:size(temp,2)-1);                

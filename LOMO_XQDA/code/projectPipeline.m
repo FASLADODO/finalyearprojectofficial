@@ -132,9 +132,9 @@ sentenceOptions.preciseId=false;
 %% What to run?
 featureForce=true;
 sentenceForce=false;
-classifyImages=true;
+classifyImages=false;
 classifySentenceImages=false;
-classifySentences=false;
+classifySentences=true;
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -161,7 +161,9 @@ sentenceFeatureRun={AUTOENCODE_F};
 
 %Used for sentence input type
 %mean, mode, matrix
-sentencesRun={'mode0_norm3outvectors_phrase_win3_threshold100_size50.txt'}; %'all' leads to running every sentence vector
+sentencesRun={
+ 'mode2_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win7_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win3_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold150_size300.txt'
+}; %'all' leads to running every sentence vector
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
