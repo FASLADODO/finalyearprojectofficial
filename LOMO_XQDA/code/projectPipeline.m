@@ -93,7 +93,7 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=800;%199 1000
+imageOptions.hiddensize1=500;%199 1000
 imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
@@ -173,7 +173,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[LOMO_F];%LOMO_FAUTOENCODEIMG_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2}];
 classifiersRun=[TWOCHANNEL2_F];
 sentenceClassifiersRun=[XQDA_F];
