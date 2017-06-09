@@ -93,14 +93,14 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=1000;%199 1000
+imageOptions.hiddensize1=800;%199 1000
 imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-imageOptions.retinexy=true;
-imageOptions.width=50;
-imageOptions.height=50;
+imageOptions.retinexy=false;
+imageOptions.width=40;
+imageOptions.height=40;
 
 
 %options.noImages=0;%if 0 then all run
@@ -134,9 +134,9 @@ sentenceOptions.preciseId=false;
 %% What to run?
 featureForce=true;
 sentenceForce=false;
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
-classifySentences=true;
+classifySentences=false;
 
 %% Feature Extractors and Classifiers
 %%Features
