@@ -112,7 +112,11 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                             
                             fprintf('Sentences %s already exists. Loading .mat \n', storedSentences);
                             load(storedSentences);
+                            'loaded stored sentences are size'
+                            size(sss)
                             sentences(i,:,:,:)=sss;
+                            'sentences are size'
+                            size(sentences)
                         else
                             tic
                             fprintf('Loading sentences %s \n', char(name));
