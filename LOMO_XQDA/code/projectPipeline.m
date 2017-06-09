@@ -93,14 +93,14 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=1000;%199 1000
+imageOptions.hiddensize1=800;%199 1000
 imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-imageOptions.retinexy=true;
-imageOptions.width=50;
-imageOptions.height=50;
+imageOptions.retinexy=false;
+imageOptions.width=40;
+imageOptions.height=40;
 
 
 %options.noImages=0;%if 0 then all run
@@ -135,8 +135,9 @@ sentenceOptions.preciseId=false;
 featureForce=true;
 sentenceForce=false;
 classifyImages=true;
-classifySentenceImages=true;
-classifySentences=true;
+classifySentenceImages=false;
+classifySentences=false;
+
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -164,9 +165,12 @@ sentenceFeatureRun={AUTOENCODE_F};
 
 %Used for sentence input type
 %mean, mode, matrix
+%Sentences compared need to be of same mode, norm, size, otherwise they
+%will have different vector lengths
 sentencesRun={
- 'mode0_norm3outvectors_phrase_win7_threshold150_size300.mat'
-}; %'all' leads to running every sentence vector
+  'mode1_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode1_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode1_norm3outvectors_phrase_win3_threshold150_size300.txt', 'mode1_norm3outvectors_phrase_win7_threshold200_size300.txt'
+};
+
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[LOMO_F];%LOMO_FAUTOENCODEIMG_F
@@ -566,7 +570,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    labels{(ft*(i-1))+i}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
+                    labels{(ft*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
@@ -646,7 +650,7 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
-                    labels{(st*(i-1))+i}=char(strrep(csvFileName,'.csv',''));
+                    labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
                         for iter=1:numFolds
 
