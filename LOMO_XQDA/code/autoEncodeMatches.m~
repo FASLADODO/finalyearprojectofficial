@@ -10,7 +10,7 @@
 %Produces the match matrix between images and sentences
 %Training images are indexed by their last index
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galClassLabel,probClassLabel, iter, options)
+function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFea,galClassLabel,probClassLabel, iter, options)
     testSize=options.testSize;
     
     %% Assert that gal and probe labels match (they should)
@@ -50,9 +50,9 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     for i=1:int16(numMatches/2)*(options.falsePositiveRatio+1)
         size(galFea1(i,:))
         size(probFea1(i,:))
-        trainingPairs(:,1,1,i)=galFea1(i,:);
+        trainingPairs(:,1,i)=galFea1(i,:);
         size(trainingPairs)
-        trainingPairs(:,2,1,i)=probFea1(i,:);
+        trainingPairs(:,2,i)=probFea1(i,:);
         size(trainingPairs)
     end
     
@@ -61,18 +61,9 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     hiddenSize1 = options.hiddensize1;%size of hidden layer in autoencoder, want smaller than sentences
     hiddenSize2= options.hiddensize2;%int16(0.5*size(sentences,4))
     
-                   imagesTrainIn2=cell(size(imagesTrain2,3),1);
-
-                imagesAllIn=cell(size(imagesProcess,3),1);
-
-                for i=1:size(imagesProcess,3)
-                   imagesAllIn{i}=squeeze(imagesProcess(:,:,i));
-                end
-
-                %trainingIn and testingIn based off subset
-                %options.sentenceTrainSplit
-                 for i=1:size(imagesTrain2,3)
-                   imagesTrainIn2{i}=squeeze(imagesTrain2(:,:,i));
+                imagesTrainIn=cell(size(trainingPairs,3),1);
+                 for i=1:size(trainingPairs,3)
+                   imagesTrainIn{i}=squeeze(trainingPairs(:,:,i));
                  end
 
 
@@ -84,7 +75,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                 'size imagesIdsTrain2'
                 size(imagesIdsTrain2)
                 fprintf('Running autoencoder1...\n');
-                autoenc1 = trainAutoencoder(imagesTrainIn2,hiddenSize1, ...
+                autoenc1 = trainAutoencoder(imagesTrainIn,hiddenSize1, ...
                 'MaxEpochs',options.maxepoch1, ...%200
                 'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
                 'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
@@ -92,7 +83,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                 'ScaleData', false); 
                 view(autoenc1)
                 fprintf('Running autoencoder2...\n');
-                features1=encode(autoenc1, imagesTrainIn2);
+                features1=encode(autoenc1, imagesTrainIn);
                 autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
                     'MaxEpochs',options.maxepoch2, ...%100
                     'L2WeightRegularization',0.002, ...
@@ -104,7 +95,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                 size(features2)
                 'size imagesIdsTrain2'
                 size(imagesIdsTrain2)
-                softnet = trainSoftmaxLayer(features2,imagesIdsTrain2.','MaxEpochs',options.maxepoch3);
+                softnet = trainSoftmaxLayer(features2,imagesIdsTrain.','MaxEpochs',options.maxepoch3);
                 deepnet = stack(autoenc1,autoenc2,softnet);
 
                 
