@@ -166,9 +166,9 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
- 'mode0_norm3outvectors_phrase_win3_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size300.txt','mode0_norm3outvectors_phrase_win10_threshold150_size300.txt'}; %'all' leads to running every sentence vector
+    'mode0_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win7_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size300.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size300.txt'
 };
->>>>>>> 0be2050d0387678f1321fb4c08fc3e679f35510d
+
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
