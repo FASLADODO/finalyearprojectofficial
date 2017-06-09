@@ -1,8 +1,8 @@
 function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sentenceGalFea, dimensionMatchMethod, classifierName)
-    switch classifierName
+   
         
-        %%Make image and sentence vectors dimensions match for XQDA 
-        case 'XQDA'
+       
+        
             numDims=min(size(sentenceProbFea,4),size(sentenceGalFea,4));
             if(size(sentenceProbFea,4)  ~= size(sentenceGalFea,4))
                 if(size(sentenceProbFea,4) > size(sentenceGalFea,4))
@@ -32,7 +32,7 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
 
                 end
             end
-        case 'twoChannel'
+        
             numDims=min(size(sentenceProbFea,4),size(sentenceGalFea,4));
             if(size(sentenceProbFea,4)  ~= size(sentenceGalFea,4))
                 if(size(sentenceProbFea,4) > size(sentenceGalFea,4))
@@ -62,6 +62,6 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
 
                 end
             end       
-    end
+    
 
 end

@@ -17,6 +17,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     'WHether the gal and prob, sentences and images are matching labels'
     isequal(galClassLabel,probClassLabel)
     
+    fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio')
     %% Create training positive matches
     numMatches=size(galFea,1);
     p = randperm(numMatches);
@@ -45,14 +46,14 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     size(galFea1) %should be no.examples, no.features
     size(probFea1)
     half=(size(probFea,2)/2);
+    fprintf('Assembling joint input for trainingNetwork2');
     for i=1:int16(numMatches/2)*(options.falsePositiveRatio+1)
+        size(galFea1(i,:))
+        size(probFea1(i,:))
         trainingPairs(:,1,1,i)=galFea1(i,:);
-        %trainingPairs(:,2,1,i)=galFea1(i,:);
-        size(trainingPairs(:,1,i));
-        size(galFea1(i,:));
-        size(probFea1(i,:));
-        %trainingPairs(:,1,2,i)=probFea1(i,:);
+        size(trainingPairs)
         trainingPairs(:,2,1,i)=probFea1(i,:);
+        size(trainingPairs)
     end
     t0 = tic;
         
@@ -66,21 +67,34 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     plotperform(tr)
     %}
     
+    %
     %% Create and train a better net
+    noFeatsIn=size(galFea,2);
+    
     layers = [ ...
-    imageInputLayer([size(galFea,2) 2 1]);
-    convolution2dLayer([2,1],25); %25 filters,  2 width height 1
-    reluLayer();
-    maxPooling2dLayer([2,1],'Stride',2); %2 width height 1, moves 2 along horizontally, 0 vertically
-    fullyConnectedLayer(1) %fully connected layer of size 1
-    regressionLayer];
+    imageInputLayer([size(galFea,2) 2 1 ], 'Name', 'input1');
+    convolution2dLayer([2,2], 40 , 'Name', 'convol1'); %25 filters,  2 width height 1
+    reluLayer('Name', 'relu1');
+    maxPooling2dLayer([2,1], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
+    convolution2dLayer([2,2], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
+    reluLayer('Name', 'relu2');
+    %maxPooling2dLayer([1,2], 'Name', 'maxpool2'); %2 width height 1, moves 2 along horizontally, 0 vertically
+    fullyConnectedLayer(5, 'Name', 'fulll1');
+    reluLayer('Name', 'relu3');
+    fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
+    softmaxLayer
+    classificationLayer()]; % The software determines the size of the output during training.
 
+    layers
     options = trainingOptions('sgdm','InitialLearnRate',0.001, ...
-        'MaxEpochs',5);
+        'MaxEpochs',5,'ExecutionEnvironment','auto');%can onle select ecxecutionenvironment in 2017
+    %lets move to autoencoder then see what have in computing labs
     size(trainingPairs)
     size(matchResults)
-    net = trainNetwork(trainingPairs,matchResults,layers,options)
-
+    fprintf('Training network twoChannel2\n');
+    net = trainNetwork(trainingPairs,categorical(matchResults),layers,options)
+    net.outputs
+    net.outputConnect=[0,0,0,0,0,0,0,0,1,0,0];
 
 
 
