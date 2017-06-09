@@ -1,7 +1,7 @@
 %Input rows are the sentences, cols are the variabls
 function sentenceVectors=extractPCA(sentences, numDims)
     idx=randperm(size(sentences,2));
-    newSize=10000;
+    newSize=min(10000,size(sentences,2));%Newsize necessary to reduce memory usage
     
     meanS=mean(sentences,2);%col vector
     sentenceVector=bsxfun(@minus,sentences,meanS);
@@ -13,7 +13,7 @@ function sentenceVectors=extractPCA(sentences, numDims)
     eigVecs(:,:)=eigVecs(:,i);
     eigVecs=eigVecs(:,1:numDims);
     
-    for s= 1: size(sentences,1);
+    for s= 1: size(sentences,1)
         for i=1: numDims
             temp= sentenceVector(s,idx(1:newSize))*eigVecs(:,i);
             sentenceVectors(s,i)= temp;

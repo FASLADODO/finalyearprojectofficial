@@ -292,16 +292,20 @@ function [sentences,sentenceIds]=autoEncodeSentences(sentences, sentenceIds,prec
                             resultIndexes(i)= find(origLabels(:,i));
                         end
 
-                        plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
+                        %plotconfusion(origLabels(resultIndexes,1:noPlots),testLabelPredictions(resultIndexes,1:noPlots));
                         %N by M, number of classes, number of examples
                     else
                         fprintf('Due to the size of training data chosen, there are no repeats to use for intermitent confusion plot testing\n');
-                end
+
+                    end
+
                     %}
                     fprintf(' Training autoencoders with examples...\n');
                     % Perform fine tuning
                     deepnet = train(deepnet,xTrain,sentencesIdsTrain2.','useParallel','yes','showResources','yes');
+
                    %{
+
                     if(size(xTest,2)~=0)
                         %Confusion matrix after fine tuning
                         fprintf('Confusion matrix after fine tuning\n');

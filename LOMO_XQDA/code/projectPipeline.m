@@ -93,20 +93,20 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=1000;%199 1000
+imageOptions.hiddensize1=500;%199 1000
 imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-imageOptions.retinexy=true;
-imageOptions.width=50;
-imageOptions.height=50;
+imageOptions.retinexy=false;
+imageOptions.width=40;
+imageOptions.height=40;
 
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca
+options.dimensionMatchMethod='first'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
 options.testSize=1000; %used for twoChannel, as matches go to 16,000,000 otherwise
 
 sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
@@ -138,6 +138,7 @@ classifyImages=false;
 classifySentenceImages=false;
 classifySentences=true;
 
+
 %% Feature Extractors and Classifiers
 %%Features
 LOMO_F=1;
@@ -148,6 +149,7 @@ AUTOENCODEIMG2_F=5;
 %%Classifiers
 XQDA_F=1;
 TWOCHANNEL_F=2;
+TWOCHANNEL2_F=3;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -166,17 +168,18 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode2_norm3outvectors_phrase_win5_threshold200_size400.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size400.txt', 'mode2_norm3outvectors_phrase_win7_threshold150_size400.txt', 'mode0_norm3outvectors_phrase_win7_threshold200_size400.txt', 'mode1_norm3outvectors_phrase_win3_threshold0_size400.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size400.txt', 'mode1_norm3outvectors_phrase_win5_threshold0_size400.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size400.txt', 'mode2_norm3outvectors_phrase_win10_threshold0_size400.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size400.txt', 'mode1_norm3outvectors_phrase_win7_threshold200_size400.txt', 'mode2_norm3outvectors_phrase_win3_threshold150_size400.txt', 'mode1_norm3outvectors_phrase_win10_threshold200_size400.txt', 'mode1_norm3outvectors_phrase_win5_threshold150_size400.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size400.txt', 'mode1_norm3outvectors_phrase_win7_threshold150_size400.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size400.txt', 'mode1_norm3outvectors_phrase_win10_threshold150_size400.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size400.txt', 'mode2_norm3outvectors_phrase_win3_threshold0_size400.txt', 'mode1_norm3outvectors_phrase_win3_threshold200_size400.txt', 'mode2_norm3outvectors_phrase_win5_threshold0_size400.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size400.txt', 'mode1_norm3outvectors_phrase_win3_threshold150_size400.txt', 'mode2_norm3outvectors_phrase_win10_threshold150_size400.txt', 'mode2_norm3outvectors_phrase_win10_threshold200_size400.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size400.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size400.txt', 'mode2_norm3outvectors_phrase_win7_threshold200_size400.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size400.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size400.txt', 'mode2_norm3outvectors_phrase_win3_threshold200_size400.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size400.txt', 'mode2_norm3outvectors_phrase_win5_threshold150_size400.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size400.txt', 'mode1_norm3outvectors_phrase_win10_threshold0_size400.txt'
+'mode0_norm3outvectors_phrase_win7_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size200.txt'
+
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel}];
-classifiersRun=[TWOCHANNEL_F];
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2}];
+classifiersRun=[TWOCHANNEL2_F];
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
-classifierName={'XQDA','twoChannel'};
+classifierName={'XQDA','twoChannel','twoChannel2'};
 %dimensionMatchMethod='pca'; %pca, first 
 
 features=[];
@@ -364,7 +367,7 @@ for i=1:length(featureExtractorsRun)
         else
             descriptors=features;
         end
-        descriptors(1,:)
+        
         %% Order image features
         [personIds,idx] = sort(personIds);
         descriptors=descriptors(idx,:);  
