@@ -1,4 +1,4 @@
-function [personIds,images]=autoEncodeImages2d(images, personIds, options)
+function [personIds2,images]=autoEncodeImages2d(images, personIds, options)
 
     %images(:,:,:,i)
     %% Encoder parameters
@@ -9,6 +9,7 @@ function [personIds,images]=autoEncodeImages2d(images, personIds, options)
         for i= 1:size(images,4)
            newImages(:,:,i)=squeeze(mean(rgb2gray(images(:,:,:,i)),3)); 
         end
+        %does rgb2gray reduce already becos if so dis bad
         images=newImages;
         'the size of images post gray scaling'
         size(images)
@@ -64,6 +65,7 @@ function [personIds,images]=autoEncodeImages2d(images, personIds, options)
                             
                 %% Order sentences
                 [imagesIdsProcess,idx]=sort(personIds);
+                personIds2=imagesIdsProcess;
                 imagesProcess=squeeze(images(:,:,idx));%all the files, sentences,words, word vectors
                 fprintf('\nthe size of imagesprocess is (%d, %d)\n', size(imagesProcess,1),size(imagesProcess,2));
                 
@@ -227,7 +229,9 @@ function [personIds,images]=autoEncodeImages2d(images, personIds, options)
                     size(imagesIdsTrain2.')
                     deepnet = train(deepnet,xTrain,imagesIdsTrain2.');
                     deepnet.outputConnect=[0, 1, 0];
+
                 personIds=imagesIdsProcess;
+
                 features2=deepnet(xAll);
 
                 size(features2)

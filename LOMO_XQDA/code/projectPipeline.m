@@ -90,15 +90,17 @@ READ_ALL=3;
 READ_DISTORT=4;
 imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_DISTORT;
-imageOptions.imageTrainSplit=2000;
+imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=1000;%199 2000
-imageOptions.hiddensize2=500;%100 500
-imageOptions.maxepoch1=20;
-imageOptions.maxepoch2=10;
+imageOptions.hiddensize1=1000;%199 1000
+imageOptions.hiddensize2=200;%100 500
+imageOptions.maxepoch1=100;
+imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-imageOptions.retinexy=false;
+imageOptions.retinexy=true;
+imageOptions.width=50;
+imageOptions.height=50;
 
 
 %options.noImages=0;%if 0 then all run
@@ -149,7 +151,7 @@ TWOCHANNEL_F=2;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
-featureImgDimensions=[128,48; 227,227; 224,224; 128, 48; 224, 224]; %100 40
+featureImgDimensions=[128,48; 227,227; 224,224; 128, 48; 50, 50]; %100 40
 featureName={'LOMO', 'ALEX', 'VGG', 'autoEncode', 'autoEncode2d'};
 imgType={'Std','Ctrl','All','Distort'};
 
@@ -242,8 +244,13 @@ if(classifyImages | classifySentenceImages)
             fprintf('Extracting current feature %s, place in data directory \n',currFeatureName)
 
             %Load images according to size of feature extraction process
-            imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
-            imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
+            if(featureExtractorsRun(i)~=AUTOENCODEIMG_F && featureExtractorsRun(i)~=AUTOENCODEIMG2_F)
+                imgWidth=featureImgDimensions(featureExtractorsRun(i),2);
+                imgHeight=featureImgDimensions(featureExtractorsRun(i),1);
+            else
+                imgWidth=imageOptions.width;
+                imgHeight=imageOptions.height;
+            end
             %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
             images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageOptions.imResizeMethod, imageOptions);
 
@@ -347,12 +354,14 @@ for i=1:length(featureExtractorsRun)
         %% Load image feature variables from file  
         fprintf('Currently loading features %s into matrices \n',currFeatureName);
         load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
+        size(features,1)
+        length(imgList)
         if(size(features,1) ~= length(imgList))
             descriptors=features.';
         else
             descriptors=features;
         end
-        
+        descriptors(1,:)
         %% Order image features
         [personIds,idx] = sort(personIds);
         descriptors=descriptors(idx,:);  
