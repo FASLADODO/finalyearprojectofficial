@@ -1,0 +1,1417 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out
+                                                          % if you need a4paper
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4
+                                                          % paper
+
+\IEEEoverridecommandlockouts                              % This command is only
+                                                          % needed if you want to
+                                                          % use the \thanks command
+\overrideIEEEmargins
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+
+
+% The following packages can be found on http:\\www.ctan.org
+\usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+%\usepackage{amsmath} % assumes amsmath package installed
+%\usepackage{amssymb}  % assumes amsmath package installed
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphicx}
+\graphicspath{ {Images/} }
+%\usepackage{float}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{todonotes}
+\usepackage{mathtools}
+
+
+\usepackage{multicol}
+\usepackage[nolist,nohyperlinks]{acronym}
+\usepackage[style=ieee,urldate=iso8601,date=iso8601]{biblatex}
+%\usepackage{array}
+\makeatletter
+\newcommand{\thickhline}{%
+    \noalign {\ifnum 0=`}\fi \hrule height 1.5pt
+    \futurelet \reserved@a \@xhline
+}
+\makeatother
+
+\addbibresource{bibliography.bib}
+
+
+\begin{titlepage}
+                % \newgeometry{top=25mm,bottom=25mm,left=38mm,right=32mm}
+                \setlength{\parindent}{0pt}
+                \setlength{\parskip}{0pt}
+                % \fontfamily{phv}\selectfont
+
+                {
+                                \Large
+                                \raggedright
+                                Imperial College London\\[17pt]
+                                Department of Electrical and Electronic Engineering\\[17pt]
+                                Final Year Project Report 2017\\[17pt]
+ 
+                }
+
+                \rule{\columnwidth}{3pt}
+                \vfill
+                \centering
+                  \includegraphics[width=0.7\columnwidth,height=60mm,keepaspectratio]{background/iCub_model.jpg}
+                \vfill
+                \setlength{\tabcolsep}{0pt}
+
+                \begin{tabular}{p{40mm}p{\dimexpr\columnwidth-40mm}}
+                                Project Title: & \textbf{Person identification by matching natural text description with images} \\[12pt]
+                                Student: & \textbf{Becks Simpson} \\[12pt]
+                                CID: & \textbf{00823926} \\[12pt]
+                                Course: & \textbf{EIE4} \\[12pt]
+                                Project Supervisor: & \textbf{Mikolajczyk,K.M. } \\[12pt]
+                                Second Marker: & \textbf{Gyorgy,A.} \\
+                \end{tabular}
+\end{titlepage}
+
+
+\title{\LARGE \bf
+Person Identification By Matching Text Description With Images 
+}
+
+%\author{ \parbox{3 in}{\centering Huibert Kwakernaak*
+%         \thanks{*Use the $\backslash$thanks command to put information here}\\
+%         Faculty of Electrical Engineering, Mathematics and Computer Science\\
+%         University of Twente\\
+%         7500 AE Enschede, The Netherlands\\
+%         {\tt\small h.kwakernaak@autsubmit.com}}
+%         \hspace*{ 0.5 in}
+%         \parbox{3 in}{ \centering Pradeep Misra**
+%         \thanks{**The footnote marks may be inserted manually}\\
+%        Department of Electrical Engineering \\
+%         Wright State University\\
+%         Dayton, OH 45435, USA\\
+%         {\tt\small pmisra@cs.wright.edu}}
+%}
+
+\author{Becks Simpson CID: 00823926% <-this % stops a space
+}
+
+
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+This project concerns the research and design of a system to match natural language text descriptions with images of pedestrians. The main focus of this project is projecting image and description representations to a common subspace where their similarity can be measured and matches predicted. Descriptions have been captured through a web interface where users followed a given script, and as such all data is labelled and the majority of learning is supervised. By experimenting with different neural network structures, vector projection methods and natural language to vector conversion parameters different degrees of successful matching have been acheived. Word2Vec, a program that learns a distributed representation of words, was used to convert the natural language descriptions to their vector representations. Two-channel, SSP Psuedo-Siamese, and multiple-variant regression, deep CNN networks have been used to measure the similarity of image and description representations.  This project has security related applications using soft-biometrics to identify a suspect from footage using witness statements, a process that is currently very time intensive and with a low success rate. This person re-identification is of growing importance in an ever increasingly watched and recorded world, where CCTV has been widely implemented in many countries. 
+
+
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+The Internet is increasingly dominated by visual media, people have growing access to smart phones and other image capturing devices, to take photos, upload and store online. In 2014 \cite{meeker2014internet} Mary Meeker's annual Internet Trends report showed that 1.8 billion digital images are uploaded and shared every day. Yet while the amount of data stored exponentially grows, the most human friendly way to search for and sort images still relies on textual queries entered into a Search Browser. \cite{kumar2008facetracer} Current technologies use annotation based searching of images, matching textual queries to relevant image results that have been manually tagged or associated with the document they are embedded in. However this poses many problems; tagging is time consuming, so most images are untagged leaving them unsearchable. Also images are often used purely contextually within documents so are of not direct relevance to the documents contents, leading to search results that are inaccurate. Ultimately \cite{kovashka2012whittlesearch} due to the huge range of applications where a user can attempt to use a system to find their envisioned content of interest, it is unrealistic that keywords alone are sufficient to apply to any possible user query. As such being able to search through images using visual machine learning automatically without requiring the uploader to tag or categorize their images is increasingly desirable.
+
+One application of particular importance, and is the subject of this paper, is pedestrian re-identification, a context of this being forensic science, when one needs to identify a person within surveillance footage matching a witness description given. Currently \cite{cctv_wired}the British Security Industry Association (BSIA) estimates there are between 4-5.9 million cameras in Britain. However manually searching through footage to identify suspects is time-consuming and often an inefficient use of resources. Developing algorithms that could accomplish this feat with a high degree of accuracy and robustness to different contextual factors would be most beneficial. This is of growing importance with the rise of the Internet of Things (IOT), where in this context otherwise simple camera's footage can be fed to a smarter higher level processing system. Eventually all footage collected by CCTV cameras could be efficiently and automatically searched for people of interest at a fraction of the time and money of previous manual annotation.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.5\textwidth]{eyewitness}
+\caption{Situational application of Person Re-identification neural network}
+\label{fig:eyewitness}
+\end{figure}
+
+This project is a form of Content Based Image Retrieval (CBIR) where searchable content is limited to images with pedestrians. \cite{deepimageretrieval} The main challenge here is bridging the semantic gap between low level image features (pixel values) that machines can operate on and high level abstract features that are human friendly (in our case, pedestrian description). \cite{flickr8k}A prerequesite for sentence based search is the ability to associate images with natural language descriptions of their contents. Machine learning through deep neural networks has been proposed as a long term solution to bridge this gap, through the learning of image feature representations and similarity measures. Our CBIR system aims to retrieve images based on an entered textual query e.g. "old man with glasses", by automatically analyzing images from the pedestrian data set and returning the closest match.
+
+Opinion is divided on CBIR techniques effectiveness for handling real-life queries in large, varied data sets and its use as a solution to the problems of traditional image indexing. However tasks within a narrower field have been attempted to some success, for instance \cite{kumar2008facetracer} developed an image search engine capable of finding matching faces from over 3.1 million faces to simple text queries. Now this process can be applied to a person re-identification context.
+
+\section{Project Specification}
+This project aims to develop an improved neural network by studying and adapting existing network architectures such as convolutional neural networks (CNNs) with the purpose of performing CBIR in the context of person re-identification. These networks will be used to learn an association function to calculate the pairwise similarity between the image and probe natural language input in order to identify from a gallery of images, the person that has been described. This technique has been previously applied to object recognition but with new access to improved data sets of larger size and more thorough annotation, it is becoming possible to see this method's full potential in the person re-identification context for the first time.
+
+This project seeked to answer questions regarding:
+\begin{itemize}
+\item Are deep learning methods effective for learning good feature representations from images and calculating the similarity between them and natural language annotations in the context of pedestrian re-identification?
+\item How do these methods improve, if any, on results achieved by traditional methods using hand-crafted features and metric learning?
+\end{itemize}
+
+
+%This project will be carried out using the RAP data set, a large varied collection of more than 40,000 pedestrian images, each manually labeled with 72 attributes of interest e.g. gender, age. 
+This project was carried out using a subset the CUHK03 data set, a collection of 
+13,164 images of 1,360 pedestrians identities from pairs of viewpoints. Natural language descriptions of these images were collected via a website provided by Dr Krystian Mikolajczyk. In total .. descriptions were provided; it was important that this was large enough to sufficiently train the networks to learn the image-description feature associations.  
+
+As shown in diagram \ref{fig:system_diagram} the neural network can be considered a black box. Through supervised learning the neural network is trained using pairwise combinations of the CUHK03 data set images and user descriptions (natural language annotations). Once trained, a given natural language input can be sequentially compared to all potential testing images, producing an array of similarity measures that can be used to order an image gallery descending in similarity. Evaluation of the networks success will be given via a Cumulative Matching Characteristic (CMC) curve, illustrating the likelihood of the correct match being in the top ranked images for each theoretical rank r.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{system}
+\caption{System Diagram for overall function}
+\label{fig:system_diagram}
+\end{figure}
+
+\cite{hodosh2013framing} Our person re-identification system, is essentially an image retrieval process, which will be determining  which descriptions and pedestrian images match the best. As such the neural network can be viewed as determining an affinity function f(i,d) which measures the associations between the images (i) and descriptions (d). The goal being to find the image i in gallery, that maximises f(i,d) for a description d. This works under the assumption that a mapping space common to both the natural language description and image can be found where a distance metric can be learned to solve the association problem. Our system will differ from other image retrieval systems in that most CCTV cameras are of low resolution, here finer biometric cues are not available so re-identification based off whole body description is required.
+
+\section{Background Research}
+\subsection{Challenges of Person Re-Identification}
+
+One of the main challenges of person re-identification is that people's appearances can vary greatly even when taken from the same camera position. This poses a great challenge to computer vision centered classification. The attributes visible on a person can change depending on whether any occlusions are present or the viewpoint is changed. This can be seen in figure \ref{fig:variations}: in (a) due to a person occluded the picture it is no longer possible to discern the person's trouser colour and height, in (b) due to a change of viewpoint to the front, the person's bag is no longer visible to the camera. These discrepancies would reduce the similarity of the same person's images, reducing the likelihood the images would be identified as the same person by the system. While humans are able to extrapolate from experience and small clues e.g. shoulder straps are present therefore the person is wearing a bag, this is very challenging for a computer system. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{variations}
+\caption{Example Intra-class Variations}
+\label{fig:variations}
+\end{figure}
+
+Furthermore the environment and contextual conditions can also vary greatly, leading to great appearance ambiguity and diversity even for the same attribute instance. An example of this would be a dress that in different lighting conditions could be interpreted to be white \& gold or blue \& black.
+
+There is also the issue of large intra-class variation within each of the attribute classes. For example there are many kinds of bags, different shape, colour and size but all need to be classified as bags. Regarding the natural language descriptions, there are many ways to describe the same person e.g. "A young man is jumping" vs "An 18-20 year old is messing about". How the classes are separated needs to make the intra-class attributes as concentrated as possible while maximising the margin between all other attribute classes in order to produce reliable classification.
+
+Images collected by CCTV systems are often of low resolution, as such the feature extraction process needs to be especially robust to the high levels of noise that this can entail.
+
+To accommodate all these variations and for the neural network to be trained to be robust against these, it is critical that the training data set comprises of a wide range of poses, illumination, occlusions, imaging conditions, viewpoints and from a large range of cameras. One of the main concern when tuning classification algorithms is to balance between including all variations of an attribute type, instance appearance, and creating false positives.
+
+
+\subsection{CUHK03 Data Set vs Other Data Sets}
+\cite{personreiddatasets}The CUHK03 dataset released in 2014 is a collection of 13,164 images of 1,360 pedestrians identities, gathered for the purpose of facilitating improved person re-identification deep learning research \cite{li2014deepreid}\cite{lomoxqda}. The images are a variety of manually cropped and auto-detected (using deformable part models) photos of varying sizes, collected by 5 pairs of cameras over 6 months. Therefore there are two disjoint camera viewpoints per person identity as shown in figure \ref{fig:cuhk03example}, and there are no occlusions present in the dataset which should improve the systems matching accuracy, although making it less robust for other datasets. By incorporating auto-detected images this dataset allows the system to be evaluated in close to practical settings, with more examples of misalignment, occlusions and missing boy parts.
+
+Pre-existing data sets such as VIPeR (Viewpoint Invariant Pedestrian Recognition), have been used with varying degrees of success to re-identify pedestrians from image input via SVMs, attribute matching etc. Yet they have been limited for training neural networks, due to heterogeneous sampling with minimal different cameras used. They also have lower quantity of samples, VIPER for example contains 10x fewer images and sparser annotations.  \cite{youtube_enhanced} This makes it difficult to avoid over-fitting on deep neural networks and greatly restricts the size they can reach. Essentially larger, more detailed data sets were required to better utilise machine learning.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{pairs}
+\caption{Example of corresponding disjoint person views in the CUHK03 dataset.}
+\label{fig:cuhk03example}
+\end{figure}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+\begin{table}[ht]
+\caption{Comparison of CUHK03 to different pedestrian attribute datasets}
+\label{rap_comparison}
+\begin{center}
+
+\begin{tabular}{M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}}
+\toprule
+\textbf{Datasets} & \textbf{Cams} & \textbf{Samples} & \textbf{Binary Attributes}
+\\ \midrule
+VIPeR & 2 & 1264 & 21
+\\ \midrule
+PRID & 2 & 400 & 21
+\\ \midrule
+GRID & 8 & 500 & 21
+\\ \midrule
+APiS & - & 3661 & 11
+\\ \midrule
+PETA & - & 19,000 & 61
+\\ \midrule
+\textbf{CUHK03} & 10 & 13,164 & -
+\\ \midrule
+RAP & 26 & 41,585 & 69
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Until recently the CUHK03 was the largest publicly available person re-identification dataset. Since as shown in figure \ref{rap_comparison} the RAP data set has been introduced . A limiting factor in its potential use during this project was the inability to collect sufficient image annotations within the timescale. Though the potential for its use and the advantages this could offer are discussed later in the report.
+
+\subsection{Machine Learning}
+\cite{standford}Machine learning is a type of artificial intelligence by which algorithms are developed that allow computers to learn, evolve behaviours without being explicitly programmed using raw data. It can be split into supervised and unsupervised learning.
+
+\cite{QUORA_SUPERVISED}Supervised learning is based on a labelled training set, where the desired targets are known.  After sufficient training, the system should be able to produce an accurate output for a novel input. This project will be using this method as the natural language descriptions and pedestrian images matches are already known. Therefore the system will tune itself to minimise its mis-identification rate, and so matching images and descriptions have the highest score/similarity.For n description inputs $X_1,X_2...X_N $ and respective image targets $Y_1,Y_2..Y_N$ training examples are a set of matchwise pairs: $( X_1,Y_1 ),( X_2,Y_2 ) ... ( X_N,Y_N ) $. The system will output the probability that for a given image description $X_a$ it corresponds to an image $Y_b$. 
+
+Unsupervised learning refers to problems where the goal is to determine how to cluster the data, by finding structure and relationships between different inputs. Essentially learning a function f that characterizes where density accumulates e.g. k-means, though interpreting the meaning behind the clustering is done manually. In the case of unsupervised distance metric learning, a low dimensional space is estimated for which the objective is to maximize the preservation of geometric relationships (e.g. distances) between the data. 
+
+
+\subsection{Feature Extraction and Classification}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{Traditional}
+\caption{Traditional methodology of feature extraction and metric learning based person re-identification algorithms.}
+\label{fig:traditional}
+\end{figure}
+The traditional method to develop purely image based person re-identification systems involves two stages (1) extracting and generating local invariant features used to identify and discriminate between different people and (2) learning a distance metric so that features from the same person are the most similar, and provide a match.
+
+To compare whether two images are of the same person, one could simply use a distance metric to directly calculate the similarity between two raw images. An example of this would be the difference between the average pixel value in an image. However low level features such as pixel values and gradients experience great levels of variation due to changes in lighting, position of a person, viewpoint etc and would not give useful comparative results. Therefore the traditional technique to accomplish person re-identification, shown in figure \ref{fig:traditional}, is where handcrafted features are extracted from an input image to form a middle level description, a feature space. This serves as an intermediary between low level features such as pixel values and gradients, and high level features such as the persons identity as shown in figure \ref{fig:heirarchy}. These features are chosen so that they have consistency for the same person across different contexts such as different viewpoints, but are still discriminative across multiple people images. 
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.3\textwidth]{feature_heirarchy}
+\caption{Heirarchy of Features.}
+\label{fig:heirarchy}
+\end{figure}
+
+Once the feature vectors have been extracted, the person re-identification problem can be simplified to that of a multi-class classification where every class is a persons identity. These middle level descriptors can be compared using either fixed or learned distance metrics, so that similarities are generated for each image pair between the input image and comparison gallery. Once ordered, the correct identities of the input image person can be compared to its rank (position) in the sorted gallery list of most similar images. This is used to generate a CMC curve, to compare between different algorithms using a variety of different distance metrics and features operating on the same data set.
+
+If the dimension of the feature vectors is too high, to improve computation these dimensions can be reduced. Principle Component Analysis (PCA) chooses dimensions with the highest variance across the data, to provide the best representation of the image. While Linear Discriminant Analysis (LDA) is a supervised method, where the dimensions are chosen so that they optimally separate the data of different classes. Essentially this improves the ability to discriminate between images of people with different identities. The difference between the two methods is shown in \ref{fig:pcavlda}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{pcavLDA}
+\caption{PCA vs LDA.}
+\label{fig:pcavlda}
+\end{figure}
+
+\cite{youtube_enhanced} To improve this process there are two areas of focus: the features extracted and the distance metrics used. With existing methods seeking to generate either cross-view invariant features \cite{lomoxqda} or cross-view robust metrics \cite{lomoxqda} Resilience to changes in viewpoints is one of the most prominent challenges in person re-identification, but few have focused on resilience to occlusions. This is due to a lack of labelling of occlusions in existing person re-identification data sets.
+
+\cite{youtube_enhanced} To overcome cross-view appearance variations, robust middle level features are developed, several different features can be combined to improve performance. Images can be represented via colour or texture with RGB, HSV colorspaces that measure an images colour information and LBP histogram and Gabor filter that describe the texture of images.These are generic to image representation but features specific to person re-identification have been developed that have more success. Though designing distinctive features that are robust to large intra-class variations in illumination, viewpoint, pose, occlusion remains a problem.
+
+Classification can use distance metrics that are fixed or learned to calculate the distance between two samples. \cite{deepimageretrieval} Fixed similarity/distance functions such as the L1 \& L2 norm, are not optimal for CIBR tasks due to the semantic gap. Hence various similarity measures have been developed using machine learning techniques.\cite{lomoxqda} 
+
+\cite{jointlearning}A distance metric can be learned on the feature descriptors derived for the training images, by maximising the probability that the smallest distance will give the correct match between the image labels, in a person re-identification context: the persons identity. When learning a distance metric the aim is to maximise inter-class variation while minimising intra-class variation. Thus creating large margins to separate different classes, this improves the ability of the metric to discriminate between different peoples identities, and make the identification more robust.
+%%POTENTREMOVE
+Distance metric learning (DML) works with two types of data: pairwise constraints where must-link and cannot-link constraints are given and triplet constraints that contain dis/similar pairs. This would be relatively easy to implement with false/positive matches of descriptions and images in our system. Some studies directly use class labels for DML e.g. Large Margin Nearest Neighbour algorithm. Metrics can be learned in a global supervised approach where they must satisfy all constraints simultaneously or a local supervised approach satisfying only local constraints with neighbouring information. Most DML studies use batch learning, where they assume all the training data has been provided before the learning task begins.
+
+Classification is calculated based on the distances calculated between the input and gallery of potential images. In the case of person re-identification the classes we are assigning are all unique as they are the person's identity. The distances/similarities generated are used to rank the testing image gallery, where the probe image and the top ranked gallery image are calculated as the most likely to be the same person, with the aim being to have the correct image (with the matching person identity) as high up the list as possible.
+
+\subsection{Neural Networks}
+
+\cite{deeplearning4j}Computers fail many perception tasks that humans can easily complete, this is because humans don't formally know how to accomplish these tasks but rather these tasks require implicit knowledge. Humans learn simple concepts, then compose them to represent more abstract ones, breaking solutions into multiple levels of abstraction and processing. Only 1\% of neurons in a brain are active simultaneously, this is efficient.
+To mimic the brains capabilities, neural networks are developed that are trained with data examples to replicate this operational knowledge and have multiple layers to process information through multiple stages of representations and transformations. By applying neurons they are trying to find characteristic patterns in the data to classify the input, if the data is random nothing can be modelled. Each label has some characteristic data distribution, and the neural network is trying to model to find those patterns.
+
+Neural networks such as Artificial Neural Networks (ANNs) or Multi-Layer Perceptrons (MLP) are based on neurons-unit cells. Figure \ref{fig:multi_layer_neural_network} shows a N layer neural network,with inputs, hidden layers of K neurons each, and one output layer, where N=3, K=4. Inputs do not constitute a layer as they are simply raw data, while the output layers represent the class scores calculated by the network. In the case of pedestrian re-identification this would be a pair of inputs similarity, the likelihood of them describing the same person.
+
+\cite{vgg_practical}Feed forward networks are some of the simplest examples of neural networks and can be effectively represented as $f(x)=f_L(...f_2(f_1(x;w_1);w_2)...);w_L)$, a composition of functions with input x and weight vectors $w_1..w_L$, with all intermediate stages holding feature maps. In the case of CNNs these functions are convulational in nature, applying to x a local and translation invariant operator.
+In this feed forward example, there are weights applied to the contribution of each previous layer neuron and each neuron has a bias when calculating its value, therefore there are 32 weights, 9 biases and 41 tuneable parameters. The full forward pass is a combination of three matrix multiplications and applications of the activation function. The layer matrix operation $$f(W_c x+b_c) $$
+A single neuron can be represented as $$f(\sum_{i=1} w_i x_i + b ) = w_cTx + b_c$$
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{multi_layer_neural_network}
+\caption{Multi-Layer Neural Network.}
+\label{fig:multi_layer_neural_network}
+\end{figure}
+\cite{neuralnetworksblackboard}Support vector machines (SVMs) are used in classification problems, and are simple examples of NNs with a depth of two and a hidden layer constituting the derived feature space, then a linear operation is performed to calculate the output. Depth 2 neural networks are often sufficient to represent a function with a given target accuracy, but the price (number of nodes, computations, params) might grow exponentially large. Deep architecture is a form of factorization, where functions such as in our case calculating the similarity of a description and pedestrian image input , can be represented efficiently. As the features move forward in the network they become more abstract and powerful, bridging the semantic gap, and built off the lower layers. \cite{deepimageretrieval}These deep neural networks fall under deep learning: a family of algorithms that model high level abstractions in data by employing deep architectures composed of multiple non-linear transformations. They allow a system to learn complex functions without relying hand-crafted features using domain knowledge and provide a new way to approach the pedestrian re-identification problem.
+
+
+\subsection{CNNs}
+In the past training deep supervised feedforward neural networks tended to yield worse results that shallower ones, but recently deep convolutional neural networks (CNNs) have been used for image classification tasks to some success. \cite{krizhevsky2012imagenet} trained a CNN to classify 1.3 million images, it had 60 million parameters, 500,000 neurons, and achieved a top-5 test error rate of 15.3\% over 1000 classes.
+
+\cite{deepimageretrieval} CNN models consist of several convolutional and pooling layers. Weight sharing in the convolutional layers and pooling layers that sub-sample the output of the previous layers to reduce the data rate, can give CNN some invariance properties e.g. translation invariance.
+
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.3\textwidth]{neuralnetworkbad}
+\caption{Single layer Neural Network.}
+\label{fig:cnn_bad}
+\end{figure}
+
+Quite often variables are unrelated to each other so directly mapping all of them to one neuron is not very useful as shown in figure \ref{fig:cnn_bad}. It is better to build a layer of neurons that each take a subset of different inputs as shown in figure \ref{fig:cnn_1D}. To reduce the number of parameters while maintaining good expressive power the weights across the layer are shared, this allows the network to have many layers of neurons to operate on the data.
+
+As a neuron is the operational sum of the products of its weights multiplied by the previous layers outputs, when the kernel size is less than the outputs from the previous layer, the kernel becomes a convolutional operator. This kernel is shifted across the layer, they can be of any size (flexible) in this case 2, which controls how many times it can shift across and therefore the number of neurons for next layer. The bottom layer kernel size 2 in figure \ref{fig:cnn_1D} can be shifted 7 times. 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{convolutionalneuralnetwork}
+\caption{Convolutional Neural Network.}
+\label{fig:cnn_1D}
+\end{figure}
+In the case that the input to the network is a 2x2 matrix, each kernel has set 2x2 weights, applying it by shifting through the whole input area. In the case of RGB, 3 2-dimensional arrays, each neuron would take 2x2x3, so 12 weights would be needed. 
+
+As shown in figure \ref{fig:cnnfilters} each layer in a neural network can have multiple filters, in this case each layer has a bank of two filters. These two kernels can have different sizes, weights and each convolves on the input.
+In the case that the input array is of size H x W x K(depth). The filter bank is an array of size: $ F= H' \times  W'\times  K \times  Q $ and the output size $y = (H - H' + 1) \times (W - W' + 1) \times Q $ where there are Q filters of size $H' \times  W' \times  K $.
+
+So if there are multiple filters on the same layer, the number of parameters can grow quickly depending on how many inputs and outputs you want, the dimensionality of input/output and the filter size.
+The output layer $y = (H - H' + 1) \times  (W - W' + 1) $ will always be smaller than the input layer,  as you cant shift kernels beyond the input.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{cnnfilters}
+\caption{Multi layer Convolutional Neural Network with Multiple Filters.}
+\label{fig:cnnfilters}
+\end{figure}
+
+ The performance of a neural network is trained by adjusting its parameters (weights of neurons, values within kernels) and hyperparameters (number of filters, size of filters). These values are initially unknown, but can be trained by feeding data through the network. In the case of images it learns the important basic orientations to detect. With each layer the structures of the data become more complicated, with the first layer learning basic primitives, like gradients of note, edges, corners and the final layer outputting higher level abstracts such as a persons identity. Depending on what problem the neural network is trying to solve it uses different kernels, loss functions and activation functions. 
+
+There are many different types of layers: input, output, filter, pooling, activation etc. These can be stacked, all operations can be considered as layers.
+%with each layer in a CNN having filters and an activation function that operates on the previous layers output. ????????
+\cite{vgg_practical}The outputs of each layer can also be downsampled, lowering the intermediate feature resolution, this is done commonly using 'stride' which sets the gap between the applied convolutional filters. Filters when applied at layers, presuming a stride equal to the filter size, reduces the intermediate feature representation proportionally to the filter size. Stride can be used in cases where larger, overall trends throughout the input want to be captured, this is however unlikely to be the case with out image representations.
+
+\subsection{Activation Layers}
+Activation layers perform gating with activation functions that introduce non-linearities to the network, this is because while linear combinations are easy to model, non linear models are more powerful. There are multiple different function options as shown in figure \ref{activation}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{activation}
+\caption{Sigmoid, Tanh, ReLU and Leaky ReLU respectively left to right}
+\label{activation}
+\end{figure}
+
+Sigmoid softmax is an activation function that models logistic regression, giving an output probability vector. Sigmoids are not very good in a neural network, as they are not centred at 0, so gradients are all positive or are all negative, so optimisation tends to oscillate and saturates quickly, so gradient is nearly 0, and therefore no learning is occuring
+%sigmoid pic here DO DIAGRAM OF ALL ACTIVATION GRAPHS WITH EQUATION IN ONE PIC
+Tanh gives a real valued number and is essentially a scaled sigmoid centred at 0, [-1,1], giving a symmetric gradient, but it still saturates.
+%tanh pic
+The most commonly used activation function is the Rectified Linear Unit (ReLU), it is 0 on its negative side,and positive on its positive side. This creates a simple, efficient, ramp function f(x)=max(0,x) which adds non-linearity, and is straight forward to implement. However on the LHS where there is 0 gradient no learning is occurring, only letting positive data through which could negatively impact the network if too many examples are negative.
+
+Leaky ReLU solves this by having a shallow gradient on the negative side to enable learning while reducing noise, f(x)=max(x,ax). This "a" parameter can be different for every neuron, giving another parameter to train.
+
+Maxout fully parametises the input, but this doubles the number of parameters for every neuron and is not convenient for large networks like this project will likely use.
+
+\subsection{Pooling Layers}
+Pooling layers are used in large data sets, where a network doesn't need to use every response in a local neighbourhood, sometimes it is sufficient to take one output from two neighbouring neurons, as often they overlap in input data values and therefore their activated values are similar. Once a feature is found (strong response of a receptive field), it is sufficient to know its rough location relative to other features (robustness). The input image can be partitioned into a set of non-overlapping/overlapping rectangles, and the outputs are a combination of inputs for each sub-region avoiding small variations that would negatively impact calculation robustness. This is a form of non-linear down-sampling, providing a form of translation invariance, reducing the amount of parameters and computation, which helps to control overfitting on small datasets.
+
+Max pooling is used commonly in a 2d layer, when looking at a 2x2 neighbourhood, it takes the max value, discard 75\% of activations, downsampling by 2 along the height and width while the depth dimension remains unchanged. This is a form of nonlinear combination, each successive layer has 4x smaller/fewer neurons. The depth means how many filters there are, do same operation for every filter, downsampling only works for an individual filter.
+
+Average pooling is similar, just that it takes the average of the neighbourhood. 
+%Diagram of pooling
+The current trend is towards smaller filters with larger stride or discarding pooling layers altogether,  as they can have a too aggressive reduction of the feature representation, and the filters add the required non-linear element to the network. 
+%diagram of normalisation level
+\subsection{Normalization Layers}
+There can be 100's of filters at every layer, so the vector that represents the location needs to be normalized to prevent the maps diverging. One layer of inputs, width, height, and depth, form a vector for one location, where the vector size is equal to number of filters the layer is using. This is normalized to constrain the vector, then the output is given to the next layer. Normalisation operates at each spatial location independently.
+Normalisation is performed using the equation $y_i_j_k = x_i_j_k (k + a \times \sum (x_i_j_k^{2})) $
+%NEED TO FIX EQUATION
+When k=1 and b=1, the l2 norm of x is given by $y=x/ \sum x^{2}$ where x is the vector in one location and y is the output. Different normalisations can be achieved with additional hyperparameters, which can be learned empirically by trying and looking at the results.
+
+\subsection{Fully connected layers}
+
+A fully connected layer is standard neuron, that linearly combines all the inputs available: activations from previous layer to perform high level reasoning. The process requires as many weights as there are inputs in the previous layer.  Their activations can be computed with matrix multiplication followed by bias offset (no convolution). This layer occupies most of parameters that the neural network contains so is prone to overfitting so should be used with caution. The input vector is multiplied by a matrix to produce a single output vector. 
+
+\subsection{Building a Neural Network}
+
+Building a good network architecture consists of choosing layers and parameters. There are guidelines, but there is no all applicable good theory, it is very much an empirical process, working with data and trying different things. 
+
+The network starts with data of limited depth and large layers with small filters, as it continues the layer size reduces but the volume remains the same as depth (number of filters) increases as size x,y decrease.It ends with a fully connected layer to produce the highest level abstraction of the input data. Components of the network consists of filters, sampling, non linear gating, spatial pooling and normalisation. 
+
+\subsection{Training a Neural Network}
+
+In the projects context the neural network will be trained with many description and image pairs, so it is fully supervised training. After passing pair examples through, a scalar loss (error) is aggregated, which is the difference between the ground truth label and the label estimated by the network. This error can then be propagated back through the network using back propagation to train the weights. For each weight the error derivative in respect to that weight is calculated, and using gradient descent the weight is changed in the direction so as to minimise the error.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{backpropagation}
+\caption{Back propagation.}
+\label{fig:backprop}
+\end{figure}
+
+In a naive application of back propagation, shown in figure \ref{fig:backprop} to train the weights you need to calculate the gradient of the error in respect to the weights. However while the loss $x_4$ is scalar so the dimensions are limited, the dimensions become huge with the derivatives of two vectors. This requires a huge amount of memory, not sustainable for deep neural networks. The solution to this is to not explicitly calculate these values, considering each layer as a blackbox with input, weights and outputs to the rest of the network so that the numerator is scalar and the denominator is a vector of the layer. The layer expresses the rest of the network as some function, needs only the output, input and weights to calculated the error derivative in respect to the output. By treating the blocks individually and using the chain rule, large calculations can be avoided.
+
+To train neural networks the weights and biases first need to initialised so that they can be re-estimated, hyperparameters also are set before the learning of weights and biases. Standard weights initialisation is random, non zero and must be varied to allow learning, as if every neuron had the same output, they would have the same gradients and parameter changes which is not true learning. The initialisation is symmetric with half being positive, half negative. The outputs from random initialisation have a variance that grows with the number of inputs, so the output from the neurons need to be normalised to give the same approximate initial output distribution. This empirically improves the rate of convergence of the neural network. If a filter has n weights, when initialised it should be divided by $sqrt(2/n)$ where 2/n is the variance.
+
+Once initialised the weights can calculate maps and get a random output. The loss function l(y*,y) for a family F of functions seeks a network function $f_w(x)$ parametrized by a weight vector w that minimizes the loss $l(f_w(x),y)$ averaged on samples $z_1 ..z_n$ where y is the ground truth data label. As the true distribution of the losses is not known, empirical risk is calculated as $E_n(f)= 1/2 \sum l(f(x_i),y_i) for i=1..n$ The averaged error over samples is propagated back, and updates the weights on the basis of the gradient $E_n$ Scalar parameters can be set to control how quickly the weights are trained down the gradient. Loss error is a highly dimensional function, but can be assumed to be at least partially smooth, so that when the weights are close enough to the optimum and learning rate sufficiently small, the gradient descent achieves linear convergence.
+
+There are 3 main types of gradient descent:
+\begin{itemize}
+\item Batch Gradient Descent: Uses all the examples in each iteration
+\item Stochastic Gradient Descent: Uses one random example in each iteration, approximate but efficient
+\item Mini-batch Gradient Descent: Uses 2-100 examples in each iteration, it is faster than full batch and is most typically used.
+\end{itemize}
+
+
+%WHAT DO EXISTING TECHNIQUES DO, WITH NO. OF SAMPLES??
+%WHAT DO I PLAN TO DO
+%DO I WANT TO EXPERIMENT WITH MATLAB BRIEFLY AND WRITE ABOUT IT. LOOK AT MATLABS NEURAL NETWORK PACKAGE
+\subsection{Loss functions}
+Loss layers specifies how the network training penalizes deviation between the predicted and ground truth labels. $$Loss = data loss + regularization$$ loss.
+Regularization gives constraints on what we want the function to be e.g. we want to converge to something small, so contrain the size. Data loss measures the compatibility between the prediction and ground truth labels (the persons identity), and averages them over all the training examples.
+Regularization loss penalizes some measure of complexity of the model, want to be close to 0.  Loss functions are normally the last layer of network. there are various functions for different tasks assuming that for each example there is a single correct label:
+\begin{itemize}
+\item Sigmoid-binary logistic regression classifier
+\item Softmax classifier uses cross-entropy loss, used to predict a single class K from multiple mutually exclusive classes.
+\item L2 loss- used for regression in a continuous space for predicting real valued f compared to y when labels are continuous, in the case of modelling functions rather than discrete events. Not robust to outliers, which introduce large gradients.
+
+\end{itemize}
+
+Loss for regression is harder to optimise than stable loss for discrete labels, as it requires one correct value for which they'll always be some error. Whereas for something to be classified as a discrete class its score magnitude just needs to pass a threshold. To solve this a regression problems output can be quantised to bins, each with a label, converting it to a classification problem.
+
+Regularization Loss:
+\begin{itemize}
+\item L2- Used commonly and heavily penalises peaky weight factors, encouraging the network to use all inputs a little, rather than some a lot.
+\item L1- Use relatively commonly and can lead to neurons having a sparse subset of the most important inputs by leading some weight factors to be close to 0 during optimisation. This improves robustness to noisy inputs.
+\end{itemize}
+
+ 
+During optimization, a large validation set is used, to search for hyper parameters on a log scale with a coarse to fine search. These include initial learning rate, learning rate decay, regularization strength (L2 penalty, dropout strength) etc. This optimisation is repeated with multiple initialisation states to avoid the network converging to local minimums.
+
+When considering the training of neural networks, the loss function used, train/val accuracy, ratio of weights:update magnitude (increase/decrease learning rates), activation/gradient distributions per layer should all be considered.
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{hyperparams}
+\caption{Monitored Learning.}
+\label{fig:hyperparams}
+\end{figure}
+
+%Random Search for Hyper-Parameter Optimization %http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf 
+
+
+\subsection{Recurrent Neural Networks}
+
+\cite{deeplearning4j} Recurrent neural networks are designed to recognize patterns in data such as sequences of text, even images can be decomposed to a series of patches. Unlike feedforward networks that never touch an individual node twice, have no concept of time and map one to one, recurrent networks cycle through a loop and can map many to one or one to many. A recurrent model takes the current input and output of the previous example in a feedback loop, essentially adding memory (sequential additional information) to neural networks. This "memory" is stored in the networks hidden state, spanning multiple time steps, as the hidden state is calculated at each timestep, so it contains traces of all the previous existing timesteps.
+
+
+Carrying memory forward can be expressed like so:
+$h_t = f(Wx_t + Uh_(t-1) ) $ where the hidden state at time t is $h_t$ , a function of the input $x_t$ at that same timestep, modified by the weight matrix W (that filters inputs) plus the hidden state of the previous time step $h_(t-1)$ multiplied by U. U is a hidden state to hidden state, transition matrix. Weight matrices control the relative importance of past hidden state and present input. Weight values as before are adjusted via back propagation and function f (logisitic sigmoid or tanh), condenses the values into a logistic space to make the gradients workable for back propagation. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{recurrentnetwork}
+\caption{Recurrent Network.}
+\label{fig:recurrent}
+\end{figure}
+Figure \ref{fig:recurrent} shows a recurrent network where a is the activation of the hidden layer (combination of weighted input and previous hidden state) and b is the output of the hidden layer after it has been transformed using rectified linear/sigmoid unit
+
+Feedforward networks learn their weights through Back Propagation. Recurrent networks use Back Propagation Through Time BPTT, where time is expressed by an ordered series of calculations linking one time step to the next. As all neural networks are nested composite functions f(g(x)), time simply extends the series of functions for which a derivative is calculated.
+BPTT's cost to update the parameters can become high over many time steps, which occurs over long sequences, so truncated BPTT can be used, reducing the amount the gradient can flow back and the length of dependencies that can be learned.
+
+It is difficult to connect the final output to remote results achieved many timesteps before as information flowing through neural nets are multiplied on my many times. This leads to the derivatives being prone to exploding if greater than 1 and vanishing if less than 1, emulating a sigmoid function. Exploding weights gradients are too powerful, this can be solved by truncation. Vanishing gradients are harder to solve, if the gradient expressing how error changes is 0, the network cannot learn, hampering the neural net.
+
+\subsection{LSTMs}
+Long Short-Term Memory Units (LSTMs) help make the error backpropagated through time and layers more constant, and allowing recurrent nets to learn over many time steps. This is achieved by the use of out-of-flow gated cells, which make decisions about what to store, when to allow reads, writes and erasures, to block or pass information. They do this using analog gates they can open or close. These are implemented by sigmoid(0-1) multiplication, instead of a digital format as it enables differentiation, suitable for back propagation.  The cells filter signals they receive using their own set of weights, which are learned by making guesses, back propagating error, and adjusting the weights using gradient descent.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{cell_gate_lstm}
+\caption{LSTM Gated Cell.}
+\label{fig:lstm_cell}
+\end{figure}
+
+As shown in figure \ref{fig:lstm_cell} combinations of the present input and past cell state are fed to the cell, and each of its 3 gates (black dots) determine how the input is handled.  $s_c$ is the current memory cell state, $gy_in$ is the current input. The cell can choose whether to forget its state, be written to or read from. LSTMs preserve constant error when backpropagated at depth by determining the subsequent cell state by adding instead of multiplying its current state with the new output. 
+
+The forget gate is a linear identity function, if the gate is open, current state memory cell just multiplied by 1 to propagate it a time step forward, if closed the memory cell is reset to 0. This is used when there is no relation between subsequent sequences. Including biases to an LSTM cell forget gate can improve performance.
+
+LSTMs allow neural networks to operate on different scales of time, avoiding constant noise from data that only needs to be infrequently checked/polyrhythmic e.g. Text contains recurrent themes at varying intervals. Sequences operate on different timescales, which the LSTM can capture by choosing cells to block for prolonged periods of time creating a memory effect as shown in figure \ref{fig:memory} through the use of forget gates. The straight lines and blank circles are closed and open gates respectively.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{longtermmemory_lstm}
+\caption{Example of Forget Gates Function.}
+\label{fig:memory}
+\end{figure}
+
+A gated recurrent unit (GRU) is an LSTM without an output gate and can fully write contents from memory cell to larger net at each timestep.
+For LSTMs the softsign activation function is faster and less prone to saturation (~0 gradients).
+
+\subsection{Neural Network methods to Match Sentence and Image Features}
+Once sentence and image features are extracted they will exist in two mutually independent subspaces, but the relation and association between them must be learned. A key challenge here is to ensure there are sufficient examples of matching images and sentences, and that the vector representation of the images and sentences aren't so large that the associations between vector components can't be sufficiently learned.
+
+Depending on the method used, sometimes dimensional reduction will be required so that the features can be compared, PCA and/or LDA can be used in these cases.
+
+One way to compare the images and sentences, is to first map the sentences to the images subspace then compare them using a standard classification method such as XQDA. This mapping can be performed by a multi-variate regression network, it allows vector inputs to train multiple output values. If the larger of the image/sentence feature representation is used as the input, the other can be set as the target output. The number of examples of matches must outnumber the length of the vectors or it will be insufficiently trained. This is limited by that it can only be trained by positive examples, which we only have ??2718 or 5436 examples of depending on whether images are only matched with sentences that directly describe them or that describe an image that contains the same person. 
+
+\cite{compareimagepatches}There exists several neural network structures specifically adapted for the task of calculating image patch similarity (with some work these can be adapted for image-sentence feature similarity). This task can be in its most basic form seen as a deep convulational network trained with annotated pairs of sentences and images as shown in figure \ref{fig:simple_similar}. Different architectures have an array of trade-offs and advantages, including speed and accuracy. This arises from whether the architecture tries to calculate the similarity of the two features sets directly or to calculate intermediate descriptors first and then the similarity function. These architectures are solely trained using our dataset of matching and non-matching sentences and images can be used.
+\begin{itemize}
+    \item \textbf{Siamese} The network consists of two branches, each takes input as one of the two matching features; the branches share the same architecture and weights, applying a series convolutional ReLU and MAX-pool layers. The branch outputs (descriptors) are concatenated and fed to a top similarity function network of linear fully connected ReLU layers. At test time two feature representations can be computed independently then matched using the top network, or even a distance function e.g. euclidean. Prior to applying euclidean the intermediate feature representations are L2 normalised.
+    \item \textbf{Psuedo-siamese} This mimics the structure of the Siamese network except the branches are uncoupled, this increases the number of parameters and flexibility of the network.
+    \item \textbf{2-Channel} This network contains no intermediate feature representations, considering the input pair a 2-channel input and works as a binary classifier indicating a match or non-match.  The lower of this network is a series of convolutional, ReLU and max-pooling layers, the output of which is given to a fully connected linear decision layer with one output. 
+    \item \textbf{Spatial Pyramid Pooling(SPP) Network} The output convolutional layer requires a pre-defined dimension, so usually the inputs are resized accordingly. However in this network the spatial pooling regions can be adjusted to be proportional to the size of the branches input. This would maintain the need for a pre-defined dimension while allowing both branches to have different size inputs and a pseudo-siamese architecture. This network inserts a spatial pyramid pooling layer between the convolutional and fully connected layers. 
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{siamese_networks.PNG}
+\caption{Structures for 2-Channel, Siamese and Pseudo-Siamese networks}
+\label{fig:siamese}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.2\textwidth]{ssp_network.PNG}
+\caption{Siamese Architecture with SSP Layers between decision layer and network branches}
+\label{fig:ssp}
+\end{figure}
+
+
+Out of these networks Siamese would be unsuitable as the image and sentence features cannot be mapped to a feature subspace using the same branch architectures. On the otherhand Pseudo-Siamese is usable with independent branch architectures while maintaining the efficiency of the Siamese network at test time, as the descriptors for each input only need to be learned once. Although the dimensions of the input features need to match due to the similar layer structures. The two-Channel network provides the greatest flexibility processing the image and sentence features jointly, and is fast to train. However it is very expensive at test time requiring all input pairs (matching and non-matching) to be compared in a brute force manner and requires a large quantity of memory.
+
+There is the option to learn directly from the image and sentence data as well as utilize sentence and image features that have been trained, although this depends on how well they can be mapped to the same feature space. Either by reducing their dimension so matching, as a form of pre-processing to the neural networks or using independent convulational network layer architectures for each input that reduce both to the same dimension feature space. It may even be the case that these learned features are superior to features learned independently by sentence-sentence and image-image convulational networks. It is possible that by taking images and sentences as raw input to the convulational networks, due to data not being lost in feature extraction pre-processing, the match results are improved. Though this all hinges on that, the increased data size isn't so large that the network is insufficiently trained. It is possible that the training data size can be increased, \cite{siamese_cnn} and \cite{compareimagepatches} used data augmentation to avoid overfitting, rotating input pairs. Furthermore many networks can be trained using positive and negative truth pairs, although best results are often acheived by using these in equal proportion.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.2\textwidth]{basic_similar.png}
+\caption{CNN Similarity Function Overview}
+\label{fig:simple_similar}
+\end{figure}
+
+\cite{siamese_cnn} explored using a Siamese twin architecture CNN to assess the similarity of two equally sized image regions, for the purpose of estimating the likelihood two pedestrian image belonged to the same tracked entity. In this paper it was used in conjunction with gradient boosting using contextual features such as the relative geometry of the two patches to calculate the final matching prediction. The network was trained as a binary classification task with the training pair stacked as a two channel single input as shown in figure \ref{fig:stacked_siamese_cnn}. They encountered the issue that the pairs of pedestrian detections tended to not have a large range of appearances due to a limited number of distinct people captured. This is a similar issue to our limited dataset, they combated this by employing a strategy to add variety to the input data to reduce overfitting and improve generalization by added geometric and image distortions independently to each of the input images. (Although only small relative geometric distortions were allowed between them). This would be an interesting avenue to explore but generalization is beyond the current scope of this project. The softmax output accuracy could be used directly but its accuracy was low, as it didn't take into account where/when the detections originated in the image. Similarly our images to sentence relations may vary depending on the viewpoint or occlusion of the images, however the images from the CUHK03 dataset are unlabelled making this a rather time intensive area to explore. If used though the impact of contextual factors is great, as their CNN classifiers alone achieved a best accuracy (AUC) of 0.718 and when combined with GB this rose to 0.954. \cite{siamese_cnn} found that jointly using information from both feature sets tended to lead to better performance as in the two-channel network structure.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{twostage.PNG}
+\caption{Stacked two-channel Siamese CNN Neural Network.}
+\label{fig:stacked_siamese_cnn}
+\end{figure}
+
+\subsection{Existing Person Re-Identification Systems using Image Input}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{all_methods}
+\caption{Existing Person Re-Identification Techniques.}
+\label{fig:all_methods}
+\end{figure}
+
+There are a variety of techniques currently implemented as shown in figure \ref{fig:all_methods} in the closely related field of performing person re-identification by matching images. The traditional method of this relies on a process of handcrafted feature extraction followed by either fixed or learned distance metrics that can be used to classify the data. Improvement in this field was largely motivated by either improving the feature extraction or distance metric learning process. 
+
+As a form of pre-processing to feature extraction, the retinex algorithm has been used to make colors consistent across images. Color is an important feature to identify people, but varies across camera and lighting conditions. Using retinex algorithm to pre-process images, color images are produced that are consistent with human observation of the scene. These restored images have vivid color information and detailed shadowed regions that could assist the classification process. 
+
+One of the simplest feature extraction methods is \cite{gray2008viewpoint}ELF16 from 2008, an ensemble of local features, computed from histograms in 6 equally divided horizontsal stripes, there are 8 colour channels (RGB, HSV, YCbCr) although these suffer when there are high image variations. \cite{LFDA} improved on this by encoding such local descriptors as fisher vectors to enable global image representation,and SDALF used symmetry driven accumulation of these local features to improve the handling of multiple viewpoints. Adaboost had also been used to select the best discriminative features out of the color and texture sets. \cite{lomoxqda} used local maximal occurrence features (LOMO)  to handle viewpoint changes, images are separated into horizontal subwindows, from which the occurrence of local features are analyzed and are maximised, this stably represents images across multiple viewpoints.
+
+Subspace and metric learning have been used to generate robust similarity functions to deal with this complex matching problem. This is a two stage process, with Principle Component Analysis (PCA) used to reduce the dimension, then metric learning is performed on the subspace.
+PCA has traditonally been used to downsample the extracted features to a lower feature subspace of only the most discriminative or powerful features. This helps remove image noise and enables better classification. \cite{lomoxqda} proposed the use of XQDA to simultaneously learn the feature subspace with the distance metric to improve performance, allowing the distance metric to be simultaneously learned so that the optimal combination of feature subspace and distance metric were learned in combination with each other.
+
+SVMs are a form of simple supervised classifier that try to find a linear hyperplane that best separates features of different classes to maximise inter-class variation and minimise intra-class variation (the margin), to give the best separation and lowest number of misclassified samples (training error).They perform best when giving fewer most discriminative features, to avoid overfitting or confusion. E.g. If trying to classify a shoe attribute for person re-identification the most useful features would be extracted from the lower region of the image.
+
+%ImageNet"Imagenet classification with deep convolutional neural networks"
+%LFDA applies FDA with PCA (principle component analysis) and LPP (Locality preserving projections) to derive a low dimensional yet discriminant subspace. It projects simple features into different, local sub spaces
+
+\cite{youtube_enhanced}Using purely neural networks the process is more straight forward, unifying the feature extraction and image-pair classification processes as shown on figure \ref{fig:traditional_cnn}. Once the network has been trained, to operate, an image pair is inputted, this calculates and outputs the likelihood the pair of images contains the same person. Using a back propagation algorithm the weights and parameters of the neural network can be adjusted. However the application of neural networks to solely solve this problem has been limited in the past due to the small size of the datasets leading to overfitting. Although attempts have been made to compensate for this via semi-supervised learning \cite{QUORA_SUPERVISED} where few of the data used for training have associated targets using a combination of labelled and unlabelled pedestrian image datasets.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{Traditional__1_}
+\caption{Traditional methodology of neural network based person re-identification algorithms.}
+\label{fig:traditional_cnn}
+\end{figure}
+
+%The standard way to train a CNN network is pairwise comparison, performing deep convolution. Mini-batch stochastic gradient descent(SGD) can be applied for faster back propagation and smoother convergence.
+%MORE DETAILS ABOUT HOW CNN WORKS, CURRENT architectures OF CNN, current methods to train cnn
+
+%Hard negative mining-E. Ahmed, M. Jones and T. K. Marks "An improved deep learning architecture for person re-identification"
+%Neural Networks Tricks of the Trade, 2012
+
+Recently to try and improve on the feature extraction process using solely handcrafted features, neural networks have been used to learn the most discriminant features on the dataset. \cite{youtube_enhanced}However handcrafted features such as RGB, HSV in cases of large view variation can be more reliable. To combine the best of CNNs and person classifiers \cite{youtube_enhanced} proposed the use of deep neural networks for feature extraction, figure \ref{fig:fusion_network}. These could then be combined with traditional features extracted from the raw images using a deep feature fusion network to obtain a better overall representation. In the fusion framework via back propagation the parameters of the CNN network are influenced by the traditionally extracted features. This regularizes the CNN features, making them more complementary with the traditional features.This betters the features ability to discriminate between different images.  These new features could be then input and tested with existing metric learning methods.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{youtube_enhanced}
+\caption{Deep fusion network to extract and concatenate elf16 features and CNN features.}
+\label{fig:fusion_network}
+\end{figure}
+This method can be used with a variety of classifiers and removes the need for pairwise training. Two basic classifiers (L1-norm, LFDA) were used to evaluate the proposed features effectiveness, the most effective being the fusion networks feature. With state of the art classififer the system also out-performed previous deep re-identification models.
+
+\cite{deepattributes} had a problem in wishing to to learn mid-level viewpoint invariant attributes using a neural network but found it difficult to acquire enough attribute labelled training data to avoid overfitting. So proposed a 3 stage semi-supervised deep attribute learning algorithm. First a fully supervised dCNN was trained using an independent labelled dataset, producing initial attribute labels for the target dataset. To improve the discriminative power of these attributes for person re-identification, the network was fine tuned using person ID labels and the defined attributes using triplet loss to re-inforce that images of the same class of person would have similar attributes. Final stage tuning was conducted using the initial labelled dataset with the original target dataset. Once deep attributes were learned, they were more robust and efficient than local features, and could be fused with other features like in \cite{youtube_enhanced}, and finally used to compute the distance metric. Depending on the depth and size of our neural network.  
+
+\cite{multilabelcnn} developed a multi-label neural network (MLCNN) that didn't assume the independence of attributes, predicting multiple elements as a unified framework shown in figure \ref{fig:mlcnn_network}. This is because attributes have complex localizing characteristics, for instance hair will only be found around the head. Part detection is challenging, so the images were divided into multiple overlapping body parts which were fed into the MLCNN, with each part filtered independently. The resulting attribute scores had pre-defined connections to the part channels, as particular attributes were pre-known to associate with particular parts. The total loss could be accumulated as $F= k \times \sum ( \lambda_k \times G_k)$ where $G_k$ is the kth attribute, there are K total attributes, and $\lambda _k$ controls the contribution. $\lambda_k$ was set equal to 1/K, although previous studies have shown that more unqiue attributes could be given higher weightings.
+
+%As features as not mutually exclusive, assigning features to images, should be a multi-label, not a multi class problem.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{mlcnn_network}
+\caption{Multi-label convolutional neural network (MLCNN) structure}
+\label{fig:mlcnn_network}
+\end{figure}
+After this process, the features were used in attribute assisted person re-identification where a fusion distance was calculated using a combination of attribute based and low level feature distances. Unfortunately the CUHK03 dataset is not labelled with attributes, so the above methods that use discrete attribute labels to describe images/sentences will largely not be possible.
+
+\subsection{Existing Text Based Image Retrieval Systems}
+%The positives and negs cnn vs TRADITIONAL METHODs etc what additional challenges for cnn in this context poses
+
+Performing person re-identification introduces new challenges when using natural language description due to the need to compare the two separate image and text domains. \cite{kmbreakingnews}Progress in the Computer Vision(CV) and Natural Language Processing (NLP) fields has improved the capabilities of image to text and text to image conversions in recent years. Combined with the increased capabilities of parallel computers and the release of new, larger, more detailed data sets, deep learning has become a promising method to accomplish many forms of object recognition. An example of this being the Flickr8K dataset \cite{flickr8k}, a new benchmark collection of sentence based image descriptions, with 8000 images, each with 5 different captions. 
+
+ \cite{clothingappearance} conducted a simplified version of text based image retrieval, by using textual queries that consisted of boolean combination of pre-defined attributes, a multiple part-multiple component appearance descriptor. Clothing is often chosen as a good discriminant between people due to the variable environment of the photo and the low resolution of pedestrian images preventing more detailed feature matching such as facial recognition. Furthermore other notable features are often vulnerable to occlusions, with previous databases not noting occlusions.
+
+However it is far more difficult to map raw language descriptions to the image domain to enable similarity matching. Current search engines find images based on manually written text annotations given to images. \cite{kumar2008facetracer} developed the first automatic image search engine capable of finding matching faces to simple text queries e.g. "indoor photos of smiling children". Their images are automatically labelled with attributes offline on the basis of a large number of attributes, at search time only the labels are queried resulting in instantaneous searches. Attributes are generated using a boosted set of Support Vector Machines to form a high accuracy classifier, this is not the most accurate classification method, but it enables easy scalability. For each new attribute an additional SVM can be added that is trained on a subset of data labelled with the new attribute. To create a classifier for a particular attribute and to remove non-discriminative features, they created a set of local feature options to choose from. Each option has 4 choices: region of face to extract features (shown in figure \ref{fig:facialregions}) , the type of pixel data to use e.g. image derivatives, the kind of normalization to apply e.g. remove illumination gains, and the level of aggregation to use. For some attributes their aggregate information was more useful than individual pixel values. e.g. mean, variance, histogram of pixel values. The image results shown to the user were ranked by decreasing confidence for all search terms, for queries will multiple terms, the product of probabilities (confidences for each mentioned attribute) was used as the search criteria. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{facialregions}
+\caption{Face regions used for automatic feature selection}
+\label{fig:facialregions}
+\end{figure}
+%, as the RAP data set is the most decorated pedestrian data set available, already containing 72 searchable attributes and
+However scalability is not a major consideration for this project as generalisation is not under the scope of this project. Furthermore facial structures are far more consistent than pedestrian appearances, allowing \cite{kumar2008facetracer} to utilize far more detailed regional areas which is not possible for pedestrian image analysis. Also with only 10 searchable attributes, it is not a true analysis of natural language, as its user interface tells users which 10 queries the search engine is responsive to.  Finally as stated before the CUHK03 dataset is not labelled with attributes, not facilitating these methods. %Also Adaboost only allows different classifiers to be combined linearly, preventing attributes which depend on different regions/feature types would be difficult to classify. Pedestrian image attributes are more varied, non-symmetric.
+
+
+\cite{kovashka2012whittlesearch} poses that the key to closing the gap between a high level semantic such as a persons description, and the low level image raw data is an interactive search approach where users can iteratively refine their searches, using their feedback to adapt the system's relevance ranking function. This builds on pre-existing systems with binary feedback ("relevant","irrelevant") that leads to slow convergence on the users target, and the ability to tune the system with weights on a low level feature subset e.g. texture, which is unintuitive to the common user. Offline a set of ranking functions are learned, each which predict a attributes strength in an image e.g. shininess. At users query, the system returns images and the user selects among them to provide relative attribute feedback e.g. "I want shoes like this but more formal", the systems relevance function can then be recalculated and the images are re-ranked. This process repeats till the top images are acceptable to the user. However the process that we are developing will be non-interactive, as it is more efficient, and realistic for the low resolution images in the CUHK03 data set.
+
+\cite{picsemantics} proposes a model which computes the joint probability of features over different image regions, in order to learn the semantics of the image. Single isolated regions are often hard to interpret, and are not independent, for example the presence of a tiger in an image is less likely if a ballroom is also detected in another region of the image and visa versa. Probabilistic  models allow systems to predict the probability of a word given the features computed for different sections across an image, this allowed them to automatically annotate and retrieve images. The continuous relevance model was used that associates continuous features with words and does not require an intermediate clustering stage.
+
+\cite{deepimageretrieval} developed a CNN for the purpose of CBIR by extending \cite{krizhevsky2012imagenet} CNN which showed promising results for image classification tasks on the ImageNet data set. The ImageNet data set is a collection of 15 million labelled high resolution images belonging to 22,000 categories. They took the activations of the trained CNN model's final 3 layers, which contained semantically rich direct feature representations.  \cite{deepimageretrieval} explored the generalisation of this feature representation, similarly this project could use pre-trained MATLAB neural networks and fine tune them using the CUHK03 dataset to adjust them to the more specific task of person re-identification. These findings could be summarised as retraining the deep model with a similarity learning objective on a new domain, boosted retrieval performance.
+
+Similarity measures and 50,000 validation images were used to query the 1.2 million image set, images were returned of the same class, most similar. They achieved encouraging results with the pre-trained CNN model directly used for feature extraction in the new CBIR task, with the CNN able to extract high semantic information. While the features extracted from the CNN  might not be superior to handcrafted features, when refined, they consistently outperform hand-crafted features on all data sets.
+
+\subsection{Classifying Images and Sentences using Neural Networks}
+For image/sentence classification the neural network serves the purpose to project the input to a subspace that is linearly classifiable, then this is mapped to a set of class scores where typically (depending on the loss function) the class with the highest score is assigned. 
+
+However in this project, as the overall goal is to calculate word-sentence associations it is useful to simply use these neural networks to calculate the intermediate image/sentence feature representations. These networks are tuned using classification layers so that images of the same person and sentences belonging to the same person and/or image depending on the generalisation level are assigned the same classes. 
+
+Autoencoders can be used for a form of unsupervised feature learning, as they are typically used to learn a more efficient, lower dimension representation (encoding) for their input. The simplest auto-encoder compresses its input to a hidden layer, then decompresses it to its output layer, and once trained, the output layer can be stripped. It is a method to learn good representation on unlabelled data and can be later coupled with classification layers in a deep network format to fine-tune. 
+
+\subsection{MATLAB Functions, ToolBoxes and Pre-Trained Neural Networks}
+MATLAB is a scientific programming language with strong mathematical support for the implementation of advanced computational systems. Neural Network functions, Machine Learning and Computer Vision systems are well supported in MATLAB via the Neural Network, Statistics and Machine Learning, and Computer Vision System Toolboxes.
+
+This projects neural networks will be calculating the similarity between two matrices, representing the provided image and natural language description. These matrices can either be the imported images and descriptions directly or by intermediate feature representations generated by other networks/ handcrafted features.
+
+Conversion to matrix format is required to overcome the fact that natural language descriptions and images exist in different formats. While images are easy to import to n by m by 3 matrix format using \textit{I=imread(...)}, the Natural Language Descriptions will need to be converted using the 3rd party tool Word2Vec to calculate word vector representations and custom made python scripts to generate cumulative description representations.  
+
+The MATLAB Neural Network Tookbox 2017b contains several pre-trained neural networks that have been used to classify images. These features can be extracted from the networks by connecting to the last fully connected layer, this is the richest feature representation before classification is attempted. 
+
+\cite{matlabalex}Alexnet is a network trained on a subset of the ImageNet database, of more than 1,000,000 images with 1000 object categories e.g. pencil, mouse. The model takes as input 227x227x3 sized images with zerocenter normalisation and generates rich 1000 component feature representation for a wide range of images.
+
+\cite{matlabvgg} Vgg16 is again trained on a subset of the ImageNet database, and takes as input 224x224x3 images with zerocenter normalisation producing 1000 component feature representations.
+
+\cite{matlab_transfer}However to make the results applicable to our CUHK03 dataset, transfer learning will need to be performed on the pre-trained networks so that the feature representations obtained correlate to their labels. This fine-tuning adapts the network to our narrower person re-identification task and is far more efficient that designing and training a network from scratch (like an deepnet autoencoder).  The networks have already learned a rich representation, but can be retrained using only 100's of our image dataset to achieve good results. It is faster and avoids the issues of insufficient data. The majority of the pre-trained layers of the pretrained network are kept, but the last few layers can be altered and replaced with new softmax and classification layers so that the feature representations can be trained to reflect their classes.
+
+The deep feature representations extracted using these fine-tuned networks will have to provide good enough discriminative results to justify the large time taken to train and run these networks compared to handcrafted features.
+
+\subsection{Word2Vec}
+\cite{mikolov2013distributed}Word2Vec is a program used in the project to convert the image descriptions to a numerical matrix or vector format depending on the secondary processing selected. It is a form of natural language processing that uses the idea that vocabulary is discrete and that a continuous, distributed representation of words can be therefore learned. The training process consists of learning this word embedding map, with the aim being to map similar words to similar locations. In the case of this project for example, 'jeans' and 'trousers' representational vectors would ideally be in close proximity for good semantic representation and the relations between 'he' and 'she' vs 'male' and 'female' would be similar in nature. This program is an efficient method to capture a large number of semantic and syntactic word relationships in order to learn good word vector representation from large amounts of unstructured word data.
+
+\cite{word2vec_src}Word2Vec learns word distribution by going through every word, then examining neighbouring words contained within a pre-defined window that occur within the same sentence.This process culminates in output probabilities of how likely each word within the vocabulary is close to the input word. E.g. For an input of "Australia" it would be expected that "koala" would have a higher probability than "penguins", as they occur in close proximity of each other more often. This process is shown in figure \ref{fig:word2vec_context_windows}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{training_data.png}
+\caption{Word2Vec Context Windows}
+\label{fig:word2vec_context_windows}
+\end{figure}
+
+Word2Vec contains two shallow neural models to choose from: CBOW and skip-gram, each with different training methods (with/out negative sampling).Traditionally words are represented using Pointwise Mutual Information (PMI) matrices, a form of distributional semantics. Word2Vec uses the principal that a shallow network can be trained for a particular task, but then what is actually used are the learned weights on the hidden layer, these are the word vectors.
+
+\cite{wor2vec_skipgram} \cite{wor2vec_quora} The Skip-gram neural network model builds its vocabulary of words from the training text, then represents each one as a one-hot vector. So a vocabulary consisting of 10,000 unique words would mean words are initially represented by 10,000 component vectors. The output is similarly a 10,000 component vector where each component represents the probability that this word is a randomly selected nearby word. The network is shown in figure \ref{fig:skip_gram_net} , and is trained using word pairs, where the output is the 10,000 component probability distribution. 
+
+When learning word vectors with size 200, the weight matrix in the network is 10,000 by 200. The aim of this process is to learn the hidden layer, then the vector representation for each word can be extracted by multiplying the weight matrix by the one-hot word vector, the weight matrix is effectively a lookup table. The output layer is a softmax regression classier whose outputs sum to 1. Each output neuron has a weight vector it multiplies against the word vector from the hidden layer. All output neuron values are divided by the sum of the 10,000 output neurons so they sum to 1. If two words are semantically similar, they should have similar contexts, so the model outputs similar probability distributions, creating similar intermediate word vector representations. 
+
+This network has a huge no. weights 200 features, 10,000 words gives 2M hidden layer weights. Training is not feasible when using gradient descent, it's too slow and requires a huge amount of training data to avoid overfitting. 
+
+To reduce the amount of training required, frequent words can be sub-sampled from the training text. This is where words are removed according to their frequency, this reduces frequent words presence within context windows and is important as words like "the" and "a" comprise a large portion of the text but contribute very little semantic meaning, and far fewer samples are required  than supplied to learn good representations. The smaller the parameter sample, the less likely a word is to be kept (default is 0.001). \cite{SKIP_GRAM} Sub-sampling also has the side-effect that the context windows become effectively larger than their pre-defined size. There is also the option to remove very rare words from the dataset as they will be unable to be trained to a robust representation due to a lack of samples. However subsampling for our data will be less of a concern due to its relatively small size .... .... and removing rare words needs to be carefully thresholded. 
+
+"Negative sampling" can also be used so training samples update only a small percentage of model weights, reducing the training burden and  improving the word vector quality. \cite{mikolov2013distributed} This is where only a small number of "negative" words are randomly selected as well as the matching positive word, usually 5-20 works well on small datasets. Negative words are chosen according ton their frequency using "unigram distribution", more frequent words are more likely to be picked as negative samples. So a negative-sampling of 5 gives, 6/10,000 processed, as it includes the 5 negative and one positive output neurons.  
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{skip_gram_net_arch.png}
+\caption{Word2Vec Skip-Gram Network Structure}
+\label{fig:skip_gram_net}
+\end{figure}
+
+Word2Vec also has the capability to group words that occur frequently together but infrequently in other contexts to phrases. These are identified and subsequently treated as individual words during training. The addition of phrases swells the vocabulary size but can be important when preserving semantic definitions and making the vocabulary more expressive. For instance "hand bag" is a bag and is not therefore a natural combination of the individual words "hand" and "bag". 
+
+\subsection{Natural language annotations observations}
+
+During this project the neural networks will be trained and tested using collected natural language annotations of the RAP dataset. To determine in what way these annotations would be best collected and the challenges that this tasks presents, I first collected some trial annotations. This included 75 annotations on 10 different images, from a similar dataset to RAP, 4 were front view and 3 were side and back view each. This gave valuable insight into how people need to be guided to effectively annotate images, and what trends and tendencies people have when identifying attributes from different viewpoints and under different conditions.
+%\setlength{\extrarowheight}{10pt}
+
+\begin{table}[ht]
+\caption{Example Pedestrian Image Annotations}
+\label{descrip_table}
+\begin{center}
+\begin{tabular}{M{0.2\textwidth}|M{0.2\textwidth}}
+\toprule
+\includegraphics[width=0.08\textwidth, height=0.2\textwidth]{gt_001} 
+& 
+\includegraphics[width=0.08\textwidth, height=0.2\textwidth]{query_001}
+\\
+Query Image 1 & Query Image 2
+\\ \midrule
+Green jumper, white shorts, orange boots, girl, \textbf{long brown hair}, medium height.
+& 
+Female, \textbf{black hair}, brown handbag, checkered top, skirt.
+\\	\midrule
+Smiling, carrying a book, orange shoes, white shorts.
+& 
+Strong legs, brown bag, brown hair.
+\\	\midrule
+Short, slim, \textbf{dark-haired}, young female, shoulder-length hair, nice smile.
+& 
+White shorts, brown mid length hair, stripey jumper, female.
+\\	\midrule
+Girl with \textbf{brown/black long hair}, wearing shorts and some sort of t-shirt while holding a book-like thing with her right arm. She has a bracelet on her left arm.
+& 
+Brown hair, short white skirt, reddish socks, female, brown bag, striped red and white and green jumper.
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+Table \ref{descrip_table} gives examples of some annotations given for two query images. It shows that people when asked for a description will sometimes just start listing attributes. "Strong legs, brown bag, brown hair", is by no means a complete sentence and not what we want. It also shows that as expected, the same colour can be referenced and perceived as many different values, for example dark brown hair can be described as "black", "brown", "darkish".
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{pie1}
+\caption{Percentage of total annotation that descriptors accounted for in query image 1.}
+\label{fig:pie_query1}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.4\textwidth]{pie2}
+\caption{Percentage of total annotation that descriptors accounted for in query image 2.}
+\label{fig:pie_query2}
+\end{figure}
+
+
+\begin{table}[ht]
+\caption{Percentage of people that commented features for each Query Image}
+\label{percent_queryimg1_table}
+\begin{center}
+\begin{tabular}{M{0.16\textwidth}|M{0.12\textwidth}|M{0.12\textwidth}}
+\toprule
+Attributes
+& 
+\% Described From Query Image 1
+& 
+\% Described From Query Image 2
+\\ \midrule
+Asian & \textbf{45.5} & 0.0\\ \midrule
+Female & 63.6& \textbf{75.0} \\ \midrule
+Highschooler / Student  & \textbf{9.1}& 0.0\\ \midrule
+Yellow boots  & \textbf{ 9.1}& 0.0\\ \midrule
+Bag / Brown bag  &0.0 & \textbf{75.0}\\ \midrule
+Teenager / Young / Girl  & \textbf{54.5}& 0.0\\ \midrule
+Short / 5ft / Petite  & \textbf{27.3} & 0.0\\ \midrule
+Slim  & \textbf{18.2} & 0.0\\ \midrule
+Brown/Black/ Dark hair / Short/Medium/ Shoulder length &\textbf{45.5} & 100.0 \\ \midrule
+T-shirt / Grey / Checkered top & 18.2& \textbf{25.0}\\ \midrule
+Book & \textbf{9.1} & 0.0\\ \midrule
+Bracelet & \textbf{18.2} & 0.0 \\ \midrule
+Excited / Fun / Nice smile & \textbf{27.3} & 0.0\\ \midrule
+Jeans / White shorts / Short white skirt &27.3 & \textbf{75.0}\\ \midrule
+Grey wooly jumper / Stripey red/green jumper &9.1 & \textbf{50.0}\\ \midrule
+Reddish socks & 0.0& \textbf{25.0 }
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+Table \ref{percent_queryimg1_table} shows people also have a tendency to describe what the scene or person means to them, not necessarily literally what they are. In this case the person is described as "excited/fun" and "a highschooler", but more examples are people seeing a duffel bag and commenting "he is going to the gym" or the person is a mask, so he is described as being "sick". These higher level descriptions will be difficult if not possible to train on and should be avoided if possible.  There are also great variations in how specific people are when describing the same item, for example the same top can be described as "a checkered top", or "stripey red/green jumper" or "a grey wooly jumper", this is why the use of neural networks to train to recognise the multiple representations of the same item is so important. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.1\textwidth]{query_002}
+\caption{Outlier Image From Annotations Analysis.}
+\label{fig:bad_image}
+\end{figure}
+
+One of the images, a back view , was discarded from Table \ref{all_percent_table}'s calculations as shown in figure \ref{fig:bad_image} as it was an anomaly, with very close zoom, making annotating any features a challenge which would distort the results.
+
+\begin{table}[ht]
+\caption{Overall percentages features were commented on across all images}
+\label{all_percent_table}
+\begin{center}
+\begin{tabular}{M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}}
+\toprule
+Attribute & Front view & Back View & Side View
+\\	\midrule
+Ethnicity & \textbf{36.4}&0.0 & 16.7\\	\midrule
+Age & \textbf{45.5}& 18.2& 16.7\\	\midrule
+Perceived Gender & 65.9& 64.8& \textbf{66.7}\\	\midrule
+Height & \textbf{13.6} & \textbf{13.6}& 8.3\\	\midrule
+Body build & \textbf{18.2}& 13.6& 8.3\\	\midrule
+Bottoms: Trousers/Skirts/ Shorts etc & 25& 42&\textbf{ 83.3}\\	\midrule
+Top: T-Shirt, hoodie etc & 27.3& 46.6& \textbf{66.7}\\	\midrule
+Bag & 9.1& 60.2& \textbf{87.5}\\	\midrule
+Accessories & \textbf{52.3}& 0.0& 33.3\\	\midrule
+Personality/State &\textbf{34.1}& 0.0& 0.0\\	\midrule
+Occupation/ Action & 15.9&\textbf{ 18.2}& 0.0\\	\midrule
+Socks/Shoes & 4.5 & 12.5& \textbf{16.7}\\	\midrule
+Hair & 38.6 &\textbf{ 72.7}& 66.7\\	\midrule
+Average & 37.5  36.4 & \textbf{41.7}
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Overall Table \ref{all_percent_table} has shown there is a strong relationship between viewpoints and the person's attributes that are focused on and described. Some of these are self explanatory, that from the back attributes that are stereo-typically more visible such as hair and bags experience a greater level of description than from the front. Also from the back viewpoint, fewer, but larger, features in general are focused on such as shirt and trouser appearance.  Therefore the viewpoint of the image has a large influence even in humans that can extrapolate. 
+Viewpoint can also influence how the pedestrian is perceived, colloquialisms and higher level descriptions, like the person's personality, occupation etc, are more common when the person is being viewed from the front. Table \ref{all_percent_table} shows while personality is commented on 34.1\% of the time when the person is viewed from the front, this falls to 0.0\% for all other views as people associate personality with faces. These factors decrease the likelihood that two images of the same person from different viewpoints will be matched.
+
+Table \ref{all_percent_table} shows that Perceived gender, hair and bags are the qualities most likely to be commented on. Perceived gender is a whole body attribute, and as such has great consistency across all viewpoints. Hair is a common description technique, and bags are novel enough to justify mention while being large enough to be noticed. Although both hair and bags have low mention rates from front view, as they tend to be less visible. However despite a persons perceived gender being prominent, it is still not commented on 100\% of the time, Table \ref{all_percent_table} shows that gender is only commented on 64-67\% of the time. Meaning you cannot guarantee that even the most confident and obvious features, useful for classification are going to be entered, reducing the systems capabilities.
+Height, body build shoes and socks are features less likely to be noticed, all commented on less than 19\% of the time. Shoes and socks are small and likely to be cropped. The pedestrian images are zoomed in to the person of interest which is essential for recognition, but without a frame of reference it can be difficult to judge measurements such as height and body build. Generally our research also showed that unexpected or novel features have a higher likelihood of being noticed and commented on, for instance glasses and masks.
+
+\subsection{Take aways from natural language annotation}
+Though our initial surveys of people was limited to only 5 images from two different viewpoints and not from the RAP dataset, it yielded some interesting insights into peoples descriptive tendencies and the properties associated with different views.
+Our initial surveys of people to annotate a group of pedestrian images has revealed that in order to receive useful information a lot of direction is required. Even when instructing a person to "describe a person as if helping someone search for them", they still resorted to higher level descriptions that one would not use typically in an everyday setting. For instance "they look like a funny person", is useless, completely subjective metric that should be discouraged. Furthermore the formatting would be one of listing attributes rather than natural speech.
+When asking people clarification is often needed, so the annotations requests in any online questionnaires we present need to carefully frame what it is we want. This could be done by giving examples of what are bad and good descriptions. An example of this is shown for Query Image 1, in Table \ref{good_bad_table} and was used in the website layout shown in figure \ref{fig:website}.
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.5\textwidth]{website}
+\caption{Website used to collect image annotations}
+\label{fig:website}
+\end{figure}
+
+
+\begin{table}[ht]
+\caption{Example Good vs Bad Descriptions}
+\label{good_bad_table}
+\begin{center}
+\begin{tabular}{M{0.1\textwidth}|M{0.3\textwidth}}
+
+&
+\includegraphics[width=0.08\textwidth, height=0.2\textwidth]{gt_001} 
+\\
+& Query Image 1 
+\\ \midrule
+Good Description
+& 
+A slim girl with dark long hair, wearing a dark coloured jumper, either dark blue or black, white shorts, and orange or brown boots. There are white horizontal stripes on her jacket. She is holding something, possibly a book or a laptop, in her right hand and may be carrying a bag on her back. She wears a black bracelet on her left wrist. The girl is facing the camera and smiling.
+\\	\midrule
+Bad Description
+& 
+Asian girl, dark hair, blue jacket, orange boots, bracelet. 
+\\	\midrule
+Reason
+& 
+It is listing attributes, not giving full natural sentences.
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+These findings are consistent with \cite{hodosh2013framing} stating that humans tend to give specific conceptual image descriptions detailing what the image depicts which may be abstract while image representations are centred around concrete generic descriptions of the persons attributes and actions. Humans give implied non-visible information such as a persons mood and too narrow information such as the persons name. As such the user is guided to move from a conceptual to a more concrete description when searching for a person.
+
+While these considerations will only be handled by the neural network, as I will not be dealing with the intermediate representations directly, it is interesting to see the challenges that the neural network will have to handle from the human input side of things. This analysis of the annotations can also be used as part of an extension to guide the development of pre-processing stages and the construction of the neural networks to offset human biases to further improve the systems accuracy.  This would be similar to \cite{multilabelcnn} where a CNNs structure had pre-defined connections between the regional part channels and the attribute scores they contributed to. 
+
+\subsection{Background Research Overview}
+%%%MAYBE ADD MORE STUFF HERE ABOUT THE NETWORKS GONNA USE
+
+The main drawback for the use of neural networks \cite{youtube_enhanced} \cite{deepattributes} has been that their development have been limited due to the small size and low variance of the pedestrian data sets. This makes them prone to overfitting and makes it difficult to accommodate the great intra-class variations between the same attributes and people due to changes in viewpoint, occlusions and lighting conditions. With the introduction of the large CUHK03 data set, this problem has been partially solved.
+
+Feature-based methods can suffer greatly from illumination variations and human shape deformations. While the separation of the images into sub-windows has counteracted some viewpoint variation \cite{lomoxqda}, how discriminative the features are can greatly impact the next stage distance metric learning and classification. There has been great success in either combining the learning of the feature subspace and distance metric \cite{lomoxqda} or using a combination of handcrafted features and neural network features \cite{multilabelcnn}\cite{youtube_enhanced} to form a fusion network that can accurately represent the image. The CUHK03 dataset could improve this further due to all its images being auto-croppd to only include the relevant pedestrians.
+
+Current methods to implement context based image retrieval are largely based on NLP where pre-set key words are isolated from textual queries, and used to set features that they user is searching for. These are then compared to images that have been pre-analysed to automatically generate their feature list. However this will not be the case with this project, as our natural language annotations will be converted to matrix form directly for raw input into our neural network. Humans can describe the same thing in pseudo-unlimited number of ways, it would be impossible to accommodate for all variations leading to a loss of information from the textual queries. Furthermore for our purposes of pedestrian re-identification the data set will be more limited in size and the need for real time results is lower than with online search engines. As such the features of the pedestrian images do not need to be pre-computed to an intermediate representation in advance. Pairwise similarity can be computed between all pedestrian images and natural language descriptions.
+
+\section{Requirements Capture}
+The primary objective of this project is to develop and optimise a system using deep networks to calculate the similarity between natural language descriptions and images for the purposes of person re-identification.  This project is open-ended and research based by nature due to the limited pre-existing examples of the use of deep networks for this purpose. However there are many pre-existing projects in related fields such as image-image pedestrian re-identification, and discrete text based image searching that could give some comparison to the results achieved during this project. Figure \ref{table:results} shows the results achieved by similar image-image person re-identification systems different ranks, tested and trained using the Viper image dataset.
+
+\begin{table}[ht]
+\caption{Top matching rank on Viper }
+\label{table:results}
+\begin{center}
+\begin{tabular}{M{0.1\textwidth}|M{0.1\textwidth}|M{0.035\textwidth}
+|M{0.035\textwidth}|M{0.035\textwidth}|M{0.035\textwidth}}
+\toprule
+Type & Methods & Rank1 & Rank5 & Rank10 & Rank20
+\\ \midrule
+Deep Learning based ReID & MLCNN \cite{multilabelcnn}& 31.23 & 62.85 & 76.23 & 88.26\\ \midrule
+Deep Learning based ReID & Deep Fusion Network \cite{youtube_enhanced}& 51.06 & 81.01 & 91.39 & 96.90\\ \midrule
+Deep Learning based ReID & Deep Feature Learning \cite{ding2015deep} & 40.50 & 60.80 & 70.40 & 84.40 \\ \midrule
+Deep Learning based ReID & SSDAL \cite{deepattributes} & 37.9 & 65.5 & 75.6 & 88.4 \\ \midrule
+Deep Learning based ReID & SSDAL \+ XQDA \cite{deepattributes} & 43.5 & 71.8 & 81.5 & 89.0 \\ \midrule
+Metric Learning Based & LOMO + XQDA \cite{lomoxqda} & 40.00 & 67.40 & 80.51 & 91.08\\ \midrule
+Metric Learning Based &LFDA \cite{LFDA} & 24.18 & 52.85 & 67.12 & 78.96\\ \midrule
+Metric Learning Based &KISSME \cite{KISSME} & 24.75 & 53.48 & 67.44 & 80.92\\ \midrule
+Metric Learning Based & ELF \cite{gray2008viewpoint} & 12.00 & - & 44.00 & 61.00
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\section{Analysis and Design}
+%High kevek overview of system design. many times final design different from original, why changes made, why interesting? what discoveries in project change work direction. if design not implemented fully descibe parts not implemented, if reason interesting write about it. where evolution of ideas interesting develop it, otherwise rder in which things done need not be shown. show engineering process, identifies design choices made, possivilities, why made particular choices, looking for rational args adn critical assess/. trade offs, reasons may be various/ out of your control.
+
+%Alll configurables
+%critical pipeline
+
+%Some images have "none" in their description column, these are removed during matlab loading.
+The system design is shown in figures \ref{fig:systsentence}, \ref{fig:systall} and \ref{fig:systimg}.
+
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{system_diagramsentence.png}
+\caption{Description Feature Generation System Diagram}
+\label{fig:systsentence}
+\end{figure*}
+
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{system_diagramimg.png}
+\caption{Image Feature Generation System Diagram}
+\label{fig:systimg}
+\end{figure*}
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{system_diagramall.png}
+\caption{Feature Matching System Diagram}
+\label{fig:systall}
+\end{figure*}
+
+
+\section{Implementation}
+
+%discusss most import/interetsing aspects, anything surprising/difficult. Good reasons to include code: algorithmic flow, highlight interesting optimisation, demonstrate interactions with data-structure, give example of input for tool that has been designed. Screenshots are bad, lazy shouldnt use for waveforms, results of runnin a tool (usuaylly text). Dont use as page filler/proof something compiled, marker expected to believe you. When discuss implementation focus on concpetual/logical design, only dive into details for interesting parts/important decisions. Thought out figs/diagrams more effective to convey design. WHether data struct, design-flow. software  avail on github
+
+The starting point for this project was the image person re-identification framework developed by \cite{lomoxqda}. This framework included the use of LOMO as a method of hand-crafted feature extraction, these image representations were then compared using XQDA, and the distance comparison matrix generated was then used to create a CMC Curve using a custom function.  
+
+One of the first steps I took in adapting this framework was to generalise the critical pipeline so that other feature extraction and similarity functions could be implemented. I created known arrays of these functions that could be selected and iterated through, and imageOptions, sentneceOptions, options variables to store the parameters that would control the functioning of the image and sentence feature extraction, and matching methods. The Matlab file projectPipeline.m acted as the central system, all parameters could be selected at the top of this file.
+
+I decided that it would be beneficial to have to capacity to generate image-image, sentence-sentence CMC curves as well as image-sentence. This is because the different methods of extracted image and sentence features could be experimented with independently leading to faster design iterations. It made sense the more discriminative and accurate the image and sentence features relating to their respective ids, the more likely the neural networks will be able to learn the subspace to measure the similarity of the sentence and image features on.
+
+Due to the large number of parameters that could be trained in this project to generate the CMC matching results, I needed to determine early on a robust naming system that would allow results to be loaded later and compared. Similarly feature representations were saved in the data/ directory, so that the same features could be repeatedly used with multiple matching and subspace learning methods. 
+
+Some parameters were prefixed such as the negative sampling and sampling of the Word2Vec program as their impact on the accuracy of the word vectors could be largely determined by the compute\_accuracy.sh executable. Once these parameters were fixed, an assortment of initial description representations could be generated by using different settings in a custom python program to combine, filter and map the word vector representations. These description representations were stored in the matlab\_sentnece\_vector directory, where they could be loaded via Matlab. A limitation here was that the description matrix representations individually exceeded 500MB, so they needed to be extracted on every computing session if new features using them needed to be generated, as they were too large to store on Github. 
+
+A powerful remote machine was provided with MATLAB 2016 installed to facilitate the running of multiple networks simultaneously. However a substantial portion of the networks experimented with required MATLAB 2017, including the alexnets, vggnets and custom CNN networks involving regression layers. These could only be performed on my laptop creating a bottleneck in my experiments. This led to me eventually abandoning the vggnet due to its comparatively long training time, with some training experiments taking several days to conclude. 
+
+The code for this project is available at \textit{ https://github.com/rs6713/finalYearProjectOfficial.git}.
+
+\subsection{Label Extraction}
+Image and Description names were stored in the format \textit{image=\textbf{a}_set=\textbf{b}_id=\textbf{c}.png} with \textbf{\textit{a,b,c}} representing integer numbers. A persons identity was determined by their set b \& id c with image a representing the camera viewpoint used. Therefore it was possible to set labels either as generally so as to specify the persons id (b\&c) or to refer to a person from a specific viewpoint (a\&b\&c). General labels were required for image-image matching and feature extraction, in order to train the networks with image pairs. However specific labels could be used for image-sentence and sentence-sentence matches. This was an additional parameter I chose to experiment with, as while images that the description specifically described would have the strongest associations, it is also expected there would be correlation with other images that contained the same person. By matching individual descriptions to all images that contained the same person, the training data doubles in size, however there is more variation among sentence-image matches that could lower the matching accuracy rate.
+Furthermore the training data size can also be increased in ways that doesn't potentially reduce the correlation between same identity descriptions and images, such as increasing the falsePositive ratio, so that more examples of non-matches are used to train the network. With the CUHK03 dataset the number of false matches far outstrips the positive, as for every pair of images, there are also 2716 non-match examples. 
+
+\subsection{Image Feature Extraction}
+
+Images were imported and stored in matrices using imread("") from the images/ directory with their labels processed from their filenames. Several different methods were experimented with to extract intermediate image feature representation to use in either image-image or sentence-image matching. 
+
+Images when fed into the neural network will need to be pre-processed as images in the CUHK03 data set range from 34x105 to 172x367 pixels, so images will need to be standardised in size. The Retinex algorithm could also optionally be applied to improve image detail.
+
+Alexnet and Vggnet are pre-trained image classification networks included as part of MATLAB's neural networking toolbox. 
+LOMO was 
+alexnet, vggnet, lomo
+
+
+Images and natural language descriptions will be stored as an array of matrices, with an associated array of their class labels (person identities). These will be randomised in order, then split into according training, validation and testing sets. 
+
+In all cases images are processed before being fed into the feature extractor, in all cases altering their dimensions to a pre-defined size. Alexnet and Vggnet required images to be 'zero center normalized' $X=X-mean(X(:)); X=X/std(X(:));$.
+AUTOENCODERS
+
+\subsection{Sentence Vector/Matrix Representation Extraction}
+
+Show pipeline for sentence matrix generation (python script, bash scripts etc)
+The vocabulary size, the number words,
+DIfficulties of people description, mentioning viewpoint. Makes sentences describing same person more dissimilar
+
+The word vector representation can be controlled using 3 parameters: 
+\begin{itemize} 
+    \item Size
+    \item Window
+    \item 
+    
+\end{itemize}
+
+
+Each word is converted to its vector representation using Word2Vec, these can then be combined to form a representation of the image description. There are several options for the combinationary method:
+\begin{itemize}
+    \item Mean-
+    \item Mode-
+    \item Matrix- This consists of arranging the
+\end{itemize}
+The original image descriptions have an average length of 52 words, so each sentence 
+The contributions of words to their overall description representation could be weighted according to a number of factors, words describing key physical characteristics such as "skirts" and "shirts" could be prioritized whereas "useless" yet frequent words such as "and", "the" could be removed altogether. 
+
+Remove sections of text that follow the word probably /mark and minify weight contribution
+Another option is the impact of phrases
+
+I will be using Word2Vec as the means to calculate the sentence representations, the parameters I can tune to create more accurate word vectors are: the sub-sampling threshold, the negative sampling threshold, the size of the word vectors produced, the phrase generation threshold and the size of the context windows. 
+The parameters for negative sampling and sub-sampling are chosen according to the size of the data available, therefore I will experiment with these to find the optimal combination using the word vector tools. Then I will vary the size of the context window, phrasing thresholds and size of the word vectors to produce multiple word vector representations. These have a direct impact on the semantic quality of words and richness of the initial sentence representations. Therefore they will be used for sentence feature extraction to see which in combination with which feature extraction method provide optimal description representation. 
+
+
+\subsection{Image/Sentence Matching}
+When memory useage became a restriction in training the neural network, sub-sampling the image and sentence representations through a variety of methods PCA/LDA to reduce the memory intensity and allow for more training match pairs was a possibility. Furthermore it became necessary to progressively test pairs of images and sentences, rather than generate all pairs and test in one go due to limited memory.
+
+\subsection{Neural Network Design}
+The number of annotations collected from the website will be an important factor when considering the depth and size of the neural network that can be developed in this project. The number of parameters of a neural network grows exponentially with its depth and number of neurons. A larger network with more parameters is more powerful but if no. parameters is greater than no. examples it leads to overfitting. This is somewhat beyond the consideration of this project as we have no immediate plans to generalise to other data sets but it would give misleading results of higher accuracy that could not be replicated. The number of examples provided to the system can be given by $y= K \times A$, where K is the RAP training subset size and A is the total number of annotations per image. This is what will constrain the size of the neural network we can develop which has important implications in that the larger the number of parameters the higher the dimension of the subspace that can be derived resulting in a greater rank-1 re-identification rate.
+
+The RAP data set will be split into training, validation and testing subsets. \cite{matlab} The training set is used to train the networks weights and biases, the validation set error is monitored during training (this should initially decrease but with overfitting start to rise). The networks weights and biases are saved at the minimum validation error. The test set is then applied and the results outputted from the network are used for CMC curves and comparison with all other networks results. If validation error differs greatly from test set error it is indication of a poor data split.
+
+How I split the data will depend on the data set size, (particularly how many annotations we collect) and the complexity of the neural net developed. Having enough varied cases in the training set to accurately model the domain is essential while also wanting to get accurate feedback across a wide range of test samples. A common division split is 60:20:20 for training, validation and testing respectively.
+
+Training the neural network will be very computationally taxing, and consist of feeding it with many pairwise examples of images and natural language descriptions. These can be positive examples such that they have a matching persons identity or negative examples so that they don't. The aim being to train the neural network, adjusting the parameters by a variant of back propagation, to generate an association function. The network will be trained over multiple epochs.
+
+\cite{balance_training}The balance between positive and negative examples used to train the network need to be constrained, if there are 10,000 images in the RAP training subset, assuming each has independent person identity, and 5 average annotations per image. This gives a ~0.0001 ratio of positive image/NL pairs to negative. Models trained on very imbalanced data sets tend to produce majority classifiers, over-predicting the majority class in this case, that the image and description do not match. There will need to be a balance between the total number of examples given and the balance between positive and negative examples. In this case we could just use 5 positive and 5 negative examples for each image, resulting in 100,000 50\% positive 50\% negative examples to train our network with.
+
+
+
+
+\section{Testing}
+IDS given to images and sentences: general vs precise.
+
+If results repeat but relevant put in appendix. Detailed test dad can be omitted if not relevant. An accurate summary of tests should be included in report itself. Some non-working designs can be described as if they work when they dont. Precise description of how it works and how it working was established is important.
+Less useful in analytical projects
+
+ SHOW PCA MAP OF LINKING SAME LABEL IMAGE AND SENTENCE FEATURES
+\subsection{Overview}
+The neural network can be considered a blackbox, so the success of the system relies solely on the relation of its inputs and outputs. In this case, this is the ability of the system to correctly return the similarity between a pedestrian image and pedestrian natural language description.
+
+To evaluate how well the neural network performs on unseen descriptions, training and test pools of images and descriptions will be drawn from the same domain, the RAP data set, but kept disjoint. 
+
+\cite{multilabelcnn} repeated the process of generating training and testing subsets 11 times to get 11 splits. The 11th was used for parameter tuning such as the learning rate, and weights for their MLCNN while the other 10 were used to generate average recognition rate results.
+As such our recognition results will be averaged over several iterations to improve reliability.
+\subsection{CMC- Cumulative Match Curve}
+The way these results are  presented is traditionally through a CMC (Cumulative Match Curve). For all the tests conducted, it displays the \% of them that had the correct matching image for the input description within a specific rank of the sorted image gallery. Some examples of techniques and their respective success rates at specific ranks can be shown in table \ref{table:results}. 
+
+
+
+
+\subsection{Comparisons to existing techniques in related fields}
+The method of searching for a person of the same identity using a natural language description is a new area of research and as such has no direct comparisons. However the success rate of research in the similar fields of matching images with the same person identities, and neural networks to match textual descriptions to objects can be useful in providing a comparative benchmark. This is only concerning the final results of each of the techniques, or specifically how successful the systems were at calculating the similarity between different pedestrian images, so that images of the same person were the most similar. 
+
+As I iterate through different techniques to learn the similarity between natural descriptions and images, the success of each will be determined solely by the resulting CMC  generated. This is because the solution I will be developing will generate no intermediary results, as the neural networks used require no intermediary feature representation. Traditionally in matching images of the same persons identity there is also the evaluation of the mean Average recognition success rate of the images features. This derives from the fact that the recognition process is separated into two stages, feature extraction and metric learning, the advantage of those systems is that they gives two clear options to improve a systems robustness and success rate rather than one metric to evaluate by.
+
+\subsection{Success rates within specific contexts}
+Contextual and environmental factors such as actions, change in viewpoints and occlusions pose some of the largest challenges in the re-identification field. The systems effectiveness at handling each of these factors can be evaluated by training the neural network with subsets of the data set and partitioning the results, to only include singular contextual variations. 
+
+To compare the results from pedestrian images for each of the viewpoints, I would remove images containing occlusions from all training and testing images, then partition the results between the different viewpoints. This would indicate which viewpoint is proving most problematic for person re-identification. By removing the interaction of viewpoints with occlusions the results more reliably represent the effect viewpoints have on successful re-identification. My earlier analysis of how people label images differently according to viewpoints and which attributes are most likely to be non-visible e.g from the back a bag, might offer insights into why this is the case. 
+
+Occlusions impact how many attributes are visible, how much information can be fed into the network, some attributes are more likely to be occluded than others e.g. shoes more so than perceived gender. However the number of occlusions is dependent on the environment and how cameras are situated, also it is not known whether the images chosen in the RAP data set were intentionally done so there would be a high percentage of occluded images to enable better results analysis. To calculate the impact occlusions have on the results of the system, we should avoid making assumptions about the default composition of pedestrian data sets in respect to occlusion, the likelihood that a persons image will be occluded. Therefore to evaluate occlusions impact on performance, a network will be trained with only non-occluded images as they are in the majority, and results will be partitioned based on occlusion. The loss of descriptive information associated with occlusion, the diversity of occlusion and the visible outliers in the image should result in lower success rates.
+
+The process of viewpoint partitioning would be repeated with: with actions vs. without. In both images without actions or occlusions are expected to obtain higher success rates, but the degree to which this is case will help identify in what contexts the system is failing the most. This will help identify when iterating techniques which areas the neural network should be improved guiding the measures I attempt.
+
+\cite{rapdataset} carried out similar factor analysis using the RAP data set, but within the context of matching the identities of input images rather than natural language descriptions. Their results would not be expected to necessarily follow the trends this project finds, as it does not have to take into account the human element of image descriptions. For instance, our preliminary research indicates humans focus on different attributes can be affected by the viewpoint of the person in the image. Their results showed it was easier to classify people from the front and back viewpoint but our results in table \ref{all_percent_table} indicate that images of pedestrians from the side attributes are on average more likely to be annotated. 
+
+
+
+
+
+
+\subsection{Sentence Semantics}
+One way to evaluate the 
+
+\cite{mikolov2013distributed} A benefit of extracting word presentations using these network models is that they capture many linguistic patterns and relations. For example: $vec("man")-vec("male")+vec("female") ~= vec("woman")$.  Similarly phrases can be evaluated using a combination of words and phrases: $vec("hand_bag")-vec("hand")+vec("back")~=vec("backpack")$. Word2Vec provides a script compute-accuracy.sh that allows you to input a text file containing relations like those shown above. The test is considered a success if the vector closest (cosine distance) to the one calculated is correctly predicted. I created question-phrases2.txt and question-words2.txt as one method to assess to what degree the semantic and syntactic quality of the words had been successfully captured. These are shown in figures \ref{table:question-words} and \ref{table:question-phrases}. Due to the limited dataset size and the style of describing a singular person, it was largely not possible to capture syntactic relationships such as $vec("quickly")-vec("quick")+vec("slow")~=vec("slowly").$ \cite{mikolov2013distributed} best model achieved an accuracy of 72\% on their dataset, with vector dimensionality 300, context size 5, however this was with a dataset of 33 billion words, far greater than what we have available. If we could source additional descriptive structures to increase the size of our original dataset, it might prove beneficial in the representational accuracy of our words.
+
+
+%FIGURES SHOWING EXAMPLES OF RELATIONS
+\begin{table}[ht]
+\caption{Question-words2.txt Subsection- Used to evaluate the accuracy of the word vector representations}
+\label{table:question-words}
+\begin{center}
+\begin{tabular}{M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}|M{0.1\textwidth}}
+\textbf{:opposite} 
+\\ \midrule
+boy & girl & man & woman
+\\	\midrule
+male & female & his & her
+\\	\midrule
+boy & girl & father & mother
+\\	\midrule
+old & young & long & short
+\\	\midrule
+black & white & dark & light
+\\	\midrule
+short & tall & small & large
+\\	\midrule
+slim & obese & skinny & big
+\\	\midrule
+\textbf{:similar}
+\\	\midrule
+fat & big & slim & slender
+\\	\midrule
+man & him & woman & girl
+\\	\midrule
+asian & chinese & man & male
+\\	\midrule
+long & long-sleeved & short & short-sleeved
+\\	\midrule
+\textbf{present-article}
+\\	\midrule
+wear & wears & hold & holds\\	\midrule
+wear & wearing & hold & holding\\	\midrule
+looks & looking & carries & carrying
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[ht]
+\caption{Question-phrases2.txt Subsection- Used to evaluate the accuracy of the phrase vector representations}
+\label{table:question-phrases}
+\begin{center}
+\begin{tabular}{M{0.14\textwidth}|M{0.14\textwidth}|M{0.06\textwidth}|M{0.06\textwidth}}
+\textbf{:opposite} 
+\\	\midrule
+walking\_away\_from \_the\_camera &towards\_the\_camera& left& right\\	\midrule
+walking\_away\_from \_the\_camera &towards\_the\_camera& male &female \\	\midrule
+she\_is &he\_is &long &short\\	\midrule
+she\_is& he\_is &light& dark\\	\midrule
+short\_hair& long\_hair& small &large\\	\midrule
+short\_hair &long\_hair& short &long \\	\midrule
+\textbf{:similar}
+\\	\midrule
+asian &an\_asian &asian & chinese
+\\	\midrule
+asian &an\_asian &asian &origin\\	\midrule
+backpack& back\_pack &handbag &hand\_bag\\	\midrule
+backpack &back\_pack &rucksack &ruck\_sack \\	\midrule
+pair\_of &shoes &pair\_of &glasses
+
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+
+Word2Vec also provides a similarity functionality where it can display the most similar word (cosine distance) to that inputted provided it is contained in the dataset. Beyond the question tests developed this gave a quick way to evaluate the quality of the semantic meaning encoded within the word. For each Word2Vec network configuration we could evaluate the most similar words to 5 pre-defined words: "asian", "bag", "head", "shirt", and "woman" to encapsulate five areas of description: ethnicity, accessories, body parts, clothing and perceived gender. 
+
+To visualise word semantic relations described above, using MATLAB I could reduce the word representations to 2 dimensions using PCA, then connect patterns of words. This further to the compute-accuracy script Word2Vec provides a means to evaluate to what degree word-relations have been encoded in the vector representations.
+
+phrase-accuracy, pca-graphs, word similarity
+\subsection{Match Results}
+CMS, CONFUSION GRAPHS used for image-image, sentence-sentence, image-sentence
+Discuss how know success criteria
+USING CONFUSION GRAPHS, ACCURACY, 
+the accuracy of the features is determined as to what degree the features of matching images are similar, cms curve, can give pca example. 
+
+http://gim.unmc.edu/dxtests/roc3.htm - accuracy
+
+
+Once sentence-image matching has been completed I can also visually analyse the top ranking true positve/negative matches and false positive/negative matches. This would hopefully give insight into whether mis-matched sentences and images could be attributed to images being similar or due to truly incorrect similarity calculations.
+
+\subsection{Sentence Generation and Matching Parameters}
+Parameters were used to control how word vector representations were generated, how they were combined to form description vector representation, and how features were extracted from these representations so that sentences describing the same image and/or the same person were similar.
+\begin{itemize}
+    \item \textbf{Word2Vec Size-}The size of the vector Word2Vec produced for every word. The larger the vectors the greater the variation between different words, but equally the more difficult to associate words that are similar. The size was a tradeoff between rich representation and not being so large that it could not be adequately trained on the limited descriptions vocabulary size.
+    \item \textbf{Word2Vec Window-}The size of the window to associate words with one another, this is limited to within the same description. The larger the window the more context a word could be given, this could even be set to a default large number so that every word associates with eachother within a description. However this would not give very robust word association, as all words within the window are associated equally.
+    \item \textbf{Word2Vec Threshold-} The threshold determines to what degree phrase collection has occurred, the lower the threshold the greater the introduction of phrases as individual words in our vocabulary.
+    \item \textbf{Pre-Processing Description Normalisation-} Once Word2Vec has calculated the individual word vector representation, these need to be combined to form a description representation. There were 3 options explored: 'Mean' taking the mean of the word vectors, 'Max' taking the Max columnwise of every word vector and 'Matrix' combining the word vectors to form a matrix representation. 
+    \item \textbf{Pre-Processing Description Mode-}The words contribution to the overall description representation can be weighted depending on the quality of the words representation, the words frequency in the vocabulary, and its pre-defined status, for example "and" is not a good descriptor distinguisher, but "skirt" would be.
+    \item \textbf{Feature Extraction Method-} How features are extracted from the Word2Vec description representation. This for the time being was purely using different setups of autoencoders e.g. autoEncoder.m, with varying learning rates and weight regularization.
+    \item \textbf{Training Level-}When deriving the description representation 3 levels of autoencoders could be used, 1 being one autoencoder reducing the feature size, 2 being two successive autoencoders reducing the feature size further and 3 combining the autoencoders with a softmaxlayer to form a deepnet. This can be trained with the sentenceIds, producing far more accurate feature representations, this was used for the majority of subsequent tests.
+    \item \textbf{Sentence Training Split-} Controlled the number of sentences used to train the  network, these were pre-ordered so that for example a training split of 200 sentences would contain 100 sentence pairs. This meant the  network would learn features that were similar for sentences of the same image/person. As there were sometimes 3 descriptions for the same person, this 3rd description could be used during testing to validate it got assigned the correct id. The sentence networks took less time to train than the image neural networks allowing for 1000's of sentences (half of those that exist), to be used.
+    \item \textbf{Sentence Precise Id-} This determined whether only descriptions that describe the same image were associated with eachother, or to all descriptions about images that contained the same person. In theory descriptions of the same exact image should be more similar, as there are no changes in viewpoint, occlusion, or lighting conditions. However there were only 36 images that had multiple descriptions limiting this avenue of exploration.
+    \item \textbf{Hidden Sizes 1,2-}Used in autoencode.m to control the progressize size of the feature representation calculated for the sentences. 
+    \item \textbf{Maxepochs 1,2,3-} The maximum number of training iterations for each successive autoEncoder deepnet layer.
+    \item \textbf{Sentence Split Method-}Controlled which sentences were comprised into the training set, there were three options: "pairs", "oneofeach" and "oneofeachplus". Pairs comprised the training set of groups of sentences of the same person/image so the neural network could learn the features that are similar for images of the same person or same images. Oneofeach ensured that the largest variety of descriptors of different people are used, so the neural network would learn which descriptions are not associated with oneanother. Oneofeachplus took 1 of every descriptor and any triple descriptions that existed, meaning there was a great variety of descriptions, but also multiple descriptions of the same ID existed.
+\end{itemize}
+
+Equally initially the sub-sampling and negative-sampling ideal values must be found, as these are directly determined by the size and structure of our text dataset, this was determined before the sentence representations were extracted with varying parameters. The sub-sampling formula chosen by Word2Vec aggressively subsamples words with frequency greater than the chosen threshold but maintains the frequency rankings. Sub-sampling is important to balance the influence of frequent and infrequent words, very important when considering our people descriptions data with limited size and many synonyms or differnt spellings accepted of the same word e.g. "backpack" and "back pack", "backpack" and "rucksack". 
+
+Another area to explore in combination with varying the subsampling is to apply filters to the original text dataset. Unlike many of the datasets used with Word2Vec our dataset is far smaller and with a very precise subject matter. It would make sense to try and correct spelling errors and converge multiple representations we know have the same meaning. For example "hand bag" and "handbag" could both be mapped to "handbag", "rucksack" and "backpack" are strong synonyms. This would increase the frequency of the words improving their representation robustness, although issues such as "hand bag" and "handbag" could equally be solved by the use of phrases.
+
+
+TRAINING TIME FOR SENTENCE NETWORKS
+
+ However there are only 36 images for which there are two descriptions, which means there is a limited training size of 72, 
+
+\subsection{Image Processing and Matching Parameters}
+Parameters were adjusted to control how the images were pre-processed, how their features were extracted and how the images that associated to the same person were matched.
+\begin{itemize}
+   \item \textbf{Feature Extraction Method-} Image features could be extracted using LOMO, or learned using fine tuned Alexnet/ Vgg16net networks. Different configurations of these neural networks were experimented with also.
+   \item \textbf{Number of Images-} This allowed for an override so that a lower number of images were used during training, testing and matching, used so that a greater variety of feature extraction configurations could be experimented with quickly.
+   \item \textbf{Image Pre-Processing Technique-} The CUHK03 dataset has a great variety of image sizes varying from (172, 367) to (34, 105). In contrast every feature extraction method required the input images to be a particular size: LOMO (128, 48), Alexnet (227, 227), Vggnet (224, 224). Images were prepared as such using one of two methods READALL and RESIZE, shown in figure \ref{fig:imageresize}.
+   \item \textbf{Image training Split-} Controlled the number of images used to train the neural network, these were pre-ordered so that for example a training split of 200 images would contain 100 image pairs. This meant the neural network would learn features that were similar for images of the same person. Testing images could then be constrained to have the same ids as those that had trained the neural network, and then see if it predicted the correct image id. However as the CUHK03 image subset I used only contained pairs and no triplets, this stage was not possible. Although it could be somewhat replicating by seeing if an image pair were mapped to the same classifier ID. Regarding the neural networks, in theory the larger the training size the greater the accuracy of the features extracted. While there is a chance of overfitting, this was beyond the scope of this project and unlikely as often the training size is greatly limited by the time it takes to train the neural network. Gathering results for VGG except for small number of images, and training size had to be largely abandoned due to the long times involved. Alexnet (3x faster than VGGnet) still took a significant amount of time as shown in figure \ref{table:ALEXTIMES}.
+    \item \textbf{Image Split Method-} Controlled which images were comprised into the training set, there were three options: "pairs", "oneofeach" and "oneofeach+". Pairs comprised the training set of pairs of images of the same person so the neural network could learn the features that are similar for images of the same person. Oneofeach ensured that the largest variety of images of different people are used, so the neural network would learn which images are not associated with oneanother. 
+\end{itemize}
+
+   \begin{table}[ht]
+\caption{Training times of Alexnet with ascending training sizes.}
+\label{table:ALEXTIMES}
+\begin{center}
+\begin{tabular}{M{0.15\textwidth}|M{0.15\textwidth}}
+\toprule
+\textbf{Training Size} & \textbf{Training Time (hrs)}
+\\ \midrule
+50 & 6989
+\\ \midrule
+100 & 13962
+\\ \midrule
+150 & 20960
+\\ \midrule
+200 & 27852
+\\ \midrule
+250 & 36370
+\\ \midrule
+300 & 42572
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Indeed one of the largest problems during the project was that I only had access to MATLAB R2017 on my own laptop. Only this version contained the toolboxes and functions required for the Alexnet, Vggnet and twoChannel convulational regression network. This limited the number of results I could gather and eventually led to me largely abandoning using Vggnet to extract image features.
+
+
+
+
+
+
+\subsection{Sentence-Image Matching Parameters}
+Parameters during this final classification stage were used to control the degree of image-description association, how feature representations were pre-processed, the testing size to gather the final  and the classification method used. 
+\begin{itemize}
+    \item \textbf{Classification Method-} The following methods were developed: XQDA, and a two channel neural network. 
+    \item \textbf{False Positive Ratio-} The false positive ratio controlled when training the neural network how many positive and negative examples were given. For example with twoChannel.m sentences and images feature representations were combined, and these were associated with a matchId indicating whether they had the same id 1, or were unrelated 0. By increasing the ratio, more examples are available to train the neural network and ensure that it learns what image-sentence relations to tend to 0. However too high and the weightings will be influenced to tend all tested matches to 0.
+    \item \textbf{Dimension Match Method-} In the event the sentence and image features did not match in dimension, they had to be adjusted to allow for comparison. This was required as a form of pre-processing for most classification methods. PCA was used to reduce the size of the features commonly.  
+    \item \textbf{Test Size-} This was applicable when using a neural network to classify the image and sentence matches to reduce the memory size required and testing time. For example with twoChannel.m when testing matches, every image would have to be compared to every description, there was ~4000 known images and description matches, giving a testing size of ~16,000,000 which was not possible 
+    \item \textbf{Precise Id-} Descriptions are associated with images, but there are two images of every person. In theory descriptions will have a stronger association with their particular image, than the other image of the same person. By changing this parameter we could hopefully see how accurately matching descriptions and images associate compared to descriptions with all images that contain the person they originally described.  
+\end{itemize}
+
+\subsection{Test Variations Overview}
+There is also interaction between the different parameters chosen, for example PCA is currently being used to alter the dimensions of the sentence and image features so that they match. However these could also be respectively changed so that they already match, removing this information loss stage. While the images and sentences dimensions that provide the best individual matching might be different, the matching between images and sentences might be best acheived by matching dimensions. It is important at this point to remember the original purpose of the project is to correlate between images and sentences, and while the dimensions found for image matching and sentence matching might be optimal, these are only found as guides to the final experiment parameters for image-sentence matching.
+
+\section{Results}
+
+\subsection{Word Vector Representation}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{phraseallaccuracy}
+\caption{Max Accuracy \% for Phrase Thresholds across different window sizes}
+\label{fig:phrase_all_acc}
+\end{figure}
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{phrase0accuracy}
+\caption{Phrase Threshold 0 Accuracy \% of Window Sizes for different Word Vector Sizes}
+\label{fig:phrase_0_acc}
+\end{figure}
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{phrase200accuracy}
+\caption{Phrase Threshold 200 Accuracy \% of Window Sizes for different Word Vector Sizes}
+\label{fig:phrase_200_acc}
+\end{figure}
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{phrase150accuracy}
+\caption{Phrase Threshold 150 Accuracy \% of Window Sizes for different Word Vector Sizes}
+\label{fig:phrase_150_acc}
+\end{figure}
+
+
+pca, phrase accuracy, first words come up with most similar, impact of size.
+
+look at size of vocabulary, frequency of words etc.
+\subsection{Image Descriptions}
+general vs specific.
+Descriptions that described the same image
+\subsection{Images}
+\subsection{Sentence-Images}
+Test plan-how program/system verified (ALL CONFIGURATIONS)
+Understanding and analysis of the algorithm, program behavior.. when deliverable is product quantifiable then testing shows how functional correctness established, this chapter showss quantifiably how well product works. 
+Empirical relationship between params and results, show approp graphs
+theory predicts performance of results compared to expectation and difference noted and explained 
+(sentences that will perform best, word associations in pca predicted and results, impact of phrases, then resulting sentence-images) training size up leads better accurac, but worse generalisation. 
+
+semi-empirical models of behavior may be developed/justified/tested
+
+why were some exps carried out but others not, types of exps.sim carried out should be descibed (established likely most accurate sentence configutrations for time sake only p[roceeded with these) wheat were important params in sim and how impacted results. 
+
+\section{Evaluation}
+%Contain critical eval of your work, compare to previous analysis, algorithms/products and when related to orig objective. compare to pre-existing systems. To what extent fulfilled orig objs, what has changed/ rationlise it. how does scope work differ from related work. show evidence to think sa engineer and be critical of own work, eval its significance. look at what orig stated in inception report, What are adv, disadv compared to related work. examiners expect your project to show evidence of ability to think as engineerm eval own work and its sig. compare outcome with init objs and requirements. give reasons and explain why things changed. should not require examiners to read interim report, explain changes between final and init obj in seld-contained manner. nsummarise rather than repeat requirements capture stated earliuer in report
+
+The end point of this project is largely undefined as it is research based and experimental by nature, although of course improving the functionality of the starting neural network frameworks is the end goal. To develop a system that achieves the greatest rate of successful person re-identification with robustness to different viewpoints, occlusions, noise and environments.
+
+%The large intra-class variation of a pedestrians appearance (across viewpoints, occlusions and environments), combined with the great variation in how humans express and describe pedestrian qualities may mean no reliable, meaningful connection can be made. We know significant accuracy results have been gathered with CBIR systems that use key words, but this is a step lower representation than high level natural language semantics.
+
+\subsection{Criticisms of evaluation}
+A criticism of the premise of this project is that while this technology is for example likened to the contextual use of forensic science, where an eye witness statement is used to identify a person from CCTV footage, it is in part a false equivalency. In this project users annotate the images, and these annotations are matched to images in the gallery. However the annotations given are not like real world descriptions, they are given under calm condition with unlimited exposure to the image source, this leads to more detailed notes. Even when just comparing to a situation when someone has to recall what someone looks like, this would likely be far less detailed than the annotations given by someone using our website. **link reliability of witness statements, ability to remember images** This means that the annotations and images in this experiment will have a higher correlation than one would reasonably expect to achieve in a real world situation. 
+
+A better comparison would perhaps at least be to expose the user to the image for 5 seconds, wait 10 seconds, then ask for a detailed description of the person. However this would likely make it much more challenging to gain useful results, as images would have a less reliable connection to the annotations. The results generated are still useful in helping guide the development of the neural network and to see to what capacity it is possible to identify images from natural language descriptions of matching identity. Just results with as high percentages, should not expected to be achieved with real world application of the system.
+
+Other metrics could have been used for cross evaluation such as time to calculate, how the number of samples available impacts the success rate of person re-identification. However these are not the focus of the paper and will not be used.
+
+\section{Conclusions and Further Work}
+%how successful been, what acheived, how could work be taken further. identify positively what worthwhile in your work, clear descriptions of work limitations, what did you not have time to complete, describe work you did not have time to complete as further work. In conclusion summarise key achievements, refer to other sections for more detail when necc. what design chouces did you make along hte way and why. what was most diff/clever part of project,  why was it diff, how did you overcome diffs, did you discover/invent anything novel, what did you learn. difficult does not nexx mean take longest time
+
+%explore overfitting
+%other methods to extract and compare features
+%other methods to measure matches
+
+\subsection{Experiment with new improve datasets}
+Since the introduction of CUHK03 new, larger, more varied and thoroughly labelled datasets have emerged, these have the possibility to improve this projects results by providing larger datasets. The RAP dataset is a large varied collection of more than 40,000 pedestrian images, each manually labeled with 72 attributes of interest e.g. gender, age, so it is 3 times as large as the CUHK03 dataset and has been manually labelled with a large variety attributes. This would mitigate the lack of reliable association between the natural language descriptions and images due to its large size and great level of variation across its images. 
+
+The introduction of labelled attributes would also facilitate other forms of intermediate feature representation, not possible with the CUHK03 dataset. It would also allow evaulations for each system settings to be conducted across a range of dataset segmentations e.g. occlusions. Performance has been compared against results achieved in similar fields. Final conclusions drawn on the use of neural networks for CBIR in the context of pedestrian re-identification using NL input.
+& Effective comparison to neighbouring systems can only take place if meaningful results have been obtained. 
+
+With the development of neural networks there is always the risk of overfitting to the data set you are working with. This is where the error on the training set is driven to a very small value, but when new inputs from the testing set are applied the error is large due to a lack of generalisation. This should be mitigated by the RAP data sets number of samples and non-heterogeneous nature with many examples of occlusions, different viewpoints, taken from over 20 different cameras. However an extension here would be to apply a different existing pedestrian image data set during an additional training stage to improve the networks robustness.
+
+
+Importantly this dataset also offers 4 additional attributes when compared to pre-existing datasets such as VIPER:
+\begin{itemize}
+\item \textbf{Viewpoints (front, back left right)}, based on full body direction
+\item \textbf{Occlusions (Top, Bottom, Left, Right)}, when the corresponding part is invisible, four sources of occlusion have been identified: person, environment, attachment and other, occlusion can be multi-value.
+\item  \textbf{Body Parts (Head, Upper, Lower Body)} coarse positions are annotated as shown in figure \ref{fig:rap_body_parts}
+\item \textbf{ Fine attributes (actions, role, body type)} such as "talking, customer, large" respectively
+\end{itemize}
+
+Taking these environmental and contextual factors into account should generate a more robust algorithm; viewpoints and occlusions are a large source of intra-class variation among the same person's image. As can be seen from figure \ref{fig:views}, the distribution of the RAP data set is such that images are taken from a sufficiently balanced variety of viewpoints. Furthermore 33\% of the RAP data set images are occluded. This means each viewpoint and occlusion type should be statistically significant when training the neural network, increasing the neural networks ability to correctly identify pedestrians given a variety of these contextual and environmental factors.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.35\textwidth]{view_distribution}
+\caption{Distribution of viewpoints across RAP data set}
+\label{fig:views}
+\end{figure}
+\cite{rapdataset}This project will be using the RAP data set, a collection of 41,585 images with resolution 1280x720 originating from 26-surveillance cameras situated long term at a shopping mall. Each image is manually annotated with 72 attributes (69 binary, 3 multi-class), including environmental and contextual factors, these can be seen in Table \ref{table:rap_dataset}. 
+
+
+\begin{table}[ht]
+\caption{Attributes annotated in the RAP data set}
+\label{table:rap_dataset}
+\begin{center}
+\begin{tabular}{M{0.2\textwidth}|M{0.2\textwidth}}
+\toprule
+Class & Attribute
+\\ \midrule
+Spatial-Temporal & Time, SceneID, image position, Bounding box of body/head-shoulder/upper-body/lower-body/accessories
+\\ \midrule
+Whole & Gender, age, body shape, role
+\\ \midrule
+Accessories & Backpack, single shoulder bag, handbag, plastic bag, paper bag etc
+\\ \midrule
+Postures,Actions & Viewpoints, telephoning, gathering, talking, pushing, carrying etc
+\\ \midrule
+Occlusions & Occluded parts, Occlusion types
+\\ \midrule
+\begin{tabular}{M{0.08\textwidth}|M{0.08\textwidth}}Parts & 
+  \begin{tabular}{M{0.07\textwidth}}Head \\ \midrule
+  Upper \\ \midrule Lower\end{tabular}
+\end{tabular}
+&
+\begin{tabular}{M{0.2\textwidth}}
+Hair style, hair color, hat, glasses\\ \midrule
+  Clothes style, clothes, color \\ \midrule 
+  Clothes style, clothes color, footwear style, footwear color
+\end{tabular}
+\\	\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+GUI
+
+\section{User guide}
+WHen deliverable meant to be used by others, details how to install, configure/use (otherwise omit if dont make image enquiry gui) 
+
+
+
+
+
+
+
+
+
+
+\section{Conclusions}
+To conclude, the focus of this project is to develop a Pedestrian Re-Identification System using neural network architectures on the CUHK03 pedestrian data set to calculate the similarity between pedestrian images and natural language descriptions. This is a form of CBIR, providing users with a new, more powerful and intuitive way to search through pedestrian footage, than the limited manual image annotation and indexing methodology currently widely implemented. The challenges in this project arise from the great intra-class variation of image appearances and natural descriptions for the same person. The success of this project can be assessed by comparison to similar fields such as CBIR using keywords, and Pedestrian Re-Indentification systems using query images and/or handcrafted features.
+
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\printbibliography
+
+\begin{appendices}
+\chapter{Some Appendix}
+github account. just list where specific things are found/ how to access them.
+
+appendix should include/refer to all technical details needed by another user to continue code development
+test data sets(again for large volsm, electronic form more appropriate), raw results (table of unreadable results should not be put in report but may be put in appendix). 
+\end{appendices}
+
+
+
+\end{document}
+

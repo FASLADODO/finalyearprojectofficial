@@ -17,7 +17,7 @@ fileFrequencies="word-vocab.txt"
 #Load all word vector associations
 #FILEOUT2="vectors-phrase-win"${WINDOWS[$w]}"-threshold"${THRESHOLDS[$t]}".txt"
 #print glob.glob("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/vectors-phrase-win*.txt")                                  vectors-phrase-win
-files=["phrasevectors-txt/"+i for i in os.listdir("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/phrasevectors-txt") if i.find(".txt")!=-1]
+files=["phrasevectors-txt/"+i for i in os.listdir("/home/rs6713/Documents/finalyearprojectofficial/word2vec/trunk/phrasevectors-txt") if i.find(".txt")!=-1 and i.find("size500")!=-1]
 #i.find("vectors-phrase-win3-threshold100")!=-1 and , how to pick specific ones
 thresh_dict={"200": "phrase-descriptions/phrase0","150": "phrase-descriptions/phrase1", "100" : "phrase-descriptions/phrase2", "50": "phrase-descriptions/phrase3", "25": "phrase-descriptions/phrase4", "10": "phrase-descriptions/phrase5", "0": "phrase-descriptions/phrase-descriptions.txt"}
 print files
