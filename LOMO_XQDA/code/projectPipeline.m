@@ -93,14 +93,14 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=500;%199 1000
-imageOptions.hiddensize2=200;%100 500
+imageOptions.hiddensize1=1500;%199 1000
+imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
-imageOptions.width=40;
-imageOptions.height=40;
+imageOptions.width=50;
+imageOptions.height=50;
 
 
 %options.noImages=0;%if 0 then all run
@@ -134,9 +134,9 @@ sentenceOptions.preciseId=false;
 %% What to run?
 featureForce=true;
 sentenceForce=false;
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
-classifySentences=true;
+classifySentences=false;
 
 
 %% Feature Extractors and Classifiers
@@ -489,7 +489,7 @@ if(classifySentenceImages)
                         config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
                         csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                         %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
-                        labels{((i-1)*ft*st)+ (st*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
+                        labels{((i-1)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2))+ (size(sentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
                         
                         %if there exists no results for this sentence
                         %config, images extracted
@@ -570,7 +570,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    labels{(ft*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
+                    labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
@@ -650,7 +650,7 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
-                    labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
+                    labels{(size(sentenceGalFea,1)*(i-1))+st}=strrep(csvFileName,'.csv','');
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
                         for iter=1:numFolds
 
