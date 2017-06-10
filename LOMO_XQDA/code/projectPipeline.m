@@ -98,9 +98,11 @@ imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
+
 imageOptions.retinexy=true;
 imageOptions.width=40;
 imageOptions.height=40;
+
 
 
 %options.noImages=0;%if 0 then all run
@@ -143,8 +145,10 @@ matchForce=true;
 featureForce=false;
 sentenceForce=false;
 classifyImages=true;
+
 classifySentenceImages=true;
 classifySentences=true;
+
 
 
 %% Feature Extractors and Classifiers
@@ -177,7 +181,9 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
+
 'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
+
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
@@ -498,7 +504,7 @@ if(classifySentenceImages)
                         config='';%strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                         csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                         %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
-                        labels{((i-1)*ft*st)+ (st*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
+                        labels{((i-1)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2))+ (size(sentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
                         
                         %if there exists no results for this sentence
                         %config, images extracted
@@ -579,7 +585,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    labels{(ft*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
+                    labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
@@ -659,8 +665,10 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
-                    labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
-                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 )
+
+                    labels{(size(sentenceGalFea,1)*(i-1))+st}=strrep(csvFileName,'.csv','');
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+
                         for iter=1:numFolds
 
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter, options);

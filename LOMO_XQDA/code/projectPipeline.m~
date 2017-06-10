@@ -93,14 +93,24 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
+<<<<<<< HEAD
 imageOptions.hiddensize1=500;%199 1000
+=======
+imageOptions.hiddensize1=1500;%199 1000
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
+<<<<<<< HEAD
 imageOptions.retinexy=true;
 imageOptions.width=40;
 imageOptions.height=40;
+=======
+imageOptions.retinexy=false;
+imageOptions.width=50;
+imageOptions.height=50;
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 
 
 %options.noImages=0;%if 0 then all run
@@ -143,8 +153,13 @@ matchForce=true;
 featureForce=false;
 sentenceForce=false;
 classifyImages=true;
+<<<<<<< HEAD
 classifySentenceImages=true;
 classifySentences=true;
+=======
+classifySentenceImages=false;
+classifySentences=false;
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 
 
 %% Feature Extractors and Classifiers
@@ -177,14 +192,24 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
+<<<<<<< HEAD
 'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
+=======
+'mode0_norm3outvectors_phrase_win7_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size200.txt'
+
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
+<<<<<<< HEAD
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches}];
 classifiersRun=[AUTOENCODEMATCHES_F];
+=======
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2}];
+classifiersRun=[TWOCHANNEL2_F];
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches'};
@@ -498,7 +523,7 @@ if(classifySentenceImages)
                         config='';%strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                         csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                         %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
-                        labels{((i-1)*ft*st)+ (st*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
+                        labels{((i-1)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2))+ (size(sentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
                         
                         %if there exists no results for this sentence
                         %config, images extracted
@@ -579,7 +604,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    labels{(ft*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
+                    labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
 
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
@@ -659,8 +684,13 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
+<<<<<<< HEAD
                     labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 )
+=======
+                    labels{(size(sentenceGalFea,1)*(i-1))+st}=strrep(csvFileName,'.csv','');
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+>>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
                         for iter=1:numFolds
 
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter, options);
