@@ -168,8 +168,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode0_norm3outvectors_phrase_win7_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size200.txt'
-
+'mode2_norm3outvectors_phrase_win3_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win10_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win3_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win10_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win10_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win3_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win7_threshold150_size100.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
