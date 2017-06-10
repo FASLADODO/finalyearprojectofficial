@@ -82,7 +82,7 @@ addpath(classifyDir);
 addpath(evalDir);
 
 %% Experiment parameters
-numFolds=5; %Number of times to repeat experiment
+numFolds=2; %Number of times to repeat experiment
 numRanks = 100; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
@@ -94,11 +94,11 @@ imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
 imageOptions.hiddensize1=500;%199 1000
-imageOptions.hiddensize2=200;%100 500
+imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-imageOptions.retinexy=false;
+imageOptions.retinexy=true;
 imageOptions.width=40;
 imageOptions.height=40;
 
@@ -106,8 +106,15 @@ imageOptions.height=40;
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='first'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
-options.testSize=1000; %used for twoChannel, as matches go to 16,000,000 otherwise
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
+options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
+options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
+options.hiddensize2=20;%100 500
+options.maxepoch1=200;
+options.maxepoch2=100;
+options.maxepoch3=200;
+%try larger flasepositiveratio
+
 
 sentenceOptions.featureExtractionMethod=@autoEncodeSentences;
 sentenceOptions.featureExtractionName='autoEncodeSentences';
@@ -132,10 +139,11 @@ sentenceOptions.preciseId=false;
 
 
 %% What to run?
-featureForce=true;
+matchForce=true;
+featureForce=false;
 sentenceForce=false;
-classifyImages=false;
-classifySentenceImages=false;
+classifyImages=true;
+classifySentenceImages=true;
 classifySentences=true;
 
 
@@ -150,6 +158,7 @@ AUTOENCODEIMG2_F=5;
 XQDA_F=1;
 TWOCHANNEL_F=2;
 TWOCHANNEL2_F=3;
+AUTOENCODEMATCHES_F=4;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -168,18 +177,17 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode0_norm3outvectors_phrase_win7_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size200.txt'
-
+'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2}];
-classifiersRun=[TWOCHANNEL2_F];
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches}];
+classifiersRun=[AUTOENCODEMATCHES_F];
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
-classifierName={'XQDA','twoChannel','twoChannel2'};
+classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches'};
 %dimensionMatchMethod='pca'; %pca, first 
 
 features=[];
@@ -462,8 +470,8 @@ if(classifySentenceImages)
    
     %numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
-    matchingConfig=sprintf('fpr_%ddmm_%dts_%d',options.falsePositiveRatio,options.dimensionMatchMethod, options.testSize);
-    
+    %matchingConfig=sprintf('fpr_%ddmm_%dts_%d',options.falsePositiveRatio,options.dimensionMatchMethod, options.testSize);
+    matchingConfig=strjoin(cellfun(@num2str,struct2cell(options),'UniformOutput',0),'');
     labels=cell(length(classifiersRun)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2),1);   
     %%Select classifiers want to run
     for i=1:length(classifiersRun)
@@ -487,14 +495,14 @@ if(classifySentenceImages)
 
                         currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                         temp=strrep(resultSentences(st),'../results/sentences/','');
-                        config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+                        config='';%strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                         csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                         %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
                         labels{((i-1)*ft*st)+ (st*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
                         
                         %if there exists no results for this sentence
                         %config, images extracted
-                        if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                        if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 || matchForce==true)
                             %Repeat classification process numFolds times
                             for iter=1:numFolds
 
@@ -652,7 +660,7 @@ if(classifySentences)
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
                     labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
-                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 )
                         for iter=1:numFolds
 
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter, options);
