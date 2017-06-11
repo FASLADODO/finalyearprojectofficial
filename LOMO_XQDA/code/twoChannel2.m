@@ -83,7 +83,9 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     reluLayer('Name', 'relu3');
     fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
     softmaxLayer
-    classificationLayer()]; % The software determines the size of the output during training.
+    classificationLayer()
+%    regressionLayer()
+]; % The software determines the size of the output during training.
 
     layers
     options = trainingOptions('sgdm','InitialLearnRate',0.001, ...
