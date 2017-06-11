@@ -187,8 +187,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 %will have different vector lengths
 sentencesRun={
 
- 'mode1_norm3outvectors_phrase_win10_threshold200_size500.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size500.txt'
-
+ 'mode1_norm3outvectors_phrase_win10_threshold200_size500.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)

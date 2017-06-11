@@ -17,27 +17,31 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     %% Assert that gal and probe labels match (they should)
     'WHether the gal and prob, sentences and images are matching labels'
     isequal(galClassLabel,probClassLabel)
-    
+     if(~options.trainAll)
+        numMatches=int16(size(galFea,1)/2);
+    else
+       numMatches=size(galFea,1); 
+    end   
     fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio')
     %% Create training positive matches
-    numMatches=size(galFea,1);
-    p = randperm(numMatches);
-    galFea1 = galFea(p(1:int16(numMatches/2)), : );
-    probFea1 = probFea(p(1:int16(numMatches/2)), : );
-    classLabelGal1=galClassLabel(p(1:int16(numMatches/2)));
-    classLabelProb1=probClassLabel(p(1:int16(numMatches/2)));
-    matchResults=ones(int16(numMatches/2),1)*threshAim;
-    temp=zeros((int16(numMatches/2)*options.falsePositiveRatio),1);
-    matchResults((1+int16(numMatches/2)):((1+options.falsePositiveRatio)*int16(numMatches/2)),1)=temp;
+    
+    p = randperm(size(galFea,1));
+    galFea1 = galFea(p(1:numMatches), : );
+    probFea1 = probFea(p(1:numMatches), : );
+    classLabelGal1=galClassLabel(p(1:numMatches));
+    classLabelProb1=probClassLabel(p(1:numMatches));
+    matchResults=ones(numMatches,1)*threshAim;
+    temp=zeros((numMatches*options.falsePositiveRatio),1);
+    matchResults((1+numMatches):((1+options.falsePositiveRatio)*numMatches),1)=temp;
     
     
     %% Now add training false matches
-    for i= 1: int16(numMatches/2)
+    for i= 1: numMatches
         falseMatchIndexes=find(classLabelProb1 ~= classLabelGal1(i));
         n = randperm(length(falseMatchIndexes));
         for f=1:options.falsePositiveRatio
-            galFea1(i+int16(numMatches/2)*f,:)=galFea1(i,:);
-            probFea1(i+int16(numMatches/2)*f,:)= probFea1(falseMatchIndexes(n(f)),:);%Take random negative match  
+            galFea1(i+numMatches*f,:)=galFea1(i,:);
+            probFea1(i+numMatches*f,:)= probFea1(falseMatchIndexes(n(f)),:);%Take random negative match  
         end
     end
     %can go through pairs by first index, creates two columns, each col
@@ -47,7 +51,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     size(probFea1)
     half=(size(probFea,2)/2);
     fprintf('Assembling joint input for trainingNetwork2');
-    for i=1:int16(numMatches/2)*(options.falsePositiveRatio+1)
+    for i=1:numMatches*(options.falsePositiveRatio+1)
         size(galFea1(i,:))
         size(probFea1(i,:))
         trainingPairs(:,1,1,i)=(galFea1(i,:)-mean2(galFea1(i,:)))/std2(galFea1(i,:));
@@ -72,13 +76,12 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     noFeatsIn=size(galFea,2);
     
     layers = [ ...
-    imageInputLayer([size(galFea,2) 2 1 ], 'Name', 'input1');
-    convolution2dLayer([2,2], 40 , 'Name', 'convol1'); %25 filters,  2 width height 1
+    imageInputLayer([size(trainingPairs,1) 2 1 ], 'Name', 'input1');
+    convolution2dLayer([4,2], 40 , 'Name', 'convol1'); %25 filters,  2 width height 1
     reluLayer('Name', 'relu1');
     maxPooling2dLayer([2,1], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
-    convolution2dLayer([2,2], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
+    convolution2dLayer([4,1], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
     reluLayer('Name', 'relu2');
-    %maxPooling2dLayer([1,2], 'Name', 'maxpool2'); %2 width height 1, moves 2 along horizontally, 0 vertically
     fullyConnectedLayer(5, 'Name', 'fulll1');
     reluLayer('Name', 'relu3');
     fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
@@ -88,27 +91,26 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
 ]; % The software determines the size of the output during training.
 
     layers
-    options = trainingOptions('sgdm','InitialLearnRate',0.001, ...
-        'MaxEpochs',5);%can onle select ecxecutionenvironment in 2017
+    netOptions = trainingOptions('sgdm','InitialLearnRate',0.005, ...
+        'MaxEpochs',100,'Verbose',true);%can onle select ecxecutionenvironment in 2017
     %lets move to autoencoder then see what have in computing labs
     size(trainingPairs)
     size(matchResults)
     fprintf('Training network twoChannel2\n');
-    net = trainNetwork(trainingPairs,categorical(matchResults),layers,options)
-    view(net)
-    net.outputs
-    net.outputConnect=[0,0,0,0,0,0,0,0,1,0,0];
+    trainingPairs(:,:,:,1)
+    deepnet = trainNetwork(trainingPairs,categorical(matchResults),layers,netOptions)
 
+    
 
 
 
     trainTime = toc(t0);
-    testSize=min(options.testSize, int16(numMatches/2));
+    testSize=min(options.testSize, int16(size(galFea,1)/2));
     %% Squeeze removes singleton dimensions
-    galFea2 = galFea(p(int16(numMatches/2)+1 :int16(numMatches/2)+ testSize), : );
-    probFea2 = probFea(p(int16(numMatches/2)+1 : int16(numMatches/2)+testSize), : );
-    classLabelGal2=galClassLabel(p(int16(numMatches/2)+1 : int16(numMatches/2)+testSize));
-    classLabelProb2=probClassLabel(p(int16(numMatches/2)+1 :int16(numMatches/2)+ testSize));
+    galFea2 = galFea(p(int16(size(galFea,1)/2)+1 :int16(size(galFea,1)/2)+ testSize), : );
+    probFea2 = probFea(p(int16(size(galFea,1)/2)+1 : int16(size(galFea,1)/2)+testSize), : );
+    classLabelGal2=galClassLabel(p(int16(size(galFea,1)/2)+1 : int16(size(galFea,1)/2)+testSize));
+    classLabelProb2=probClassLabel(p(int16(size(galFea,1)/2)+1 :int16(size(galFea,1)/2)+ testSize));
     
     
                     
@@ -121,11 +123,13 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                             temp2=(probFea2(u,:)-mean2(probFea2(u,:)))/std2(probFea2(u,:));
                             testPairs(:,1,1,1)=temp1;
                             testPairs(:,2,1,1)=temp2;
-                           
-
-                            values=predict(net,testPairs);
+                            
+                            values = activations(deepnet,testPairs,'finalOutPut');
+                            %values=predict(net,testPairs);
                             match=classLabelGal2(i)==classLabelProb2(u);
-                            dist(i,u)=abs(threshAim-values);  %ones down centre should match
+                            %2 numbers 1e-04 i think 1st is prob 0 second
+                            %is prob 1 
+                            dist(i,u)=abs(threshAim-values(2));  %ones down centre should match
                             
                             if(match && i~=1 && u~=1 && i<10)
                                fprintf('match %0.2f and nearest wrong neighbour %0.2f \n',dist(i,u), dist(i,u-1)) 
