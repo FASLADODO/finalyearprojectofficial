@@ -10,7 +10,7 @@
 %Produces the match matrix between images and sentences
 %Training images are indexed by their last index
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFea,galClassLabel,probClassLabel, iter, options)
+function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches1(galFea, probFea,galClassLabel,probClassLabel, iter, options)
     threshAim=1;
     
     %% Assert that gal and probe labels match (they should)
@@ -27,7 +27,8 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
     numMatches=size(galFea1,1);
     classLabelGal1=galClassLabel(p(1:numMatches));
     classLabelProb1=probClassLabel(p(1:numMatches));
-    
+    'whether class label gal 1 and prob 1 are equal'
+    isequal(classLabelGal1,classLabelProb1)
     matchResults=ones(numMatches,1)*threshAim;
     temp=zeros((numMatches*options.falsePositiveRatio),1);
     size(temp);
@@ -83,25 +84,19 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
                 'MaxEpochs',options.maxepoch1, ...%200
                 'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
                 'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
-                'SparsityProportion',0.5, ...%each hidden layer neuron proportion that output
+                'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
                 'ScaleData', false); 
                 %view(autoenc1)
                 fprintf('Running autoencoder2...\n');
                 features1=encode(autoenc1, pairsTrainIn);
-                autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
-                    'MaxEpochs',options.maxepoch2, ...%100
-                    'L2WeightRegularization',0.002, ...
-                    'SparsityRegularization',4, ...
-                    'SparsityProportion',0.25, ...
-                    'ScaleData', false);
-                features2 = encode(autoenc2,features1);
+                
                 'size features2'
-                size(features2)
+                size(features1)
                 'size matchresults'
                 size(matchResults)
             
-                softnet = trainSoftmaxLayer(features2,matchResults.','MaxEpochs',options.maxepoch3);
-                deepnet = stack(autoenc1,autoenc2,softnet);
+                softnet = trainSoftmaxLayer(features1,matchResults.','MaxEpochs',options.maxepoch3);
+                deepnet = stack(autoenc1,softnet);
                 view(deepnet)
                 
                     fprintf(' Training autoencoders with examples...\n');
