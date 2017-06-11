@@ -20,6 +20,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel(galFea, probFea,galCl
     %% Create training positive matches
     numMatches=size(galFea,1);
     p = randperm(numMatches);
+    
     galFea1 = galFea(p(1:int16(numMatches/2)), : );
     probFea1 = probFea(p(1:int16(numMatches/2)), : );
     classLabelGal1=galClassLabel(p(1:int16(numMatches/2)));

@@ -112,9 +112,12 @@ options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL 
 options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
-options.maxepoch1=200;
-options.maxepoch2=100;
-options.maxepoch3=200;
+options.hiddensize3=10;%100 500
+options.maxepoch1=20;
+options.maxepoch2=10;
+options.maxepoch3=100;%classification layer
+options.maxepoch4=5;
+options.trainAll=1;
 %try larger flasepositiveratio
 
 
@@ -162,6 +165,9 @@ XQDA_F=1;
 TWOCHANNEL_F=2;
 TWOCHANNEL2_F=3;
 AUTOENCODEMATCHES_F=4;
+AUTOENCODEMATCHES3_F=5;
+AUTOENCODEMATCHES1_F=6;
+FEEDFORWARD_F=7;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -180,17 +186,19 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
+
  'mode1_norm3outvectors_phrase_win10_threshold200_size500.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size500.txt'
+
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches}];
-classifiersRun=[AUTOENCODEMATCHES_F];
-sentenceClassifiersRun=[XQDA_F];
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch}];
+classifiersRun=[AUTOENCODEMATCHES3_F];
+sentenceClassifiersRun=[TWOCHANNEL2_F];
 imageClassifiersRun=[XQDA_F];
-classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches'};
+classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward'};
 %dimensionMatchMethod='pca'; %pca, first 
 
 features=[];
@@ -408,34 +416,36 @@ for i=1:length(featureExtractorsRun)
 
             %% Create sentenceImages that has all image features in same order as sentences
             % Place both images that match single sentence descriptor id
-            sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
-            imageIds=zeros(size(sentences,2)*2,1);
-            for s= 1:size(sentences,2)
-                sId=sentenceIds(s);%sentence id need to find match in descriptors
-                %for every sentence config
-                for c=1:size(sentences,1)
-                    %ids of imageMatches, bit pointless
-                    %temp=personIds2(find(personIds2==sId),:);
+            if(classifySentenceImages)
+                sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
+                imageIds=zeros(size(sentences,2)*2,1);
+                for s= 1:size(sentences,2)
+                    sId=sentenceIds(s);%sentence id need to find match in descriptors
+                    %for every sentence config
+                    for c=1:size(sentences,1)
+                        %ids of imageMatches, bit pointless
+                        %temp=personIds2(find(personIds2==sId),:);
 
-                    imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                    if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
-                        fprintf('Error there are not two image matches for every sentenceId with generalId \n')
+                        imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
+                        if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
+                            fprintf('Error there are not two image matches for every sentenceId with generalId \n')
+                        end
+                        imageIds(s)=sId;%temp(1);
+                        sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
+                        %if(~preciseId)
+                            imageIds(s+size(sentences,2))=sId;%temp(2);                        
+                            sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                        %end
                     end
-                    imageIds(s)=sId;%temp(1);
-                    sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                    %if(~preciseId)
-                        imageIds(s+size(sentences,2))=sId;%temp(2);                        
-                        sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
-                    %end
                 end
-            end
 
-            %images are placed with matching id in begin and end in
-            %sentenceImages ids are repeated, sentences are similatly repeated
-            sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
-            sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
-            sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
-            fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
+                %images are placed with matching id in begin and end in
+                %sentenceImages ids are repeated, sentences are similatly repeated
+                sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
+                sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
+                sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
+                fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
+            end
         end
         %% Load image feature pairs into galFea, probFea, with associated class labels
 
@@ -470,7 +480,7 @@ if(classifySentenceImages)
     else
         numRanks=size(sentenceImgGalFea,3)/2-1;
     end
-   
+   fprintf('------------------------------------------ \n CLASSIFY SENTENCE IMAGES \n --------------------------------------------\n');
     %numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
     %matchingConfig=sprintf('fpr_%ddmm_%dts_%d',options.falsePositiveRatio,options.dimensionMatchMethod, options.testSize);
@@ -538,13 +548,14 @@ if(classifySentenceImages)
                         fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,15,20,100]) * 100));
 
                     end
-
+                    title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
+                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
+                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                    legend(labels);
+                    hold off
                 end
     end
-     title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
-    legend(labels);
+     
 end
 
 
@@ -561,13 +572,14 @@ end
 
 %%Select classifiers want to run
 if(classifyImages)
-    
+    fprintf('------------------------------------------ \n CLASSIFY IMAGES \n --------------------------------------------\n');
     if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
         numRanks=options.testSize;
     else
         numRanks=int16(size(galFea,2)/2-1);
     end
     cms = zeros(numFolds, numRanks);
+    
     figure
 
     labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
@@ -587,7 +599,7 @@ if(classifyImages)
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
                     
-                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 || matchForce==true)
                         %Repeat classification process numFolds times
                         for iter=1:numFolds
 
@@ -625,7 +637,7 @@ if(classifyImages)
     xlabel('No. Ranks of ordered Gallery Images') % x-axis label
     ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
-    
+    hold off;
 end
 
 
@@ -640,6 +652,7 @@ end
 
 %%Select classifiers want to run
 if(classifySentences)
+    fprintf('------------------------------------------ \n CLASSIFY SENTENCES \n --------------------------------------------\n');
     if(options.testSize~=0 && sentenceClassifiersRun(i)~=XQDA_F)
         numRanks=options.testSize;
     else
@@ -647,6 +660,7 @@ if(classifySentences)
     end
     
     cms = zeros(numFolds, numRanks);
+   
     figure    
 
     labels=cell(length(sentenceClassifiersRun)*size(sentenceGalFea,1),1);
@@ -664,7 +678,7 @@ if(classifySentences)
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
 
                     labels{(size(sentenceGalFea,1)*(i-1))+st}=strrep(csvFileName,'.csv','');
-                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
+                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 || matchForce==true)
 
                         for iter=1:numFolds
 
@@ -702,6 +716,7 @@ if(classifySentences)
     xlabel('No. Ranks of ordered Gallery Images') % x-axis label
     ylabel('% Gallery Images that contain match within that rank') % y-axis label
     legend(labels);
+    hold off;
 end
 
 
