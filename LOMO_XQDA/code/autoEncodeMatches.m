@@ -16,14 +16,21 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
     %% Assert that gal and probe labels match (they should)
     'WHether the gal and prob, sentences and images are matching labels'
     isequal(galClassLabel,probClassLabel)
+    %[galClassLabel(1:20);probClassLabel(1:20)]
     
     fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio\n')
     %% Create training positive matches
+    %% Create training positive matches
+    if(~options.trainAll)
+        numMatches=int16(size(galFea,1)/2);
+    else
+       numMatches=size(galFea,1); 
+    end
     numExamples=size(galFea,1);
     p = randperm(numExamples);
-    galFea1 = galFea(p(1:int16(numExamples/2)), : );
-    probFea1 = probFea(p(1:int16(numExamples/2)), : );
-    numMatches=size(galFea1,1);
+    galFea1 = galFea(p(1:numMatches), : );
+    probFea1 = probFea(p(1:numMatches), : );
+    
     classLabelGal1=galClassLabel(p(1:numMatches));
     classLabelProb1=probClassLabel(p(1:numMatches));
     
@@ -54,16 +61,18 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
     for i=1:numMatches*(options.falsePositiveRatio+1)
         size(galFea1(i,:));
         size(probFea1(i,:));
-        trainingPairs(:,1,i)=galFea1(i,:);
+        trainingPairs(:,1,i)=(galFea1(i,:)-mean2(galFea1(i,:)))/std2(galFea1(i,:));
         size(trainingPairs);
-        trainingPairs(:,2,i)=probFea1(i,:);
+        trainingPairs(:,2,i)=(probFea1(i,:)-mean2(probFea1(i,:)))/std2(probFea1(i,:));
         size(trainingPairs);
     end
     
     %% Zero mean. unit variance training
+   %{
     for i=1:size(trainingPairs,3)
         trainingPairs(:,:,i)=(trainingPairs(:,:,i)-mean2(trainingPairs(:,:,i)))/std2(trainingPairs(:,:,i));
     end
+    %}
     %% Encoder parameters
     rng('default');%explicit set random seed, so results replicable
     hiddenSize1 = options.hiddensize1;%size of hidden layer in autoencoder, want smaller than sentences
@@ -73,23 +82,23 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
                  for i=1:size(trainingPairs,3)
                    pairsTrainIn{i}=squeeze(trainingPairs(:,:,i));
                  end
-
+                 
 
                 fprintf('Running autoencoder1...\n');
                 autoenc1 = trainAutoencoder(pairsTrainIn,hiddenSize1, ...
                 'MaxEpochs',options.maxepoch1, ...%200
                 'L2WeightRegularization',0.004, ... %impact of L2 reglarizer on network weights
                 'SparsityRegularization',4, ... %impact sparcity regularizer, constrains sparsity of hidden layer output
-                'SparsityProportion',0.15, ...%each hidden layer neuron proportion that output
+                'SparsityProportion',0.5, ...%each hidden layer neuron proportion that output
                 'ScaleData', false); 
-                view(autoenc1)
+                %view(autoenc1)
                 fprintf('Running autoencoder2...\n');
                 features1=encode(autoenc1, pairsTrainIn);
                 autoenc2 = trainAutoencoder(features1,hiddenSize2, ...
                     'MaxEpochs',options.maxepoch2, ...%100
                     'L2WeightRegularization',0.002, ...
                     'SparsityRegularization',4, ...
-                    'SparsityProportion',0.1, ...
+                    'SparsityProportion',0.25, ...
                     'ScaleData', false);
                 features2 = encode(autoenc2,features1);
                 'size features2'
@@ -99,7 +108,7 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
             
                 softnet = trainSoftmaxLayer(features2,matchResults.','MaxEpochs',options.maxepoch3);
                 deepnet = stack(autoenc1,autoenc2,softnet);
-
+                view(deepnet)
                 
                     fprintf(' Training autoencoders with examples...\n');
                     inputSize = size(trainingPairs,1)*size(trainingPairs,2);
@@ -110,6 +119,9 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
                     for i = 1:size(trainingPairs,3)
                         xTrain(:,i) = pairsTrainIn{i}(:);
                     end
+                    %'xTrain vs pairsTrainIn'
+                   % xTrain(:,1)
+                   % pairsTrainIn{1}(:)
                     
                     %deepnet.numInputs
                     'size xTrain'
@@ -133,24 +145,30 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches(galFea, probFe
                     classLabelProb2=classLabelProb2(1:testSize);
                     
                     fprintf('Creating distance vector...\n');
-                    dist=zeros(size(galFea2,1),size(probFea2,1));
+                    %dist=zeros(size(galFea2,1),size(probFea2,1));
                     xAll = zeros(inputSize,1);
-                    
+                    dist=zeros(size(galFea2,1),size(probFea2,1));
                     %% Test every combination and store in results dist matrix
                     for i = 1:size(galFea2,1)
-                        fprintf('Currently tested %d/%d\n', i, size(galFea2,1))
+                        %fprintf('Currently tested %d/%d\n', i, size(galFea2,1))
                         for u=1:size(probFea2,1)
-                            xAll(:,1)=[galFea(i,:),probFea1(u,:)].';
-                            xAll=(xAll-mean2(xAll))/std2(xAll);
+                            temp1=(galFea2(i,:)-mean2(galFea2(i,:)))/std2(galFea2(i,:));
+                            temp2=(probFea2(u,:)-mean2(probFea2(u,:)))/std2(probFea2(u,:));
+                            xAll(:,1)=[temp1,temp2].';
+                            %xAll(:,1)=[galFea2(i,:),probFea2(u,:)].';
+                            %xAll=(xAll-mean2(xAll))/std2(xAll);
                             values=deepnet(xAll);
                             match=classLabelGal2(i)==classLabelProb2(u);
-                            dist(i,u)=-abs(threshAim-values);  %ones down centre should match
-                            if(match && i~=1 && u~=1)
+                            dist(i,u)=abs(threshAim-values);  %ones down centre should match
+                            
+                            if(match && i~=1 && u~=1 && i<10)
                                fprintf('match %0.2f and nearest wrong neighbour %0.2f \n',dist(i,u), dist(i,u-1)) 
                             end
                         end
                     end
-                    
-
+                    'size distance matrix'
+                    size(dist)
+                    'whether labels of galfea2, probfea2 match'
+                    isequal(classLabelGal2,classLabelProb2)
     
 end
