@@ -143,10 +143,9 @@ sentenceOptions.preciseId=false;
 %% What to run?
 matchForce=true;
 featureForce=false;
-sentenceForce=false;
-classifyImages=true;
-
-classifySentenceImages=true;
+sentenceForce=true;
+classifyImages=false;
+classifySentenceImages=false;
 classifySentences=true;
 
 
@@ -181,9 +180,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-
-'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
-
+ 'mode1_norm3outvectors_phrase_win10_threshold200_size500.txt', 'mode1_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size500.txt', 'mode1_norm3outvectors_phrase_win5_threshold200_size500.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
