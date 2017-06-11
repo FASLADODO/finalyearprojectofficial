@@ -144,9 +144,9 @@ sentenceOptions.preciseId=false;
 matchForce=true;
 featureForce=false;
 sentenceForce=false;
-classifyImages=true;
+classifyImages=false;
 
-classifySentenceImages=true;
+classifySentenceImages=false;
 classifySentences=true;
 
 
@@ -181,9 +181,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-
-'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
-
+'mode2_norm3outvectors_phrase_win7_threshold0_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold0_size300.txt', 'mode2_norm3outvectors_phrase_win7_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win3_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win3_threshold150_size300.txt', 'mode2_norm3outvectors_phrase_win10_threshold150_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold200_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold0_size300.txt', 'mode2_norm3outvectors_phrase_win5_threshold150_size300.txt', 'mode2_norm3outvectors_phrase_win7_threshold150_size300.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
@@ -411,34 +409,36 @@ for i=1:length(featureExtractorsRun)
 
             %% Create sentenceImages that has all image features in same order as sentences
             % Place both images that match single sentence descriptor id
-            sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
-            imageIds=zeros(size(sentences,2)*2,1);
-            for s= 1:size(sentences,2)
-                sId=sentenceIds(s);%sentence id need to find match in descriptors
-                %for every sentence config
-                for c=1:size(sentences,1)
-                    %ids of imageMatches, bit pointless
-                    %temp=personIds2(find(personIds2==sId),:);
+            if(classifySentenceImages)
+                sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
+                imageIds=zeros(size(sentences,2)*2,1);
+                for s= 1:size(sentences,2)
+                    sId=sentenceIds(s);%sentence id need to find match in descriptors
+                    %for every sentence config
+                    for c=1:size(sentences,1)
+                        %ids of imageMatches, bit pointless
+                        %temp=personIds2(find(personIds2==sId),:);
 
-                    imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                    if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
-                        fprintf('Error there are not two image matches for every sentenceId with generalId \n')
+                        imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
+                        if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
+                            fprintf('Error there are not two image matches for every sentenceId with generalId \n')
+                        end
+                        imageIds(s)=sId;%temp(1);
+                        sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
+                        %if(~preciseId)
+                            imageIds(s+size(sentences,2))=sId;%temp(2);                        
+                            sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                        %end
                     end
-                    imageIds(s)=sId;%temp(1);
-                    sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                    %if(~preciseId)
-                        imageIds(s+size(sentences,2))=sId;%temp(2);                        
-                        sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
-                    %end
                 end
-            end
 
-            %images are placed with matching id in begin and end in
-            %sentenceImages ids are repeated, sentences are similatly repeated
-            sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
-            sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
-            sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
-            fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
+                %images are placed with matching id in begin and end in
+                %sentenceImages ids are repeated, sentences are similatly repeated
+                sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
+                sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
+                sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
+                fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
+            end
         end
         %% Load image feature pairs into galFea, probFea, with associated class labels
 

@@ -93,36 +93,28 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=1000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-<<<<<<< HEAD
 imageOptions.hiddensize1=500;%199 1000
-=======
-imageOptions.hiddensize1=1500;%199 1000
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-<<<<<<< HEAD
+
 imageOptions.retinexy=true;
 imageOptions.width=40;
 imageOptions.height=40;
-=======
-imageOptions.retinexy=false;
-imageOptions.width=50;
-imageOptions.height=50;
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
+
 
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
-options.falsePositiveRatio=5;
+options.falsePositiveRatio=1;
 options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
 options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
-options.hiddensize1=20;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
-options.hiddensize2=1;%100 500
-options.maxepoch1=100;
-options.maxepoch2=50;
-options.maxepoch3=100;
+options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
+options.hiddensize2=20;%100 500
+options.maxepoch1=200;
+options.maxepoch2=100;
+options.maxepoch3=200;
 %try larger flasepositiveratio
 
 
@@ -152,14 +144,11 @@ sentenceOptions.preciseId=false;
 matchForce=true;
 featureForce=false;
 sentenceForce=false;
-classifyImages=true;
-<<<<<<< HEAD
-classifySentenceImages=true;
-classifySentences=true;
-=======
+classifyImages=false;
+
 classifySentenceImages=false;
-classifySentences=false;
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
+classifySentences=true;
+
 
 
 %% Feature Extractors and Classifiers
@@ -192,24 +181,15 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-<<<<<<< HEAD
-'mode0_norm3outvectors_phrase_win10_threshold200_size300.txt'
-=======
-'mode0_norm3outvectors_phrase_win7_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win3_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win7_threshold150_size200.txt', 'mode0_norm3outvectors_phrase_win5_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold200_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold0_size200.txt', 'mode0_norm3outvectors_phrase_win10_threshold150_size200.txt'
 
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
+'mode2_norm3outvectors_phrase_win10_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win7_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win3_threshold150_size100.txt', 'mode2_norm3outvectors_phrase_win3_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win10_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win10_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold200_size100.txt', 'mode2_norm3outvectors_phrase_win7_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win5_threshold0_size100.txt', 'mode2_norm3outvectors_phrase_win3_threshold0_size100.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_FAUTOENCODEIMG_F
-<<<<<<< HEAD
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches}];
 classifiersRun=[AUTOENCODEMATCHES_F];
-=======
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2}];
-classifiersRun=[TWOCHANNEL2_F];
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches'};
@@ -430,6 +410,7 @@ for i=1:length(featureExtractorsRun)
 
             %% Create sentenceImages that has all image features in same order as sentences
             % Place both images that match single sentence descriptor id
+            i
             sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
             imageIds=zeros(size(sentences,2)*2,1);
             for s= 1:size(sentences,2)
@@ -684,13 +665,10 @@ if(classifySentences)
                     %Repeat classification process numFolds times
                     temp=strrep(resultSentences(st),'../results/sentences/','');
                     csvFileName=char(strcat('../results/sentences/',currClassifierName,'_', temp));                   
-<<<<<<< HEAD
-                    labels{(st*(i-1))+st}=strrep(csvFileName,'.csv','');
-                    if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 )
-=======
+
                     labels{(size(sentenceGalFea,1)*(i-1))+st}=strrep(csvFileName,'.csv','');
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2)
->>>>>>> 69b4e591b25a25bd7c3190af999dd7d92df8fb19
+
                         for iter=1:numFolds
 
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceGalFea(st,:,:)), squeeze(sentenceProbFea(st,:,:)),squeeze(sentenceClassLabelGal(st,:)),squeeze(sentenceClassLabelProb(st,:)),iter, options);
