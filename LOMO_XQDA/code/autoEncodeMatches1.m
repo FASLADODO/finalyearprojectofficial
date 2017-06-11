@@ -20,13 +20,20 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches1(galFea, probF
     
     fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio\n')
     %% Create training positive matches
+    if(~options.trainAll)
+        numMatches=int16(size(galFea,1)/2);
+    else
+       numMatches=size(galFea,1); 
+    end
     numExamples=size(galFea,1);
     p = randperm(numExamples);
-    galFea1 = galFea(p(1:int16(numExamples/2)), : );
-    probFea1 = probFea(p(1:int16(numExamples/2)), : );
-    numMatches=size(galFea1,1);
+    galFea1 = galFea(p(1:numMatches), : );
+    probFea1 = probFea(p(1:numMatches), : );
+    
     classLabelGal1=galClassLabel(p(1:numMatches));
     classLabelProb1=probClassLabel(p(1:numMatches));
+    
+    
     'whether class label gal 1 and prob 1 are equal'
     isequal(classLabelGal1,classLabelProb1)
     matchResults=ones(numMatches,1)*threshAim;
@@ -136,7 +143,7 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches1(galFea, probF
                     fprintf('Creating distance vector...\n');
                     %dist=zeros(size(galFea2,1),size(probFea2,1));
                     xAll = zeros(inputSize,1);
-                    
+                    dist=zeros(size(galFea2,1),size(probFea2,1));
                     %% Test every combination and store in results dist matrix
                     for i = 1:size(galFea2,1)
                         %fprintf('Currently tested %d/%d\n', i, size(galFea2,1))

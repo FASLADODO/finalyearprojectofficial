@@ -93,6 +93,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     size(matchResults)
     fprintf('Training network twoChannel2\n');
     net = trainNetwork(trainingPairs,categorical(matchResults),layers,options)
+    view(net)
     net.outputs
     net.outputConnect=[0,0,0,0,0,0,0,0,1,0,0];
 

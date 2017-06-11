@@ -117,6 +117,7 @@ options.maxepoch1=20;
 options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
+options.trainAll=1;
 %try larger flasepositiveratio
 
 
@@ -167,6 +168,7 @@ TWOCHANNEL2_F=3;
 AUTOENCODEMATCHES_F=4;
 AUTOENCODEMATCHES3_F=5;
 AUTOENCODEMATCHES1_F=6;
+FEEDFORWARD_F=7;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -193,11 +195,11 @@ sentencesRun={
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}];
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch}];
 classifiersRun=[AUTOENCODEMATCHES3_F];
-sentenceClassifiersRun=[TWOCHANNEL2_F,AUTOENCODEMATCHES3_F];
+sentenceClassifiersRun=[AUTOENCODEMATCHES3_F];
 imageClassifiersRun=[XQDA_F];
-classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1'};
+classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward'};
 %dimensionMatchMethod='pca'; %pca, first 
 
 features=[];

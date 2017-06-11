@@ -20,16 +20,16 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches3(galFea, probF
     
     fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio\n')
     %% Create training positive matches
-    if(~options.trainAll)
-        numMatches=int16(size(galFea,1)/2);
+    if(options.trainAll)
+        numExamples=int16(numMatches/2);
     else
-       numMatches=size(galFea,1); 
+       numExamples=numMatches; 
     end
     numExamples=size(galFea,1);
     p = randperm(numExamples);
-    galFea1 = galFea(p(1:numMatches), : );
-    probFea1 = probFea(p(1:numMatches), : );
-    
+    galFea1 = galFea(p(1:int16(numExamples/2)), : );
+    probFea1 = probFea(p(1:int16(numExamples/2)), : );
+    numMatches=size(galFea1,1);
     classLabelGal1=galClassLabel(p(1:numMatches));
     classLabelProb1=probClassLabel(p(1:numMatches));
     
@@ -138,7 +138,6 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches3(galFea, probF
                     %deepnet.outputConnect=[0, 0,1];
                     
                     %% Need to assemble test all combinations
-                    numMatches=int16(size(galFea,1)/2);
                     galFea2 = galFea(p(numMatches+1:end), : );
                     probFea2 = probFea(p(numMatches+1:end), : );
                     classLabelGal2=galClassLabel(p(numMatches+1:end));
@@ -152,7 +151,7 @@ function [dist,classLabelGal2, classLabelProb2]=autoEncodeMatches3(galFea, probF
                     classLabelProb2=classLabelProb2(1:testSize);
                     
                     fprintf('Creating distance vector...\n');
-                    dist=zeros(size(galFea2,1),size(probFea2,1));
+                    %dist=zeros(size(galFea2,1),size(probFea2,1));
                     xAll = zeros(inputSize,1);
                     
                     %% Test every combination and store in results dist matrix
