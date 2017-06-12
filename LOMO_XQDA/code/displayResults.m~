@@ -21,19 +21,19 @@ MATRIX=3;
 READ_ALL=3;
 READ_DISTORT=4;
 
-mode=IMAGES;
+mode=SENTENCESSPECIFIC;
 
 imageClassifier='XQDA';
 imageFeature='autoEncode2d';
 trainLevel=3;
 noImages=0;
 imageTrainType='pairs';
-imageSizes=[30,40,50];%display all imageHiddenSizes default
+imageSizes=[40,50];%display all imageHiddenSizes default
 imageRetinex=[0]; %1 or 0
 imageMaxEpoch=[[100,50,100]];%[200,100,200], [400,200,400]
 imageReadIn=[READ_DISTORT];%READ_ALL
-imageTrainingSizes= [1000]; %2000,1500,1000,500
-imageHiddenSizes=[[500,200];[500,100];[1000,200];[800,200];[1500,200];[1500,100]];
+imageTrainingSizes= [1000,2000]; %2000,1500,1000,500
+imageHiddenSizes=[[1000,200];[1500, 200];[1500,100]];
 imageNumRanks=1000;
 
 % Will be the same for all exps
@@ -49,13 +49,15 @@ sentenceModes=[NORMAL];%,SIMWORDS,USELESSWORDS
 sentenceWindows=[3,5,7,10];
 sentenceThresholds=[200,150,0];
 sentenceHiddenSizes=[[100,40]];%etc
-sentenceMaxEpochs=[[20,10,100];[10,20,50]];
+sentenceMaxEpochs=[[20,10,100]];
 sentenceTrainSplit=[2000];%200
 
-sentencesResults={
-    'autoEncodeMatches_mode0_norm3outvectors_phrase_win10_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat',...
-    'twoChannel2_mode1_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'twoChannel_mode0_norm3outvectors_phrase_win3_threshold100_size50autoEncodeSentences_trainLevel3_pairs_hiddensizes200100_maxepochs102050_trainsplit200.mat'
+sentencesRun={
+    'XQDA_mode0_norm3outvectors_phrase_win10_threshold150_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    
+    %'autoEncodeMatches_mode0_norm3outvectors_phrase_win10_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat',...
+    %'twoChannel2_mode1_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    %'twoChannel_mode0_norm3outvectors_phrase_win3_threshold100_size50autoEncodeSentences_trainLevel3_pairs_hiddensizes200100_maxepochs102050_trainsplit200.mat'
 };
 
 
@@ -113,12 +115,16 @@ switch(mode)
                                     load( fileName);
                                     switch(s)
                                         case 1
-                                            color='--';
+                                            color='';
+                                            widthy=1.5;
                                         case 2
-                                            color='*';
+                                            color=':';
+                                            widthy=1.5;
                                         case 3
-                                            color='
-                                    plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
+                                            color='';
+                                            widthy=1.5;
+                                    end
+                                    plot(1 : size(meanCms,2), meanCms,color,'LineWidth',widthy)
                                     hold on;
                                 else
                                     fprintf('filename %s not found\n',fileName);
@@ -210,7 +216,48 @@ switch(mode)
            end
         end
         labels
-        title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
+        title(sprintf('CMS Curve for Sentence Matching'))
+        %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
+        xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+        ylabel('% Gallery Sentences that contain match within that rank') % y-axis label
+        labels=labels(~cellfun('isempty',labels))  
+        legend(labels);
+    
+    case SENTENCESPECIFIC
+        labels=cell(length(sentencesRun),1);
+        
+        for i=1:length(sentencesRun)
+            props{i,:}=strsplit(sentencesRun{i},'_');
+        end
+        for e=size(props,2)
+            for i=length(sentencesRun)
+                repeatdetected=false;
+               for u=length(sentencesRun)
+                    if(props{i,e}==props{u,e} && i~=u)
+                        repeatdetected=true;
+                    end
+               end
+               if(repeatdetected)
+                  props{i,e}=''; 
+               end
+            end
+        end
+        
+        for i=1:length(sentencesRun)
+            fileName=strcat('../results/sentences/',sentencesRun{i},'.mat');
+            if (exist(fileName, 'file') == 2) 
+                fprintf('filename %s found, extracting now\n',fileName);
+                labels{i}=cellstr(props{i,:});
+                load( fileName);
+                plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
+                hold on;
+            else
+            	fprintf('filename %s not found\n',fileName);
+            end  
+        end
+        
+        title(sprintf('CMS Curve for Sentence Matching'))
+        %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
         xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
         ylabel('% Gallery Sentences that contain match within that rank') % y-axis label
         labels=labels(~cellfun('isempty',labels))  
