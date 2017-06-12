@@ -10,17 +10,13 @@
 %Produces the match matrix between images and sentences
 %Training images are indexed by their last index
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galClassLabel,probClassLabel, iter, options)
+function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galClassLabel,probClassLabel, iter, options)
     testSize=options.testSize;
     threshAim=1;
     
     %% Assert that gal and probe labels match (they should)
     'WHether the gal and prob, sentences and images are matching labels'
     isequal(galClassLabel,probClassLabel)
-
-    'initial gal, prob sizes'
-    size(galFea)
-    numMatches=0;
      if(~options.trainAll)
         numMatches=int16(size(galFea,1)/2);
     else
@@ -51,22 +47,21 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     %can go through pairs by first index, creates two columns, each col
     %represents an image/sentence feature set
     %trainingPairs= cat(3,galFea1,probFea1);
-    %size(galFea1) %should be no.examples, no.features
-    %size(probFea1)
+    size(galFea1) %should be no.examples, no.features
+    size(probFea1)
     half=(size(probFea,2)/2);
     fprintf('Assembling joint input for trainingNetwork2');
+    
     for i=1:numMatches*(options.falsePositiveRatio+1)
-       % size(galFea1(i,:))
-       % size(probFea1(i,:))
-        trainingPairs(:,1,1,i)=(galFea1(i,:)-mean2(galFea1(i,:)))/std2(galFea1(i,:));
-       % size(trainingPairs)
-        trainingPairs(:,2,1,i)=(probFea1(i,:)-mean2(probFea1(i,:)))/std2(probFea1(i,:));
-       % size(trainingPairs)
+        size(galFea1(i,:))
+        size(probFea1(i,:))
+        trainingPairs(:,:,1,i)=reshapeSquare((galFea1(i,:)-mean2(galFea1(i,:)))/std2(galFea1(i,:)));
+        size(trainingPairs)
+        trainingPairs(:,:,2,i)=reshapeSquare((probFea1(i,:)-mean2(probFea1(i,:)))/std2(probFea1(i,:)));
+        size(trainingPairs)
     end
     t0 = tic;
-    'size of trainingPairs is'
-    size(trainingPairs)    
-    
+        
     %% Create and train net
     %setdemorandstream(391418381) Optional setting of random params 
     %{
@@ -82,14 +77,12 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     noFeatsIn=size(galFea,2);
     
     layers = [ ...
-    imageInputLayer([size(trainingPairs,1) 2 1 ], 'Name', 'input1');
-    convolution2dLayer([4,2], 15 , 'Name', 'convol1'); %25 filters,  2 width height 1
+    imageInputLayer([size(trainingPairs,1) size(trainingPairs,2) 2 ], 'Name', 'input1');
+    convolution2dLayer([3,3], 20 , 'Name', 'convol1'); %25 filters,  2 width height 1
     reluLayer('Name', 'relu1');
-
-   % maxPooling2dLayer([2,1], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
-   % convolution2dLayer([2,1], 15, 'Name', 'convol2'); %25 filters,  2 width height 1
-   % reluLayer('Name', 'relu2');
-   % convolution2dLayer([3,1],20,'Name','convol3');
+    maxPooling2dLayer([2,2], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
+    convolution2dLayer([2,2], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
+    reluLayer('Name', 'relu2');
     fullyConnectedLayer(5, 'Name', 'fulll1');
     reluLayer('Name', 'relu3');
     fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
@@ -99,13 +92,13 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
 ]; % The software determines the size of the output during training.
 
     layers
-    netOptions = trainingOptions('sgdm','InitialLearnRate',0.01, ...
-        'MaxEpochs',500,'Verbose',true);%can onle select ecxecutionenvironment in 2017
+    netOptions = trainingOptions('sgdm','InitialLearnRate',0.005, ...
+        'MaxEpochs',100,'Verbose',true);%can onle select ecxecutionenvironment in 2017
     %lets move to autoencoder then see what have in computing labs
-    %size(trainingPairs)
-    %size(matchResults)
+    size(trainingPairs)
+    size(matchResults)
     fprintf('Training network twoChannel2\n');
-    %trainingPairs(:,:,:,1)
+    trainingPairs(:,:,:,1)
     deepnet = trainNetwork(trainingPairs,categorical(matchResults),layers,netOptions)
 
     
@@ -127,10 +120,10 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                     for i = 1:size(galFea2,1)
                         %fprintf('Currently tested %d/%d\n', i, size(galFea2,1))
                         for u=1:size(probFea2,1)
-                            temp1=(galFea2(i,:)-mean2(galFea2(i,:)))/std2(galFea2(i,:));
-                            temp2=(probFea2(u,:)-mean2(probFea2(u,:)))/std2(probFea2(u,:));
-                            testPairs(:,1,1,1)=temp1;
-                            testPairs(:,2,1,1)=temp2;
+                            temp1=reshapeSquare((galFea2(i,:)-mean2(galFea2(i,:)))/std2(galFea2(i,:)));
+                            temp2=reshapeSquare((probFea2(u,:)-mean2(probFea2(u,:)))/std2(probFea2(u,:)));
+                            testPairs(:,:,1,1)=temp1;
+                            testPairs(:,:,2,1)=temp2;
                             
                             values = activations(deepnet,testPairs,'finalOutPut');
                             %values=predict(net,testPairs);
@@ -185,4 +178,13 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     fprintf('Matching time: %.3g seconds.\n', matchTime); 
     %}
     
+end
+
+
+function M = reshapeSquare (V)
+	% Reshapes a vector into the smallers square matrix possible. If V is too short
+	% the remainder of M is filled with NaNs.
+	N = numel(V) ;
+	M = NaN(ceil(sqrt(N))) ;
+	M(1:N) = V ;
 end

@@ -109,7 +109,7 @@ imageOptions.height=40;
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
 options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
-options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
+options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
 options.hiddensize3=10;%100 500
@@ -168,6 +168,7 @@ AUTOENCODEMATCHES_F=4;
 AUTOENCODEMATCHES3_F=5;
 AUTOENCODEMATCHES1_F=6;
 FEEDFORWARD_F=7;
+TWOCHANNEL3_F=8;
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -193,11 +194,11 @@ sentencesRun={
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
-classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch}];
+classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[AUTOENCODEMATCHES3_F];
 sentenceClassifiersRun=[TWOCHANNEL2_F];
 imageClassifiersRun=[XQDA_F];
-classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward'};
+classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward', 'twoChannel3'};
 %dimensionMatchMethod='pca'; %pca, first 
 
 features=[];
@@ -686,8 +687,8 @@ if(classifySentences)
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
 
-                            fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
-                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,5,10,15]) * 100);
+                            fprintf(' Rank1,  Rank10, Rank20, Rank50\n');
+                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', cms(iter,[1,10,20,50]) * 100);
 
                         end
                         %Mean for every feature set, classifier combination
@@ -705,8 +706,8 @@ if(classifySentences)
                     csvwrite(csvFileName,meanCms)   
 
                     fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15]) * 100);
+                    fprintf(' Rank1,  Rank10, Rank20, Rank50, Rnk60, Rank70, Rank80, Rank90\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,%5.2f%%\n\n', meanCms([1,10,20,50,60,70,80,90]) * 100);
                 end
            % end
        % end
