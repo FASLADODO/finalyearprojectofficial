@@ -60,6 +60,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
         trainingPairs(:,:,2,i)=reshapeSquare((probFea1(i,:)-mean2(probFea1(i,:)))/std2(probFea1(i,:)));
         size(trainingPairs)
     end
+    trainingPairs(:,:,3,:)=NaN(size(trainingPairs,1),size(trainingPairs,2),size(trainingPairs,4));
     t0 = tic;
         
     %% Create and train net
@@ -77,7 +78,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
     noFeatsIn=size(galFea,2);
     
     layers = [ ...
-    imageInputLayer([size(trainingPairs,1) size(trainingPairs,2) 2 ], 'Name', 'input1');
+    imageInputLayer([size(trainingPairs,1) size(trainingPairs,2) 3 ], 'Name', 'input1');
     convolution2dLayer([3,3], 20 , 'Name', 'convol1'); %25 filters,  2 width height 1
     reluLayer('Name', 'relu1');
     maxPooling2dLayer([2,2], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
@@ -92,8 +93,8 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
 ]; % The software determines the size of the output during training.
 
     layers
-    netOptions = trainingOptions('sgdm','InitialLearnRate',0.005, ...
-        'MaxEpochs',100,'Verbose',true);%can onle select ecxecutionenvironment in 2017
+    netOptions = trainingOptions('sgdm','InitialLearnRate',options.learningRate, ...
+        'MaxEpochs',options.maxEpochs,'Verbose',true);%can onle select ecxecutionenvironment in 2017
     %lets move to autoencoder then see what have in computing labs
     size(trainingPairs)
     size(matchResults)

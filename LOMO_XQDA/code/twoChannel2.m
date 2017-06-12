@@ -99,8 +99,8 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
 ]; % The software determines the size of the output during training.
 
     layers
-    netOptions = trainingOptions('sgdm','InitialLearnRate',0.01, ...
-        'MaxEpochs',500,'Verbose',true);%can onle select ecxecutionenvironment in 2017
+    netOptions = trainingOptions('sgdm','InitialLearnRate',options.learningRate, ...
+        'MaxEpochs',options.maxEpochs,'Verbose',true);%can onle select ecxecutionenvironment in 2017
     %lets move to autoencoder then see what have in computing labs
     %size(trainingPairs)
     %size(matchResults)

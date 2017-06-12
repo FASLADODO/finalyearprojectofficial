@@ -108,7 +108,7 @@ imageOptions.height=50;
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -118,6 +118,8 @@ options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
 options.trainAll=1;
+options.learningRate=0.01;
+options.maxEpochs=500;
 %try larger flasepositiveratio
 
 
