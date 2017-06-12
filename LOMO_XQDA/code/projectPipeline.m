@@ -83,25 +83,25 @@ addpath(evalDir);
 
 %% Experiment parameters
 numFolds=2; %Number of times to repeat experiment
-numRanks = 100; %Number of ranks to show for
+numRanks = 1000; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
 READ_DISTORT=4;
 imageOptions.noImages=0;
 imageOptions.imResizeMethod=READ_DISTORT;
-imageOptions.imageTrainSplit=1000;
+imageOptions.imageTrainSplit=2000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=500;%199 1000
+imageOptions.hiddensize1=1500;%199 1000
 imageOptions.hiddensize2=100;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
 
-imageOptions.retinexy=true;
-imageOptions.width=40;
-imageOptions.height=40;
+imageOptions.retinexy=false;
+imageOptions.width=50;
+imageOptions.height=50;
 
 
 
@@ -147,9 +147,9 @@ sentenceOptions.preciseId=false;
 matchForce=true;
 featureForce=false;
 sentenceForce=true;
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=false;
-classifySentences=true;
+classifySentences=false;
 
 
 
