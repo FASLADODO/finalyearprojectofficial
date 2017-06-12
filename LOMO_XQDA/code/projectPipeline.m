@@ -187,8 +187,8 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
+'mode2_norm3outvectors_phrase_win7_threshold150_size400.txt'
 
- 'mode1_norm3outvectors_phrase_win10_threshold200_size500.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
@@ -196,7 +196,7 @@ sentencesRunType=3; %very important to clarify the kind of sentences we want to 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[AUTOENCODEMATCHES3_F];
-sentenceClassifiersRun=[TWOCHANNEL2_F];
+sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward', 'twoChannel3'};
 %dimensionMatchMethod='pca'; %pca, first 
