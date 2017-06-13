@@ -22,7 +22,7 @@ MATRIX=3;
 READ_ALL=3;
 READ_DISTORT=4;
 
-mode=SENTENCES;
+mode=SENTENCEIMAGES;
 
 imageClassifier='XQDA';
 imageFeature='autoEncode2d';
@@ -77,6 +77,12 @@ sentencesRun={
     %'autoEncodeMatches_mode0_norm3outvectors_phrase_win10_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat',...
     %'twoChannel2_mode1_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
     %'twoChannel_mode0_norm3outvectors_phrase_win3_threshold100_size50autoEncodeSentences_trainLevel3_pairs_hiddensizes200100_maxepochs102050_trainsplit200.mat'
+};
+
+sentenceImagesRun={
+   % 'twoChannel2_autoEncode2d_1pca200402010201010051mode0_norm3outvectors_phrase_win10_threshold150_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+    'twoChannel2_autoEncode2d_1pca2004020102010100510.01500mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+'twoChannel3_autoEncode2d_1pca2004020102010100510.01500mode0_norm3outvectors_phrase_win10_threshold150_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat'
 };
 
 
@@ -159,7 +165,7 @@ switch(mode)
         title(sprintf('CMS Curve for CUHK03 Image Matching'))
         %title(sprintf('CMS Curve for CUHK03 Image Matching with %s', config{1}))
         xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-        ylabel('% Gallery Images that contain match within that rank') % y-axis label
+        ylabel('% Probe Images that contain match within that rank') % y-axis label
         labels=labels(~cellfun('isempty',labels))  
         legend(labels);
         
@@ -243,7 +249,7 @@ switch(mode)
         title(sprintf('CMS Curve for Sentence Matching'))
         %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
         xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
-        ylabel('% Gallery Sentences that contain match within that rank') % y-axis label
+        ylabel('% Probe Sentences that contain match within that rank') % y-axis label
         labels=labels(~cellfun('isempty',labels))  
         legend(labels);
     
@@ -291,11 +297,57 @@ switch(mode)
         title(sprintf('CMS Curve for Sentence Matching'))
         %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
         xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
-        ylabel('% Gallery Sentences that contain match within that rank') % y-axis label
+        ylabel('% Probe Sentences that contain match within that rank') % y-axis label
         labels=labels(~cellfun('isempty',labels))  
         legend(labels);
         
     case SENTENCEIMAGES
+        labels=cell(length(sentenceImagesRun),1);
+        
+        for i=1:length(sentenceImagesRun)
+            props(i,:)=strsplit(sentenceImagesRun{i},'_');
+        end
+        for e=1:size(props,2)
+            for i=1:length(sentenceImagesRun)
+               repeatdetected=0;
+               for u=1:length(sentenceImagesRun)
+                    if( strcmp(props{i,e},props{u,e}))
+                        repeatdetected=repeatdetected+1;
+                    end
+               end
+               if(repeatdetected==(length(sentenceImagesRun)))
+                  %props{i,e}=''; 
+                  repeatVal(i,e)=1;
+               end
+            end
+        end
+        for e=1:size(props,2)
+            for i=1:length(sentenceImagesRun)
+                if(repeatVal(i,e))
+                    props{i,e}=' '; 
+                end
+            end
+        end
+        
+        for i=1:length(sentenceImagesRun)
+            fileName=strcat('../results/sentenceImages/',sentenceImagesRun{i});
+            if (exist(fileName, 'file') == 2) 
+                fprintf('filename %s found, extracting now\n',fileName);
+                labels{i}=strcat(props{i,:});
+                load( fileName);
+                plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
+                hold on;
+            else
+            	fprintf('filename %s not found\n',fileName);
+            end  
+        end
+        
+        title(sprintf('CMS Curve for Sentence Image Matching'))
+        %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
+        xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+        ylabel('% Probe Images that contain match within that rank') % y-axis label
+        labels=labels(~cellfun('isempty',labels))  
+        legend(labels);
         
     
     

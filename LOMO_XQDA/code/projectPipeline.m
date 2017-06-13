@@ -551,8 +551,8 @@ if(classifySentenceImages)
 
                     end
                     title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                    xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+                    ylabel('% Probe Images that contain match within that rank') % y-axis label
                     legend(labels);
                     hold off
                 end
@@ -637,7 +637,7 @@ if(classifyImages)
     end
    title(sprintf('CMS Curve for CUHK03 Image Matching'))
     xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    ylabel('% Probe Images that contain match within that rank') % y-axis label
     legend(labels);
     hold off;
 end
@@ -715,8 +715,8 @@ if(classifySentences)
        % end
     end
     title(sprintf('CMS Curve for sentence matches'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+    ylabel('% Probe Sentences that contain match within that rank') % y-axis label
     legend(labels);
     hold off;
 end
