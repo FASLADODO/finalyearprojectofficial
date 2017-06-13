@@ -81,9 +81,22 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
         for i= 1: length(sentencesRun)
             name= char(strcat(sentenceDir,cellstr(sentenceNames(i))));
             %if type mean or mode sentences
-            if(~strfind(name,'norm3') && sentencesRunType~=3 )
+            if(sentencesRunType~=3 && isequal(strfind(name,'norm3'),[]) )
                 temp=table2array(readtable(char(name),'Delimiter',' '));
                 sentences(i,:,:)=temp(:,1:size(temp,2)-1);
+                saveSentences(i)=cellstr(strrep(name,'.txt',''));
+                saveSentences(i)=strrep(saveSentences(i),sentenceDir, '');
+                        
+                saveSentences(i)=cellstr( strcat( '../data/sentences/', saveSentences{i},  options.featureExtractionName, '_trainLevel', ...
+                                                    num2str(options.trainLevel), '_',options.sentenceSplit, '_hiddensizes', ...
+                                                    num2str(options.hiddensize1), num2str(options.hiddensize2),'_maxepochs',...
+                                                    num2str(options.maxepoch1),num2str(options.maxepoch2),num2str(options.maxepoch3),'_trainsplit', ...
+                                                    num2str(options.sentenceTrainSplit),'_precise',num2str(options.preciseId), '.mat'));
+
+                        netSentences(i)=(strrep(saveSentences(i),'../data/sentences/','../data/nets/sentences/'));
+                        resultSentences(i)=(strrep(saveSentences(i),'../data/sentences/','../results/sentences/'));
+                        resultSentences(i)=(strrep(resultSentences(i),'.mat','.csv'));
+                
             else
                     %if sentences are matrices
                     if(strfind(name,'norm3') && sentencesRunType==3)
@@ -141,7 +154,8 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                     end
             end
         end
-    end   
+    end  
+    %only run autodENcode2d if matrix sentences
     if(sentencesRunType==3)
             %% If matrix sentences, convert to feature vectors
             %% Sentences are saved HERE

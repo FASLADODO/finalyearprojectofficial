@@ -9,6 +9,7 @@ close all;
 IMAGES=0;
 SENTENCES=1;
 SENTENCEIMAGES=2;
+SENTENCESPECIFIC=3;
 
 NORMAL=0;
 SIMWORDS=1;
@@ -21,7 +22,7 @@ MATRIX=3;
 READ_ALL=3;
 READ_DISTORT=4;
 
-mode=SENTENCESSPECIFIC;
+mode=SENTENCES;
 
 imageClassifier='XQDA';
 imageFeature='autoEncode2d';
@@ -43,18 +44,36 @@ sentenceArrange='pairs';
 sentencePrecise=0;
 % Will vary
 sentenceClassifier={'XQDA'}; %twoChannel2, twoChannel3, XQDA
-sentenceSizes=[100,200,300,400,500];
-sentenceNormalisation=[MATRIX];%MEAN, MODE
+sentenceSizes=[100];
+sentenceNormalisation=[MEAN];%MEAN, MODE
 sentenceModes=[NORMAL];%,SIMWORDS,USELESSWORDS
 sentenceWindows=[3,5,7,10];
 sentenceThresholds=[200,150,0];
 sentenceHiddenSizes=[[100,40]];%etc
 sentenceMaxEpochs=[[20,10,100]];
 sentenceTrainSplit=[2000];%200
-
+sentenceTop=1;%0 by default
 sentencesRun={
-    'XQDA_mode0_norm3outvectors_phrase_win10_threshold150_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    
+   %'XQDA_mode2_norm3outvectors_phrase_win7_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   %'XQDA_mode2_norm3outvectors_phrase_win3_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
+   %'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode1_norm3outvectors_phrase_win3_threshold150_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+  % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
+   'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode0_norm3outvectors_phrase_win5_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode0_norm3outvectors_phrase_win10_threshold0_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode0_norm3outvectors_phrase_win7_threshold0_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode0_norm3outvectors_phrase_win5_threshold150_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+    'XQDA_mode0_norm3outvectors_phrase_win3_threshold0_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
+   
+   
+   
     %'autoEncodeMatches_mode0_norm3outvectors_phrase_win10_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat',...
     %'twoChannel2_mode1_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
     %'twoChannel_mode0_norm3outvectors_phrase_win3_threshold100_size50autoEncodeSentences_trainLevel3_pairs_hiddensizes200100_maxepochs102050_trainsplit200.mat'
@@ -199,10 +218,13 @@ switch(mode)
                                           fileName=strcat('../results/sentences/',fileName,'.mat');
                                             if (exist(fileName, 'file') == 2) 
                                                 fprintf('filename %s found, extracting now\n',fileName);
-                                                labels{ts+ length(sentenceTrainSplit)*(ts-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*(e-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*(h-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*(t-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*(w-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*(m-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*(n-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*length(sentenceSizes)*(s-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*length(sentenceSizes)*length(sentenceClassifier)*(c-1),1}=name; 
                                                 load( fileName);
-                                                plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
-                                                hold on;
+                                                if(meanCms(1,250)>=sentenceTop || sentenceTop==0)
+                                                    labels{ts+ length(sentenceTrainSplit)*(ts-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*(e-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*(h-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*(t-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*(w-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*(m-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*(n-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*length(sentenceSizes)*(s-1)+length(sentenceTrainSplit)*size(sentenceMaxEpochs,1)*size(sentenceHiddenSizes,1)*length(sentenceThresholds)*length(sentenceWindows)*length(sentenceModes)*length(sentenceNormalisation)*length(sentenceSizes)*length(sentenceClassifier)*(c-1),1}=name; 
+                                                    sentenceTop=meanCms
+                                                    plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
+                                                    hold on;
+                                                end
                                             else
                                                 fprintf('filename %s not found\n',fileName);
                                             end
@@ -227,19 +249,27 @@ switch(mode)
         labels=cell(length(sentencesRun),1);
         
         for i=1:length(sentencesRun)
-            props{i,:}=strsplit(sentencesRun{i},'_');
+            props(i,:)=strsplit(sentencesRun{i},'_');
         end
-        for e=size(props,2)
-            for i=length(sentencesRun)
-                repeatdetected=false;
-               for u=length(sentencesRun)
-                    if(props{i,e}==props{u,e} && i~=u)
-                        repeatdetected=true;
+        for e=1:size(props,2)
+            for i=1:length(sentencesRun)
+               repeatdetected=0;
+               for u=1:length(sentencesRun)
+                    if( strcmp(props{i,e},props{u,e}))
+                        repeatdetected=repeatdetected+1;
                     end
                end
-               if(repeatdetected)
-                  props{i,e}=''; 
+               if(repeatdetected==(length(sentencesRun)))
+                  %props{i,e}=''; 
+                  repeatVal(i,e)=1;
                end
+            end
+        end
+        for e=1:size(props,2)
+            for i=1:length(sentencesRun)
+                if(repeatVal(i,e))
+                    props{i,e}=' '; 
+                end
             end
         end
         
@@ -247,7 +277,7 @@ switch(mode)
             fileName=strcat('../results/sentences/',sentencesRun{i},'.mat');
             if (exist(fileName, 'file') == 2) 
                 fprintf('filename %s found, extracting now\n',fileName);
-                labels{i}=cellstr(props{i,:});
+                labels{i}=strcat(props{i,:});
                 load( fileName);
                 plot(1 : size(meanCms,2), meanCms,'LineWidth',1.5)
                 hold on;

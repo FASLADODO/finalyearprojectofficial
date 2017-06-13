@@ -150,8 +150,8 @@ matchForce=true;
 featureForce=false;
 sentenceForce=false;
 classifyImages=false;
-classifySentenceImages=true;
-classifySentences=false;
+classifySentenceImages=false;
+classifySentences=true;
 
 
 
@@ -189,11 +189,11 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode1_norm3outvectors_phrase_win5_threshold0_size100.txt'
 
+'mode1_norm3outvectors_phrase_win5_threshold0_size100.txt'
 };
 
-sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
+sentencesRunType=1; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
