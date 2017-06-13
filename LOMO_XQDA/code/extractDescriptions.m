@@ -3,7 +3,7 @@
 %sentences saved and loaded as variables sss
 %%  SAVE WHEN DATA EXTRACTED, SAVE INTERMEDIATE RUNTYPE 3 SENTENCES, 
 %% CAN LOAD ALL AND EXTRACT CORRECTLY, CANT DO ALL ALONE, MUST DO ALL AND RUNTYPE, AS CANT LOAD CONTINGUOUSLY OTHERWISE
-function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, options)
+function [sentenceNames,sentences, sentenceIds,preciseSentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, options)
     
     ids=table2cell(readtable('../../word2vec/trunk/imageIds.txt'));
     size(ids);
@@ -16,9 +16,9 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
     for i=1:n
        name=strjoin(ids(i,:));%Format image=06_set=3_id=0001
        temp= strsplit(name,{'image ','_set ','_id ','.png'});
-       if(options.preciseId)
-           preciseSentenceIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
-       end
+       
+       preciseSentenceIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
+       
        sentenceIds(i)= str2double(strcat(temp(3),temp(4)));%str2double()
       
        %person_ids_char(i)= char(strcat(temp(3),temp(4)));

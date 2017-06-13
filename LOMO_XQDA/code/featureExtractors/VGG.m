@@ -1,5 +1,5 @@
 
-function [personIds, descriptors] = VGG(images, personIdsIn, options)
+function [personIds,precisePersonIds, descriptors] = VGG(images, personIdsIn,precisePersonIds, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -53,6 +53,7 @@ t0 = tic;
 %images=images(:,:,:,idx(1:noImages));
 [personIds,idx]=sort(personIdsIn);
 personIds=personIds(1:noImages);
+precisePersonIds=precisePersonIds(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 
 figure

@@ -3,7 +3,7 @@
 %sentences saved and loaded as variables sss
 %%  SAVE WHEN DATA EXTRACTED, SAVE INTERMEDIATE RUNTYPE 3 SENTENCES, 
 %% CAN LOAD ALL AND EXTRACT CORRECTLY, CANT DO ALL ALONE, MUST DO ALL AND RUNTYPE, AS CANT LOAD CONTINGUOUSLY OTHERWISE
-function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, options)
+function [sentenceNames,sentences, sentenceIds,preciseSentenceIds, resultSentences]= extractDescriptions(sentenceDir, sentencesRun, sentencesRunType, options)
     
     ids=table2cell(readtable('../../word2vec/trunk/imageIds.txt'));
     size(ids);
@@ -154,7 +154,8 @@ function [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescrip
                     end
             end
         end
-    end   
+    end  
+    %only run autodENcode2d if matrix sentences
     if(sentencesRunType==3)
             %% If matrix sentences, convert to feature vectors
             %% Sentences are saved HERE

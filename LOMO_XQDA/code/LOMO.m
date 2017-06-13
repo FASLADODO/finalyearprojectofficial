@@ -1,4 +1,4 @@
-function [personIds,descriptors] = LOMO(images,personIdsIn, options)
+function [personIds,precisePersonIds,descriptors] = LOMO(images,personIdsIn,precisePersonIds, options)
 %% function Descriptors = LOMO(images, options)
 % Function for the Local Maximal Occurrence (LOMO) feature extraction
 %
@@ -113,6 +113,7 @@ fprintf('Number of images extracting features from is %d.\n', noImages);
 idx= randperm(size(images,4));
 size(personIdsIn);
 personIds=personIdsIn(idx(1:noImages));
+precisePersonIds=precisePersonIds(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 
 t0 = tic;

@@ -1,4 +1,4 @@
-function [personIds2,images]=autoEncodeImages2d(images, personIds, options)
+function [personIds2,precisePersonIds,images]=autoEncodeImages2d(images, personIds,precisePersonIds, options)
 
     %images(:,:,:,i)
     %% Encoder parameters
@@ -66,6 +66,7 @@ function [personIds2,images]=autoEncodeImages2d(images, personIds, options)
                 %% Order sentences
                 [imagesIdsProcess,idx]=sort(personIds);
                 personIds2=imagesIdsProcess;
+                precisePersonIds=precisePersonIds(idx);
                 imagesProcess=squeeze(images(:,:,idx));%all the files, sentences,words, word vectors
                 fprintf('\nthe size of imagesprocess is (%d, %d)\n', size(imagesProcess,1),size(imagesProcess,2));
                 

@@ -1,7 +1,7 @@
 %% CHANGE HOW TRAINING DONE NEED TO BE PAIRS, BUT SUBSET OF PAIRS.
 %% TEST NEEDS TO BE MORE, OTHER PAIRS
 %%IT IS NOT SENTENCES, THERE ARE NO IMAGES WITH >2 EXAMPLES FOR THE ID
-function [personIds,descriptors] = ALEX(images,personIdsIn, options)
+function [personIds,precisePersonIds,descriptors] = ALEX(images,personIdsIn,precisePersonIds, options)
 %% function Descriptors = MACH(images, options)
 % Function for the machine learning feature extraction
 %
@@ -76,6 +76,7 @@ end
 
 [personIds,idx]=sort(personIdsIn);
 personIds=personIds(1:noImages);
+precisePersonIds=precisePersonIds(idx(1:noImages));
 images=images(:,:,:,idx(1:noImages));
 figure
 title('Pre Zero centering and normalising input images')
