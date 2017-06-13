@@ -93,8 +93,8 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     fullyConnectedLayer(5, 'Name', 'fulll1');
     reluLayer('Name', 'relu3');
     fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
-    softmaxLayer
-    classificationLayer()
+    softmaxLayer;
+    classificationLayer();
 %    regressionLayer()
 ]; % The software determines the size of the output during training.
 
@@ -106,7 +106,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     %size(matchResults)
     fprintf('Training network twoChannel2\n');
     %trainingPairs(:,:,:,1)
-    deepnet = trainNetwork(trainingPairs,categorical(matchResults),layers,netOptions)
+    deepnet = trainNetwork(trainingPairs,categorical(matchResults),layers,netOptions);
 
     
 

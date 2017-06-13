@@ -93,7 +93,7 @@ imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=2000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
-imageOptions.hiddensize1=1000;%199 1000
+imageOptions.hiddensize1=1500;%199 1000
 imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
@@ -146,11 +146,11 @@ sentenceOptions.preciseId=false;
 
 
 %% What to run?
-matchForce=true;
+matchForce=false;
 featureForce=false;
 sentenceForce=false;
-classifyImages=false;
-classifySentenceImages=false;
+classifyImages=true;
+classifySentenceImages=true;
 classifySentences=true;
 
 
@@ -189,15 +189,14 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-
 'mode1_norm3outvectors_phrase_win5_threshold0_size100.txt'
 };
 
-sentencesRunType=1; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
+sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
-classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
+classifiersRun=[TWOCHANNEL2_F, TWOCHANNEL3_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward', 'twoChannel3'};
@@ -302,7 +301,7 @@ end
 %%Need to have a match and randomly selected with xqda,   but sentence ids
 %%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if(classifySentenceImages | classifySentences)
+if(classifySentenceImages || classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
     [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, sentenceOptions);
     
@@ -443,6 +442,7 @@ for i=1:length(featureExtractorsRun)
 
                 %images are placed with matching id in begin and end in
                 %sentenceImages ids are repeated, sentences are similatly repeated
+                %featureextractor, 
                 sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
                 sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
                 sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
@@ -489,6 +489,7 @@ if(classifySentenceImages)
     matchingConfig=strjoin(cellfun(@num2str,struct2cell(options),'UniformOutput',0),'');
     labels=cell(length(classifiersRun)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2),1);   
     %%Select classifiers want to run
+    figure
     for i=1:length(classifiersRun)
                 idx=find(cell2mat(classifiers(:,1))==classifiersRun(i),1);
                 currClassifierId=cell2mat(classifiers(idx,1));
@@ -503,7 +504,7 @@ if(classifySentenceImages)
                 fprintf('Dimension Matching Completed \n')
                 %%For every set of features
                 for ft=1:size(sentenceImgGalFea,1)
-                    figure
+                    
 
                     %%For every sentence configuration set
                     for st=1:size(sentenceImgGalFea,2)
@@ -550,13 +551,14 @@ if(classifySentenceImages)
                         fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,15,20,100]) * 100));
 
                     end
+
+                end
+    end
                     title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
                     xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
                     ylabel('% Probe Images that contain match within that rank') % y-axis label
                     legend(labels);
                     hold off
-                end
-    end
      
 end
 
@@ -575,17 +577,21 @@ end
 %%Select classifiers want to run
 if(classifyImages)
     fprintf('------------------------------------------ \n CLASSIFY IMAGES \n --------------------------------------------\n');
-    if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
-        numRanks=options.testSize;
-    else
-        numRanks=int16(size(galFea,2)/2-1);
-    end
-    cms = zeros(numFolds, numRanks);
+
     
     figure
 
     labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
     for i=1:length(imageClassifiersRun)
+        
+            if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
+                numRanks=options.testSize;
+            else
+                numRanks=int16(size(galFea,2)/2-1);
+            end
+            cms = zeros(numFolds, numRanks);
+        
+        
             idx=find(cell2mat(classifiers(:,1))==imageClassifiersRun(i),1);
             currClassifierId=cell2mat(classifiers(idx,1));
             currClassifierFunct=cell2mat(classifiers(idx,2));
@@ -655,19 +661,22 @@ end
 %%Select classifiers want to run
 if(classifySentences)
     fprintf('------------------------------------------ \n CLASSIFY SENTENCES \n --------------------------------------------\n');
-    if(options.testSize~=0 && sentenceClassifiersRun(i)~=XQDA_F)
-        numRanks=options.testSize;
-    else
-        numRanks=int16(size(sentenceGalFea,2)/2-1);
-    end
-    
-    cms = zeros(numFolds, numRanks);
+
    
     figure    
 
     labels=cell(length(sentenceClassifiersRun)*size(sentenceGalFea,1),1);
     
     for i=1:length(sentenceClassifiersRun)
+            if(options.testSize~=0 && sentenceClassifiersRun(i)~=XQDA_F)
+                numRanks=options.testSize;
+            else
+                numRanks=int16(size(sentenceGalFea,2)/2-1);
+            end
+
+            cms = zeros(numFolds, numRanks);
+        
+        
             idx=find(cell2mat(classifiers(:,1))==sentenceClassifiersRun(i),1);
             currClassifierId=cell2mat(classifiers(idx,1));
             currClassifierFunct=cell2mat(classifiers(idx,2));

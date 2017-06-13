@@ -94,7 +94,7 @@ imageOptions.imageTrainSplit=2000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
 imageOptions.hiddensize1=1500;%199 1000
-imageOptions.hiddensize2=100;%100 500
+imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
@@ -108,7 +108,7 @@ imageOptions.height=50;
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -118,6 +118,8 @@ options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
 options.trainAll=1;
+options.learningRate=0.01;
+options.maxEpochs=500;
 %try larger flasepositiveratio
 
 
@@ -146,9 +148,9 @@ sentenceOptions.preciseId=false;
 %% What to run?
 matchForce=true;
 featureForce=false;
-sentenceForce=true;
-classifyImages=true;
-classifySentenceImages=false;
+sentenceForce=false;
+classifyImages=false;
+classifySentenceImages=true;
 classifySentences=false;
 
 
@@ -187,15 +189,14 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode2_norm3outvectors_phrase_win7_threshold150_size400.txt'
-
+'mode1_norm3outvectors_phrase_win5_threshold0_size100.txt'
 };
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
-classifiersRun=[AUTOENCODEMATCHES3_F];
+classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward', 'twoChannel3'};
@@ -300,7 +301,7 @@ end
 %%Need to have a match and randomly selected with xqda,   but sentence ids
 %%not lined up, could do it in xqda, by using find, to add 1 for 1 but lets remove here for now
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if(classifySentenceImages | classifySentences)
+if(classifySentenceImages || classifySentences)
     fprintf('Loading sentences and their associated imageIds into matrices \n');
     [sentenceNames,sentences, sentenceIds, resultSentences]= extractDescriptions(sentencesDir, sentencesRun, sentencesRunType, sentenceOptions);
     
@@ -441,6 +442,7 @@ for i=1:length(featureExtractorsRun)
 
                 %images are placed with matching id in begin and end in
                 %sentenceImages ids are repeated, sentences are similatly repeated
+                %featureextractor,
                 sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
                 sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
                 sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
@@ -549,8 +551,8 @@ if(classifySentenceImages)
 
                     end
                     title(sprintf('CMS Curve for CUHK03 Image and Sentence Matching'))
-                    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-                    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+                    xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+                    ylabel('% Probe Images that contain match within that rank') % y-axis label
                     legend(labels);
                     hold off
                 end
@@ -635,7 +637,7 @@ if(classifyImages)
     end
    title(sprintf('CMS Curve for CUHK03 Image Matching'))
     xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    ylabel('% Probe Images that contain match within that rank') % y-axis label
     legend(labels);
     hold off;
 end
@@ -713,8 +715,8 @@ if(classifySentences)
        % end
     end
     title(sprintf('CMS Curve for sentence matches'))
-    xlabel('No. Ranks of ordered Gallery Images') % x-axis label
-    ylabel('% Gallery Images that contain match within that rank') % y-axis label
+    xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label
+    ylabel('% Probe Sentences that contain match within that rank') % y-axis label
     legend(labels);
     hold off;
 end
