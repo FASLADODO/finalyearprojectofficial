@@ -25,8 +25,9 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                             end
                             sentenceProbFea=sentenceProbFea2;  
                         case 'nan_fill'
-                            tempNan= NaN(size(sentenceProbFea,4)-size(sentenceGalFea,4));
-                            sentenceGalFea(:,:,:,size(sentenceGalFea,4)+1:size(sentenceProbFea,4))=tempNan;
+                            tempNan= NaN(size(sentenceGalFea,1),size(sentenceGalFea,2),size(sentenceGalFea,3),size(sentenceProbFea,4)-size(sentenceGalFea,4));
+                            
+				sentenceGalFea(:,:,:,size(sentenceGalFea,4)+1:size(sentenceProbFea,4))=tempNan;
                         case 'extend'
                             for ft= 1:size(sentenceGalFea,1)
                                 for c=1:size(sentenceGalFea,2)
@@ -47,7 +48,9 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                             end
                             sentenceGalFea=sentenceGalFea2;  
                         case 'nan_fill'
-                            tempNan= NaN(size(sentenceGalFea,4)-size(sentenceProbFea,4));
+
+                            tempNan= NaN(size(sentenceProbFea,1),size(sentenceProbFea,2),size(sentenceProbFea,3),size(sentenceGalFea,4)-size(sentenceProbFea,4));
+			
                             sentenceProbFea(:,:,:,size(sentenceProbFea,4)+1:size(sentenceGalFea,4))=tempNan;
                         case 'extend'
                             for ft= 1:size(sentenceProbFea,1)

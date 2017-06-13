@@ -119,7 +119,7 @@ options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
 options.trainAll=1;
 options.learningRate=0.01;
-options.maxEpochs=500;
+options.maxEpochs=1000;
 options.precise=1;
 %try larger flasepositiveratio
 
