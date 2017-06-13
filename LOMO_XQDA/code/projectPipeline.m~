@@ -120,7 +120,7 @@ options.maxepoch4=5;
 options.trainAll=1;
 options.learningRate=0.01;
 options.maxEpochs=500;
-options.precise=0;
+options.precise=1;
 %try larger flasepositiveratio
 
 
@@ -147,12 +147,12 @@ sentenceOptions.preciseId=false;
 
 
 %% What to run?
-matchForce=false;
+matchForce=true;
 featureForce=false;
 sentenceForce=false;
-classifyImages=true;
+classifyImages=false;
 classifySentenceImages=true;
-classifySentences=true;
+classifySentences=false;
 
 
 
@@ -197,7 +197,7 @@ sentencesRunType=3; %very important to clarify the kind of sentences we want to 
 
 featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
-classifiersRun=[TWOCHANNEL2_F, TWOCHANNEL3_F];%AUTOENCODE3_F
+classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];
 classifierName={'XQDA','twoChannel','twoChannel2', 'autoEncodeMatches','autoEncodeMatches3', 'autoEncodeMatches1', 'feedForward', 'twoChannel3'};
@@ -312,7 +312,7 @@ if(classifySentenceImages || classifySentences)
         [sentenceIds,idx]=sort(sentenceIds);
         preciseSentenceIds=preciseSentenceIds(idx);
         sentences=sentences(:,idx,:);%all the files, sentences,words
-
+        
         %% Remove sentences that dont occur twice
         fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
         occur=0;
@@ -409,8 +409,8 @@ for i=1:length(featureExtractorsRun)
             
             fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
             sentenceIds=sentenceIds(find(matches));
-            sentences=sentences(:,find(matches),:);
             preciseSentences=sentences(:,find(preciseMatches),:);
+            sentences=sentences(:,find(matches),:);
             preciseSentenceIds=preciseSentenceIds(find(preciseMatches));
             
             %% Remove all images with no sentence match
@@ -595,21 +595,22 @@ if(classifySentenceImages)
                         end
 
                     end
+                %% IF OPTIONS.PRECISE
                 else
-                    %% IF OPTIONS.PRECISE
-               if(~options.precise)
-                    for ft=1:size(sentenceImgGalFea,1)
+                
+             
+                    for ft=1:size(preciseSentenceImgGalFea,1)
 
 
                         %%For every sentence configuration set
-                        for st=1:size(sentenceImgGalFea,2)
+                        for st=1:size(preciseSentenceImgGalFea,2)
 
                             currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                             temp=strrep(resultSentences(st),'../results/sentences/','');
                             config='';%strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                            csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
+                            csvFileName=strcat(resultsDir,'sentenceImages/','precise',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                             %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
-                            labels{((i-1)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2))+ (size(sentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
+                            labels{((i-1)*size(preciseSentenceImgGalFea,1)*size(preciseSentenceImgGalFea,2))+ (size(preciseSentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
 
                             %if there exists no results for this sentence
                             %config, images extracted
@@ -618,7 +619,7 @@ if(classifySentenceImages)
                                 for iter=1:numFolds
 
 
-                                    [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(sentenceImgGalFea(ft,st,:,:)), squeeze(sentenceImgProbFea(ft,st,:,:)),squeeze(sentenceImgClassLabel(ft,:)),squeeze(sentenceImgClassLabel(ft,:)),iter,options);
+                                    [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(preciseSentenceImgGalFea(ft,st,:,:)), squeeze(preciseSentenceImgProbFea(ft,st,:,:)),squeeze(preciseSentenceImgClassLabel(ft,:)),squeeze(preciseSentenceImgClassLabel(ft,:)),iter,options);
                                     size(dist)
                                     size(classLabelGal2)
                                     size(classLabelProb2)

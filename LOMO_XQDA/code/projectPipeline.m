@@ -312,7 +312,7 @@ if(classifySentenceImages || classifySentences)
         [sentenceIds,idx]=sort(sentenceIds);
         preciseSentenceIds=preciseSentenceIds(idx);
         sentences=sentences(:,idx,:);%all the files, sentences,words
-
+        
         %% Remove sentences that dont occur twice
         fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
         occur=0;
@@ -409,8 +409,8 @@ for i=1:length(featureExtractorsRun)
             
             fprintf('\n Input sentences %d with their associated sentenceIds %d \n', size(sentences,2),size(sentenceIds,1));
             sentenceIds=sentenceIds(find(matches));
-            sentences=sentences(:,find(matches),:);
             preciseSentences=sentences(:,find(preciseMatches),:);
+            sentences=sentences(:,find(matches),:);
             preciseSentenceIds=preciseSentenceIds(find(preciseMatches));
             
             %% Remove all images with no sentence match
@@ -482,6 +482,8 @@ for i=1:length(featureExtractorsRun)
                 preciseSentenceImgGalFea(i,:,:,:)=preciseSentences(:,:,:);
                 preciseSentenceImgProbFea(i,:,:,:)=preciseSentenceImages(:,:,:);
                 preciseSentenceImgClassLabel(i,:)=preciseSentenceIds(:);
+                'preciseSentenceids equals preciseimageids'
+                isequal(preciseImageIds, preciseSentenceIds)
                 fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
                 fprintf('Final sizes of precise sentences gallery %d, associated precise images gallery %d, and their matching sentenceClassLabels %d \n\n', size(preciseSentenceImgGalFea,3), size(preciseSentenceImgProbFea,3), size(preciseSentenceImgClassLabel,2))
             end
@@ -595,9 +597,10 @@ if(classifySentenceImages)
                         end
 
                     end
+                %% IF OPTIONS.PRECISE
                 else
-                    %% IF OPTIONS.PRECISE
-               if(~options.precise)
+                
+             
                     for ft=1:size(preciseSentenceImgGalFea,1)
 
 
