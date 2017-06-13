@@ -189,7 +189,7 @@ sentenceFeatureRun={AUTOENCODE_F};
 %Sentences compared need to be of same mode, norm, size, otherwise they
 %will have different vector lengths
 sentencesRun={
-'mode0_norm3outvectors_phrase_win10_threshold150_size100.txt'
+'mode1_norm3outvectors_phrase_win5_threshold0_size100.txt'
 
 };
 

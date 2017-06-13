@@ -79,11 +79,11 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
     
     layers = [ ...
     imageInputLayer([size(trainingPairs,1) size(trainingPairs,2) 3 ], 'Name', 'input1');
-    convolution2dLayer([3,3], 20 , 'Name', 'convol1'); %25 filters,  2 width height 1
+    convolution2dLayer([3,3], 15 , 'Name', 'convol1'); %25 filters,  2 width height 1
     reluLayer('Name', 'relu1');
-    maxPooling2dLayer([2,2], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
-    convolution2dLayer([2,2], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
-    reluLayer('Name', 'relu2');
+    %maxPooling2dLayer([2,2], 'Name', 'maxpool1'); %2 width height 1, moves 2 along horizontally, 0 vertically
+    %convolution2dLayer([2,2], 20, 'Name', 'convol2'); %25 filters,  2 width height 1
+    %reluLayer('Name', 'relu2');
     fullyConnectedLayer(5, 'Name', 'fulll1');
     reluLayer('Name', 'relu3');
     fullyConnectedLayer(2, 'Name', 'finalOutPut'); %fully connected layer of size 1
@@ -125,7 +125,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
                             temp2=reshapeSquare((probFea2(u,:)-mean2(probFea2(u,:)))/std2(probFea2(u,:)));
                             testPairs(:,:,1,1)=temp1;
                             testPairs(:,:,2,1)=temp2;
-                            
+                            testPairs(:,:,3,1)=NaN(size(testPairs,1),size(testPairs,2));
                             values = activations(deepnet,testPairs,'finalOutPut');
                             %values=predict(net,testPairs);
                             match=classLabelGal2(i)==classLabelProb2(u);
@@ -137,7 +137,8 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
                                fprintf('match %0.2f and nearest wrong neighbour %0.2f \n',dist(i,u), dist(i,u-1)) 
                             end
                         end
-                    end   
+                    end
+		       
                     matchTime = toc(t0); 
         %% Verbose feedback
     fprintf('Fold %d: ', iter);
@@ -155,6 +156,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel3(galFea, probFea,galC
           testMatches((gal-1)*size(galFea2,1)+prob)= isequal(classLabelGal2(gal), classLabelProb2(prob));
        end
     end
+    
     %% Get results
     t0=tic;
     
