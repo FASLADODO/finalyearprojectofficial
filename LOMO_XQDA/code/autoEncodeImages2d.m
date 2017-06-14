@@ -81,7 +81,12 @@ function [personIds2,precisePersonIds,images]=autoEncodeImages2d(images, personI
                             fprintf('Training data is all pairs that exist of imageData\n');
                             for i=1:length(imagesIdsProcess)
                                 if(imagesIdsProcess(i)~=old && occur>1)
-                                    for p=1:2%occur
+                                    if(strcmp(options.extend,'none'))
+                                        upTo=2;
+                                    else
+                                        upTo=4;
+                                    end
+                                    for p=1:upTo%occur
                                        indexes(idx)=i-p;
                                        idx=idx+1;                               
                                     end      

@@ -10,7 +10,7 @@
 % sentenceProbFea- featureextractor, sentence config, sentences, vector
 % no sentences * 2 if general
 function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sentenceGalFea,sentenceProbIds, sentenceGalIds, dimensionMatchMethod, classifierName)
-            fprintf('Size of sentenceprobFea %d %d and sentenceGalFea %d %d  pre matching',size(sentenceProbFea,3), size(sentenceProbFea,4),size(sentenceGalFea,3),size(sentenceGalFea,4)); 
+            fprintf('Size of sentenceprobFea %d %d and sentenceGalFea %d %d  pre matching\n',size(sentenceProbFea,3), size(sentenceProbFea,4),size(sentenceGalFea,3),size(sentenceGalFea,4)); 
             numDims=min(size(sentenceProbFea,4),size(sentenceGalFea,4));
             if(size(sentenceProbFea,4)  ~= size(sentenceGalFea,4))
                 if(size(sentenceProbFea,4) > size(sentenceGalFea,4))
@@ -80,6 +80,6 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
 
                 end
             end       
-     fprintf('size sentenceGalFea %d %d and sentenceProbFea %d %d post matching',size(sentenceGalFea,3),size(sentenceGalFea,4),size(sentenceProbFea,3),size(sentenceProbFea,4))
+     fprintf('size sentenceGalFea %d %d and sentenceProbFea %d %d post matching\n',size(sentenceGalFea,3),size(sentenceGalFea,4),size(sentenceProbFea,3),size(sentenceProbFea,4))
 
 end

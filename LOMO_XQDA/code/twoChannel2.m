@@ -11,7 +11,6 @@
 %Training images are indexed by their last index
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galClassLabel,probClassLabel, iter, options)
-    testSize=options.testSize;
     threshAim=1;
     
     %% Assert that gal and probe labels match (they should)
@@ -21,14 +20,23 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     'initial gal, prob sizes'
     size(galFea)
     numMatches=0;
-     if(~options.trainAll)
-        numMatches=int16(size(galFea,1)/2);
+    reps=int16(size(galFea,1)/length(unique(galClassLabel)));
+    fprintf('\nTHe number of repetitions of sentenceIds are %d\n',reps);
+    %galFea1 = galFea(p(1:int16(numMatches*(reps-1)/reps)), : );
+    %probFea1 = probFea(p(1:int16(numMatches*(reps-1)/reps)), : );
+    %classLabelGal1=galClassLabel(p(1:int16(numMatches*(reps-1)/reps)));
+    %classLabelProb1=probClassLabel(p(1:int16(numMatches*(reps-1)/reps)));
+    
+    if(~options.trainAll)
+        numMatches=int16(size(galFea,1)*(reps-1)/reps);
     else
        numMatches=size(galFea,1); 
     end   
-    fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio')
-    %% Create training positive matches
+    numTestMatches=int16(size(galFea,1)*(reps-1)/reps);
+    fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio\n')
     
+    
+    %% Create training positive matches
     p = randperm(size(galFea,1));
     galFea1 = galFea(p(1:numMatches), : );
     probFea1 = probFea(p(1:numMatches), : );
@@ -38,6 +46,15 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     temp=zeros((numMatches*options.falsePositiveRatio),1);
     matchResults((1+numMatches):((1+options.falsePositiveRatio)*numMatches),1)=temp;
     
+    testSize=min(options.testSize, int16(size(galFea,1)*(reps-1)/reps));
+    %% Squeeze removes singleton dimensions
+    galFea2 = galFea(p(numTestMatches+1 :numTestMatches+ testSize), : );
+    probFea2 = probFea(p(numTestMatches+1 : numTestMatches+testSize), : );
+    classLabelGal2=galClassLabel(p(numTestMatches+1 : numTestMatches+testSize));
+    classLabelProb2=probClassLabel(p(numTestMatches+1 :numTestMatches+ testSize));
+    
+    fprintf('Size of training data is %d, reps %d, unique ids %d and falsepositiveratio %d\n',numMatches*(1+options.falsePositiveRatio), reps, length(unique(galClassLabel)),options.falsePositiveRatio)
+    fprintf('Size of testing data is %d',length(classLabelGal2));
     
     %% Now add training false matches
     for i= 1: numMatches
@@ -113,12 +130,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
 
 
     trainTime = toc(t0);
-    testSize=min(options.testSize, int16(size(galFea,1)/2));
-    %% Squeeze removes singleton dimensions
-    galFea2 = galFea(p(int16(size(galFea,1)/2)+1 :int16(size(galFea,1)/2)+ testSize), : );
-    probFea2 = probFea(p(int16(size(galFea,1)/2)+1 : int16(size(galFea,1)/2)+testSize), : );
-    classLabelGal2=galClassLabel(p(int16(size(galFea,1)/2)+1 : int16(size(galFea,1)/2)+testSize));
-    classLabelProb2=probClassLabel(p(int16(size(galFea,1)/2)+1 :int16(size(galFea,1)/2)+ testSize));
+
     
     
                     

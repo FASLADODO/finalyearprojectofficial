@@ -98,17 +98,17 @@ imageOptions.hiddensize2=200;%100 500
 imageOptions.maxepoch1=100;
 imageOptions.maxepoch2=50;
 imageOptions.maxepoch3=100;
-
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
+imageOptions.extend='mirrored';%none, rotated_right
 
 
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='first'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -150,7 +150,7 @@ sentenceOptions.preciseId=false;
 matchForce=true;
 featureForce=false;
 sentenceForce=false;
-classifyImages=false;
+classifyImages=true;
 classifySentenceImages=true;
 classifySentences=false;
 
@@ -195,7 +195,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
@@ -218,8 +218,23 @@ imgHeight=100;
 
 
 %% read categories
-person_ids=zeros(n,1);
-precisePersonIds=zeros(n,1);
+imgList2=[];
+dupImgDir='';
+switch(imageOptions.extend)
+    case 'mirrored'
+        dupImgDir=strcat(imgDir,'mirrored/');
+        imgList2 = dir([dupImgDir, '*.png']);%[imgDir, '*.png']
+        fprintf('Duplicate Images are selected mirrored/ directory \n');
+    case 'rotated_right'
+        dupImgDir=strcat(imgDir,'rotated_right/');
+        imgList2 = dir([dupImgDir, '*.png']);%[imgDir, '*.png']
+        fprintf('Duplicate Images are selected rotated_right/ directory \n');
+    case 'none'
+        fprintf('Images are selected in original form purely from images/ directory \n');
+end
+
+person_ids=zeros(n+length(imgList2),1);
+precisePersonIds=zeros(n+length(imgList2),1);
 for i=1:n
    name=imgList(i).name;%Format image=06_set=3_id=0001
    temp= strsplit(name,{'image=','_set=','_id=','.png'});
@@ -227,19 +242,35 @@ for i=1:n
    precisePersonIds(i)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
    %person_ids_char(i)= char(strcat(temp(3),temp(4)));
 end
+
+for i=1:length(imgList2)
+    name=imgList2(i).name;%Format image=06_set=3_id=0001
+    temp= strsplit(name,{'image=','_set=','_id=','.png'});
+    person_ids(i+n)= str2double(strcat(temp(3),temp(4)));%str2double()
+    precisePersonIds(i+n)= str2double(strcat(temp(2),temp(3),temp(4)));%str2double()
+end
+
  %% Convert to hotcoding representation LATER WHEN LAST NEEDED AS EASIER TO SORT (better for regression)
 %options.noImages=n;
 %HOTCODING only comes into play for neural networks/autoencoding ,
 %otherwise more convenient to keep with human understandable labels
 %Only autoencode3 , image transfer learning for alexnet and vggnet
 
-images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
+images = zeros(imgHeight,imgWidth, 3, n+length(imgList2), 'uint8');
 %% read images
 for i = 1 : n
     temp = imread([imgDir, imgList(i).name]);
     images(:,:,:,i) = imresize(temp,[imgHeight imgWidth]);   
 end
-
+size(images)
+% read duplicate images
+for i= 1+n :n+length(imgList2)
+    temp = imread([dupImgDir, imgList2(i-n).name]);
+    images(:,:,:,i) = imresize(temp,[imgHeight imgWidth]);     
+end
+'size images, person_ids'
+size(images)
+size(person_ids)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Extract features using all feature extraction methods
@@ -257,7 +288,7 @@ if(classifyImages | classifySentenceImages)
         featureList=dir([strcat(featuresDir,'images/') '*.mat']);
         featuresAvail=[featureList.name];
         currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
-        config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
+        %config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
         config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'_');
         
         currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
@@ -279,7 +310,7 @@ if(classifyImages | classifySentenceImages)
                 imgHeight=imageOptions.height;
             end
             %images = zeros(imgHeight,imgWidth, 3, n, 'uint8');
-            images = readInImages(imgDir, imgList, imgWidth, imgHeight, imageOptions.imResizeMethod, imageOptions);
+            images = readInImages(images, imgWidth, imgHeight, imageOptions.imResizeMethod, imageOptions);
 
 
             %RandonPerm depending on noImages, need to keep associated
@@ -435,11 +466,16 @@ for i=1:length(featureExtractorsRun)
             %% Create sentenceImages that has all image features in same order as sentences
             % Place both images that match single sentence descriptor id
             if(classifySentenceImages)
-                sentenceImages=zeros(size(sentences,1),size(sentences,2)*2, size(descriptors2,2));
-                imageIds=zeros(size(sentences,2)*2,1);
                 
-                preciseSentenceImages=zeros(size(preciseSentences,1),size(preciseSentences,2), size(preciseDescriptors2,2));
-                preciseImageIds=zeros(size(preciseSentences,2),1);
+                imgRepeats=int16(size(descriptors,1)/length(unique(personIds2)));
+                %imgSentRepeats=sentRepeats*imgRepeats;
+                
+                sentenceImages=zeros(size(sentences,1),size(sentences,2 )*imgRepeats, size(descriptors2,2));
+                imageIds=zeros(size(sentences,2)*imgRepeats,1);
+                
+                preciseImgRepeats=int16(length(precisePersonIds2)/length(unique(precisePersonIds2)));
+                preciseSentenceImages=zeros(size(preciseSentences,1),size(preciseSentences,2)*preciseImgRepeats, size(preciseDescriptors2,2));
+                preciseImageIds=zeros(size(preciseSentences,2)*preciseImgRepeats,1);
                 %for every sentence vector
                 %% general
                 for s= 1:size(sentences,2)
@@ -448,14 +484,15 @@ for i=1:length(featureExtractorsRun)
                     for c=1:size(sentences,1)
 
                         imagesMatch=descriptors2(find(personIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                        if(size(imagesMatch,1)~=2 && ~sentenceOptions.preciseId)
-                            fprintf('Error there are not two image matches for every sentenceId with generalId \n')
+                        if(~(size(imagesMatch,1)>=2) && ~sentenceOptions.preciseId)
+                            fprintf('Error there are not at least two image matches for every sentenceId with generalId \n')
                         end
-                        imageIds(s)=sId;%temp(1);
-                        sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
-                        
-                        imageIds(s+size(sentences,2))=sId;%temp(2);                        
-                        sentenceImages(c,s+size(sentences,2),:)= squeeze(imagesMatch(2,:)); 
+                        %imageIds(s)=sId;%temp(1);
+                        %sentenceImages(c,s,:)= squeeze(imagesMatch(1,:)); %for each sentences there are two images
+                        for rep=1:imgRepeats
+                            imageIds(s+size(sentences,2)*(rep-1))=sId;%temp(2);                        
+                            sentenceImages(c,s+size(sentences,2)*(rep-1),:)= squeeze(imagesMatch(rep,:));
+                        end
                     end
                 end
                 %% PRECISE
@@ -463,11 +500,11 @@ for i=1:length(featureExtractorsRun)
                     sId=preciseSentenceIds(s);%sentence id need to find match in descriptors
                     %for every sentence config
                     for c=1:size(preciseSentences,1)
-
                         preciseImagesMatch=preciseDescriptors2(find(precisePersonIds2==sId),:);%2*26960, get indedexes images in descriptors with same id
-                        preciseImageIds(s)=sId;%temp(1);
-                        preciseSentenceImages(c,s,:)= squeeze(preciseImagesMatch(1,:)); %for each sentences there are two images
-                        
+                        for rep=1:preciseImgRepeats    
+                            preciseImageIds(s+ size(preciseSentences,2)*(rep-1))=sId;%temp(1);
+                            preciseSentenceImages(c,s+size(preciseSentences,2)*(rep-1),:)= squeeze(preciseImagesMatch(rep,:)); %for each sentences there are two images
+                        end
                        
                     end
                 end
@@ -475,13 +512,17 @@ for i=1:length(featureExtractorsRun)
                 %sentenceImages ids are repeated, sentences are similatly repeated
                 %featureextractor, sentenceconfig,sentence, vector
                 %featureextractor, sentenceconfig, image, vector
-                sentenceImgGalFea(i,:,:,:)=[sentences(:,:,:),sentences(:,:,:)];
+                for rep=1:imgRepeats
+                    sentenceImgGalFea(i,:,1+size(sentences,2)*(rep-1):size(sentences,2)*(rep),:)=sentences(:,:,:);
+                    sentenceImgClassLabel(i,1+size(sentences,2)*(rep-1):size(sentences,2)*(rep))=sentenceIds(:);
+                end    
                 sentenceImgProbFea(i,:,:,:)=sentenceImages(:,:,:);
-                sentenceImgClassLabel(i,:)=[sentenceIds(:);sentenceIds(:)];
                 
-                preciseSentenceImgGalFea(i,:,:,:)=preciseSentences(:,:,:);
                 preciseSentenceImgProbFea(i,:,:,:)=preciseSentenceImages(:,:,:);
-                preciseSentenceImgClassLabel(i,:)=preciseSentenceIds(:);
+                for rep=1:preciseImgRepeats
+                    preciseSentenceImgGalFea(i,:,1+size(preciseSentences,2)*(rep-1):size(preciseSentences,2)*(rep),:)=preciseSentences(:,:,:);
+                    preciseSentenceImgClassLabel(i,1+size(preciseSentences,2)*(rep-1):size(preciseSentences,2)*(rep))=preciseSentenceIds(:);
+                end
                 'preciseSentenceids equals preciseimageids'
                 isequal(preciseImageIds, preciseSentenceIds)
                 fprintf('Final sizes of sentences gallery %d, associated images gallery %d, and their matching sentenceClassLabels %d \n\n', size(sentenceImgGalFea,3), size(sentenceImgProbFea,3), size(sentenceImgClassLabel,2))
@@ -493,14 +534,25 @@ for i=1:length(featureExtractorsRun)
         % Sort person Ids and images so can be split effectively for
         % matching
         %now both sorted ascending
-        numImages= int16(size(descriptors,1)/2);
-        personIds=[personIds(1:2:end);personIds(2:2:end)];
-        descriptors=[descriptors(1:2:end,:); descriptors(2:2:end,:)];
-        
-        galFea(i,:,:) = descriptors(1 : numImages, :);
-        probFea(i,:,:) = descriptors(numImages + 1 : end, :);
-        classLabelGal(i,:)=personIds(1:numImages);
-        classLabelProb(i,:)=personIds(numImages+1:end);
+        if(strcmp('none',imageOptions.extend))
+            numImages= int16(size(descriptors,1)/2);
+            personIds=[personIds(1:2:end);personIds(2:2:end)];
+            descriptors=[descriptors(1:2:end,:); descriptors(2:2:end,:)];
+
+            galFea(i,:,:) = descriptors(1 : numImages, :);
+            probFea(i,:,:) = descriptors(numImages + 1 : end, :);
+            classLabelGal(i,:)=personIds(1:numImages);
+            classLabelProb(i,:)=personIds(numImages+1:end);
+        else
+            numImages= int16(size(descriptors,1)/2);
+            personIds=[personIds(1:4:end);personIds(4:4:end);personIds(2:4:end);personIds(3:4:end)];
+            descriptors=[descriptors(1:4:end,:); descriptors(4:4:end,:);descriptors(2:4:end,:);descriptors(3:4:end,:)];
+
+            galFea(i,:,:) = descriptors(1 : numImages, :);
+            probFea(i,:,:) = descriptors(numImages + 1 : end, :);
+            classLabelGal(i,:)=personIds(1:numImages);
+            classLabelProb(i,:)=personIds(numImages+1:end);
+        end
    
     else
         fprintf('Could not load features %s into matrices as folder didnt exist \n',currFeatureName);
@@ -516,11 +568,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if(classifySentenceImages)
+    
+    if(strcmp(imageOptions.extend,'none'))
+        numRanks=int16(size(sentenceImgGalFea,3)/2-1);
+    else
+        numRanks=int16(size(sentenceImgGalFea,3)/4-1);
+    end
+    if(options.testSize~=0 && classifiersRun(i)~=XQDA_F)
+        numRanks=min(options.testSize,numRanks);
+    end
+    
+   %{ 
     if(options.testSize~=0 && classifiersRun(i)~=XQDA_F)
         numRanks=options.testSize;
     else
         numRanks=size(sentenceImgGalFea,3)/2-1;
     end
+    %}
+    
    fprintf('------------------------------------------ \n CLASSIFY SENTENCE IMAGES \n --------------------------------------------\n');
     %numRanks=size(sentenceImgGalFea,3)/2-1;
     cms = zeros(numFolds, numRanks); %only need results within classification within features
@@ -683,12 +748,17 @@ if(classifyImages)
 
     labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
     for i=1:length(imageClassifiersRun)
-        
-            if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
-                numRanks=options.testSize;
-            else
+            numRanks=0;
+            if(strcmp(imageOptions.extend,'none'))
                 numRanks=int16(size(galFea,2)/2-1);
+            else
+                numRanks=int16(size(galFea,2)/4-1);
             end
+            if(options.testSize~=0 && imageClassifiersRun(i)~=XQDA_F)
+                numRanks=min(options.testSize,numRanks);
+            end
+                
+            
             cms = zeros(numFolds, numRanks);
         
         
@@ -768,8 +838,17 @@ if(classifySentences)
     labels=cell(length(sentenceClassifiersRun)*size(sentenceGalFea,1),1);
     
     for i=1:length(sentenceClassifiersRun)
+            %if(strcmp(imageOptions.extend,'none'))
+              %  numRanks=int16(size(sentenceImgGalFea,3)/2-1);
+            %else
+            %    numRanks=int16(size(sentenceImgGalFea,3)/4-1);
+            %end
+            %if(options.testSize~=0 && classifiersRun(i)~=XQDA_F)
+            %    numRanks=min(options.testSize,numRanks);
+           % end
+        
             if(options.testSize~=0 && sentenceClassifiersRun(i)~=XQDA_F)
-                numRanks=options.testSize;
+                numRanks=min(options.testSize,int16(size(sentenceGalFea,2)/2-1));
             else
                 numRanks=int16(size(sentenceGalFea,2)/2-1);
             end
