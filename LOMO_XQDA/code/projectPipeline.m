@@ -418,7 +418,7 @@ for i=1:length(featureExtractorsRun)
         load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
         size(features,1)
         length(imgList)
-        if(size(features,1) ~= length(imgList))
+        if(size(features,1) ~= (length(imgList)+length(imgList2)))
             descriptors=features.';
         else
             descriptors=features;
