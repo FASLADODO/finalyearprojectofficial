@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='mirrored';%none, rotated_right
-
-
+imageOptions.extend='none';%none, rotated_right
+%% Artificially reduce image dimensions to predict correctness
+imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='first'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -151,7 +151,7 @@ matchForce=true;
 featureForce=false;
 sentenceForce=false;
 classifyImages=true;
-classifySentenceImages=true;
+classifySentenceImages=false;
 classifySentences=false;
 
 
@@ -746,7 +746,7 @@ if(classifyImages)
     
     figure
 
-    labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
+    %labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
     for i=1:length(imageClassifiersRun)
             numRanks=0;
             if(strcmp(imageOptions.extend,'none'))
@@ -772,17 +772,26 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
-
+                    if(~imageReduce)
+                        labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
+                    else
+                        labels{(size(galFea,1)*(i-1)*2)+(ft-1)*2+1}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
+                        labels{(size(galFea,1)*(i-1)*2)+(ft-1)*2+2}=char(strcat(currClassifierName,'-',currFeatureName,'-', config,'reduce'));
+                    end
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
                     
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 || matchForce==true)
                         %Repeat classification process numFolds times
                         for iter=1:numFolds
-
-                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
-
+                            if(imageReduce)
+                                galFeaY=extractPCA(squeeze(galFea(ft,:,:)),40);
+                                probFeaY=extractPCA(squeeze(probFea(ft,:,:)),40);
+                                [distReduce,classLabelGal2Reduce, classLabelProb2Reduce]=currClassifierFunct(galFeaY, probFeaY,squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
+                            end
+                            
+                                [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
+                            cmsReduce(iter,:)= EvalCMC( -distReduce, classLabelGal2, classLabelProb2, numRanks );
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
 
@@ -791,22 +800,29 @@ if(classifyImages)
 
                         end        
                         %Mean for every feature set, classifier combination
-                        meanCms = mean(cms(:,:));          
+                        meanCms = mean(cms(:,:)); 
+                        meanReduceCms=mean(cmsReduce(:,:));
                         save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
                     else
                         load( char(strrep(csvFileName,'.csv','.mat')));
                     end                       
 
-                    
                     plot(1 : numRanks, meanCms)
                     hold on;
+                    if(imageReduce)
+                        plot(1:numRanks,meanReduceCms)
+                        hold on;
+                    end
                     csvwrite(csvFileName,meanCms); 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
                     %%type csvlist.dat
                     
                     fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50]) * 100);
+                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
+                    fprintf('The average performance:\n');
+                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
                 end
            % end
        % end
