@@ -9,8 +9,8 @@
 % sentenceGalFea- featureextractor, sentence config, sentence, vector
 % sentenceProbFea- featureextractor, sentence config, sentences, vector
 % no sentences * 2 if general
-function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sentenceGalFea, dimensionMatchMethod, classifierName)
-
+function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sentenceGalFea,sentenceProbIds, sentenceGalIds, dimensionMatchMethod, classifierName)
+            fprintf('Size of sentenceprobFea %d %d and sentenceGalFea %d %d  pre matching',size(sentenceProbFea,3), size(sentenceProbFea,4),size(sentenceGalFea,3),size(sentenceGalFea,4)); 
             numDims=min(size(sentenceProbFea,4),size(sentenceGalFea,4));
             if(size(sentenceProbFea,4)  ~= size(sentenceGalFea,4))
                 if(size(sentenceProbFea,4) > size(sentenceGalFea,4))
@@ -20,10 +20,18 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                         case 'pca'
                             for ft= 1:size(sentenceProbFea,1)
                                 for c=1:size(sentenceProbFea,2)
-                                    sentenceProbFea2(ft,c,:,:)= extractPCA(squeeze(sentenceProbFea(ft,c,:,:)), numDims);
+                                    sentenceProbFea2(ft,c,:,:)= extractPCA(squeeze(sentenceProbFea(ft,c,:,:)),sentenceProbIds(ft,:), numDims);
                                 end
                             end
-                            sentenceProbFea=sentenceProbFea2;  
+                            sentenceProbFea=sentenceProbFea2;
+			case 'lda'
+                            for ft= 1:size(sentenceProbFea,1)
+                                for c=1:size(sentenceProbFea,2)
+                                    sentenceProbFea2(ft,c,:,:)= extractLDA(squeeze(sentenceProbFea(ft,c,:,:)),sentenceProbIds(ft,:),numDims);
+                                end
+                            end
+                            sentenceProbFea=sentenceProbFea2;
+
                         case 'nan_fill'
                             tempNan= NaN(size(sentenceGalFea,1),size(sentenceGalFea,2),size(sentenceGalFea,3),size(sentenceProbFea,4)-size(sentenceGalFea,4));
                             
@@ -52,6 +60,15 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                             tempNan= NaN(size(sentenceProbFea,1),size(sentenceProbFea,2),size(sentenceProbFea,3),size(sentenceGalFea,4)-size(sentenceProbFea,4));
 			
                             sentenceProbFea(:,:,:,size(sentenceProbFea,4)+1:size(sentenceGalFea,4))=tempNan;
+			case 'lda'
+			    
+                            for ft= 1:size(sentenceGalFea,1)
+                                for c=1:size(sentenceGalFea,2)
+                                    sentenceGalFea2(ft,c,:,:)= extractLDA(squeeze(sentenceGalFea(ft,c,:,:)),sentenceGalIds(ft,:), numDims);
+                                end
+                            end
+                            sentenceGalFea=sentenceGalFea2;
+			    
                         case 'extend'
                             for ft= 1:size(sentenceProbFea,1)
                                 for c=1:size(sentenceProbFea,2)
@@ -63,6 +80,6 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
 
                 end
             end       
-    
+     fprintf('size sentenceGalFea %d %d and sentenceProbFea %d %d post matching',size(sentenceGalFea,3),size(sentenceGalFea,4),size(sentenceProbFea,3),size(sentenceProbFea,4))
 
 end

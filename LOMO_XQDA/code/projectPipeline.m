@@ -108,7 +108,7 @@ imageOptions.height=50;
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -120,7 +120,7 @@ options.maxepoch4=5;
 options.trainAll=1;
 options.learningRate=0.01;
 options.maxEpochs=1000;
-options.precise=1;
+options.precise=0;
 %try larger flasepositiveratio
 
 
@@ -540,15 +540,15 @@ if(classifySentenceImages)
                 %depending on dimensionMatchmethod and classification method
                 fprintf('Adjusting image and sentence feature dimensions so they match %s \n',options.dimensionMatchMethod)
                 if(~options.precise)
-                    [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea, options.dimensionMatchMethod, currClassifierName);
+                    [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea,sentenceImgClassLabel,sentenceImgClassLabel, options.dimensionMatchMethod, currClassifierName);
                 else
-                    [preciseSentenceImgGalFea, preciseSentenceImgProbFea]=matchDimensions(preciseSentenceImgProbFea,preciseSentenceImgGalFea, options.dimensionMatchMethod, currClassifierName);
+                    [preciseSentenceImgGalFea, preciseSentenceImgProbFea]=matchDimensions(preciseSentenceImgProbFea,preciseSentenceImgGalFea,preciseSentenceImgClassLabel,preciseSentenceImgClassLabel, options.dimensionMatchMethod, currClassifierName);
                 end
                 fprintf('Dimension Matching Completed \n')
                 %%For every set of features
                 if(~options.precise)
                     for ft=1:size(sentenceImgGalFea,1)
-
+                        
 
                         %%For every sentence configuration set
                         for st=1:size(sentenceImgGalFea,2)
