@@ -20,7 +20,7 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                         case 'pca'
                             for ft= 1:size(sentenceProbFea,1)
                                 for c=1:size(sentenceProbFea,2)
-                                    sentenceProbFea2(ft,c,:,:)= extractPCA(squeeze(sentenceProbFea(ft,c,:,:)),sentenceProbIds(ft,:), numDims);
+                                    sentenceProbFea2(ft,c,:,:)= extractPCA(squeeze(sentenceProbFea(ft,c,:,:)), numDims);
                                 end
                             end
                             sentenceProbFea=sentenceProbFea2;
