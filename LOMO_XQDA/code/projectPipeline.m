@@ -108,7 +108,7 @@ imageReduce=1; % artificial means to reduce image size when comparing results of
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -153,7 +153,7 @@ sentenceForce=false;
 classifyImages=true;
 classifySentenceImages=false;
 classifySentences=false;
-
+dimensionReduce=40;
 
 
 %% Feature Extractors and Classifiers
@@ -316,8 +316,17 @@ if(classifyImages | classifySentenceImages)
             %RandonPerm depending on noImages, need to keep associated
             %order of personIds or worthless
             [personIds,precisePersonIds, features]=featureFunct(images,person_ids,precisePersonIds, imageOptions); %(:,:,:,1:options.noImages) done inside function 
-            
-            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
+            featuresReduce=0;
+            if(autoDimensionReduce~=0)
+                dimensionMethodUsed=options.dimensionMatchMethod;
+                switch(options.dimensionMatchMethod)
+                    case 'lda'
+                    	featuresReduce= extractLDA(features,personIds, autoDimensionReduce);
+                    case 'pca'
+                        featuresReduce= extractPCA(features, autoDimensionReduce);
+                end       
+            end
+            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds', 'featuresReduce', 'dimensionMethodUsed');
 
         else
           fprintf('Already exists. Not extracting current feature %s, config %d %d\n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
@@ -418,11 +427,18 @@ for i=1:length(featureExtractorsRun)
         load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
         size(features,1)
         length(imgList)
+        %Way of loading reduced feature size if has been previously
+        %generated with correct method
+        if(~isequal(featuresReduced,0) && dimensionMethodUsed==options.dimensionMatchMethod)
+           features=featuresReduce; 
+        end
+            
         if(size(features,1) ~= (length(imgList)+length(imgList2)))
             descriptors=features.';
         else
             descriptors=features;
         end
+        
         
         %% Order image features
         [personIds,idx] = sort(personIds);
@@ -605,9 +621,9 @@ if(classifySentenceImages)
                 %depending on dimensionMatchmethod and classification method
                 fprintf('Adjusting image and sentence feature dimensions so they match %s \n',options.dimensionMatchMethod)
                 if(~options.precise)
-                    [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea,sentenceImgClassLabel,sentenceImgClassLabel, options.dimensionMatchMethod, currClassifierName);
+                    [sentenceImgGalFea, sentenceImgProbFea]=matchDimensions(sentenceImgProbFea,sentenceImgGalFea,sentenceImgClassLabel,sentenceImgClassLabel, options.dimensionMatchMethod);
                 else
-                    [preciseSentenceImgGalFea, preciseSentenceImgProbFea]=matchDimensions(preciseSentenceImgProbFea,preciseSentenceImgGalFea,preciseSentenceImgClassLabel,preciseSentenceImgClassLabel, options.dimensionMatchMethod, currClassifierName);
+                    [preciseSentenceImgGalFea, preciseSentenceImgProbFea]=matchDimensions(preciseSentenceImgProbFea,preciseSentenceImgGalFea,preciseSentenceImgClassLabel,preciseSentenceImgClassLabel, options.dimensionMatchMethod);
                 end
                 fprintf('Dimension Matching Completed \n')
                 %%For every set of features

@@ -47,7 +47,7 @@ function sentenceVectors=extractLDA(sentences, sentenceIds, numDims)
     
     for s= 1: size(sentences,1)
         for i=1: numDims
-            temp= sentences(s,idxWow(1:newSize))*eigVecs(:,i);
+            temp= sentences(s,:)*eigVecs(:,i);
             sentenceVectors(s,i)= temp;
         end
     end
