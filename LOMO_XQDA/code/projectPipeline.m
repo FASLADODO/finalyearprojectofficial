@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='mirrored';%none, rotated_right
+imageOptions.extend='none';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
-imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
+imageReduce=0; % artificial means to reduce image size when comparing results of images does not impact classificiation
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -790,8 +790,10 @@ if(classifyImages)
                                 [distReduce,classLabelGal2Reduce, classLabelProb2Reduce]=currClassifierFunct(galFeaY, probFeaY,squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
                             end
                             
-                                [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
-                            cmsReduce(iter,:)= EvalCMC( -distReduce, classLabelGal2, classLabelProb2, numRanks );
+                            [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
+                            if(imageReduce)
+                                cmsReduce(iter,:)= EvalCMC( -distReduce, classLabelGal2, classLabelProb2, numRanks );
+                            end
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
 
@@ -801,7 +803,9 @@ if(classifyImages)
                         end        
                         %Mean for every feature set, classifier combination
                         meanCms = mean(cms(:,:)); 
-                        meanReduceCms=mean(cmsReduce(:,:));
+                        if(imageReduce)
+                            meanReduceCms=mean(cmsReduce(:,:));
+                        end
                         save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
                     else
                         load( char(strrep(csvFileName,'.csv','.mat')));
@@ -820,9 +824,11 @@ if(classifyImages)
                     fprintf('The average performance:\n');
                     fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
                     fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
-                    fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
+                    if(imageReduce)
+                        fprintf('The average performance reduce:\n');
+                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
+                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanReduceCms([1,5,10,15,50, 100]) * 100);
+                    end
                 end
            % end
        % end

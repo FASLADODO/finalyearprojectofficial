@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='mirrored';%none, rotated_right
+imageOptions.extend='none';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
-imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
+imageReduce=0; % artificial means to reduce image size when comparing results of images does not impact classificiation
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -148,7 +148,7 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=true;
+featureForce=false;
 sentenceForce=false;
 classifyImages=true;
 classifySentenceImages=false;
@@ -195,7 +195,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
@@ -746,7 +746,7 @@ if(classifyImages)
     
     figure
 
-    labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
+    %labels=cell(length(imageClassifiersRun)*size(galFea,1),1);
     for i=1:length(imageClassifiersRun)
             numRanks=0;
             if(strcmp(imageOptions.extend,'none'))
@@ -772,10 +772,11 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    if(imageReduce)
+                    if(~imageReduce)
                         labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
                     else
-                        labels{(size(galFea,1)*(i-1)*2)+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));                     
+                        labels{(size(galFea,1)*(i-1)*2)+(ft-1)*2+1}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
+                        labels{(size(galFea,1)*(i-1)*2)+(ft-1)*2+2}=char(strcat(currClassifierName,'-',currFeatureName,'-', config,'reduce'));
                     end
                     csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     
@@ -805,11 +806,13 @@ if(classifyImages)
                     else
                         load( char(strrep(csvFileName,'.csv','.mat')));
                     end                       
-                    if(imageReduce)
-                        plot(1:numRanks,meanReduceCms)
-                    end
+
                     plot(1 : numRanks, meanCms)
                     hold on;
+                    if(imageReduce)
+                        plot(1:numRanks,meanReduceCms)
+                        hold on;
+                    end
                     csvwrite(csvFileName,meanCms); 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
                     %%type csvlist.dat
@@ -817,9 +820,11 @@ if(classifyImages)
                     fprintf('The average performance:\n');
                     fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
                     fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
-                    fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
+                    if(imageReduce)
+                        fprintf('The average performance reduce:\n');
+                        fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
+                        fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanReduceCms([1,5,10,15,50, 100]) * 100);
+                    end
                 end
            % end
        % end
