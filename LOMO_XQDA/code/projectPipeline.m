@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='none';%none, rotated_right
+imageOptions.extend='mirrored';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
-imageReduce=0; % artificial means to reduce image size when comparing results of images does not impact classificiation
+imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -195,7 +195,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
@@ -807,6 +807,9 @@ if(classifyImages)
                             meanReduceCms=mean(cmsReduce(:,:));
                         end
                         save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
+                        if(imageReduce)
+                           save(strcat(char(strrep(csvFileName,'','.mat')),'reduce.csv'), 'meanReduceCms');
+                        end
                     else
                         load( char(strrep(csvFileName,'.csv','.mat')));
                     end                       
