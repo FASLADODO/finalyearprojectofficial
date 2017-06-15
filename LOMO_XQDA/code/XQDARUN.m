@@ -1,11 +1,11 @@
 function [dist,classLabelGal2, classLabelProb2]=XQDARUN(galFea, probFea,galClassLabel,probClassLabel, iter, options)
                         
-    numMatches=size(galFea,1);
+    numMatches=size(galFea,1);%1359
     p = randperm(numMatches);
     
     %Get number of duplicates for each class
     % if imageOptions.extend has been used, should be 4
-    reps=int16(size(galFea,1)/length(unique(galClassLabel)));
+    reps=int16(size(galFea,1)/length(unique(galClassLabel)))*2;
     
     %Want to avoid repetitions in evaluation stage
     %Train with most data possible

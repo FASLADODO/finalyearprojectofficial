@@ -101,7 +101,7 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='none';%none, rotated_right
+imageOptions.extend='mirrored';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
 imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
 

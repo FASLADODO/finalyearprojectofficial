@@ -20,7 +20,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     'initial gal, prob sizes'
     size(galFea)
     numMatches=0;
-    reps=int16(size(galFea,1)/length(unique(galClassLabel)));
+    reps=int16(size(galFea,1)/length(unique(galClassLabel)))*2;
     fprintf('\nTHe number of repetitions of sentenceIds are %d\n',reps);
     %galFea1 = galFea(p(1:int16(numMatches*(reps-1)/reps)), : );
     %probFea1 = probFea(p(1:int16(numMatches*(reps-1)/reps)), : );
