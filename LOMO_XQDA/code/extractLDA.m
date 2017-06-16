@@ -1,8 +1,14 @@
 %Input rows are the sentences, cols are the variabls
 function sentenceVectors=extractLDA(sentences, sentenceIds, numDims)
+
     idxWow=randperm(size(sentences,2));
     newSize=min(10000,size(sentences,2));%Newsize necessary to reduce memory usage
+    sentences=sentences(:,idxWow(1:newSize));
+    
     uniqSentenceIds=unique(sentenceIds);
+    size(sentences)
+    size(uniqSentenceIds)
+    size(sentenceIds)
     sw=zeros(size(sentences,2),size(sentences,2));
     for u=1:length(uniqSentenceIds)
         withinClassIdx=find(sentenceIds==uniqSentenceIds(u));
@@ -17,6 +23,7 @@ function sentenceVectors=extractLDA(sentences, sentenceIds, numDims)
     size(sw)
     sb=zeros(size(sentences,2),size(sentences,2));
     meanOverall=mean(sentences,1);
+    meanClass=zeros(length(uniqSentenceIds),size(sentences,2));
     for u= 1:length(uniqSentenceIds)
         withinClassIdx=find(sentenceIds==uniqSentenceIds(u));
         meanClass(u,:)=mean(sentences(withinClassIdx,:),1);        
@@ -24,16 +31,22 @@ function sentenceVectors=extractLDA(sentences, sentenceIds, numDims)
 
     for u=1:length(uniqSentenceIds)
        	 %sentencesIn=sentences(find(sentenceIds==uniqSentenceIds(u)),:);
-	 sb=sb+(meanClass(u,:)-meanOverall).'*(meanClass(u,:)-meanOverall);
+           sb=sb+(meanClass(u,:)-meanOverall).'*(meanClass(u,:)-meanOverall);
     end
-    'size sb, then inv(sw)'
-    size(sb)
-    size(inv(sw))
-    orig=inv(sw)*sb;
-    'sb first row'
-    sb(1,:)
-    'sw first row'
-    sw(1,:)
+    %'size sb, then inv(sw)'
+    %size(sb)
+    %size(inv(sw))
+    %orig=sw\sb;
+    orig=pinv(sw)*sb
+    %'sb first row'
+    %sb(1:100,1)
+    %'sw first row'
+    %sw(1:100,1)
+    %'inv sw first row'
+    %temp=pinv(sw);
+    %temp(1:100,1)
+    %'orig'
+    %orig(1:100,1)
     %meanS=mean(orig,1);%row vector
     %sentenceVector=bsxfun(@minus,orig,meanS);
     %covy=sentenceVector(idxWow(1:newSize),:).'*sentenceVector(idx(1:newSize),:)/size(sentenceVector,2);

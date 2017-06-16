@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='mirrored';%none, rotated_right
+imageOptions.extend='none';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
-imageReduce=1; % artificial means to reduce image size when comparing results of images does not impact classificiation
+ % artificial means to reduce image size when comparing results of images does not impact classificiation
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -294,7 +294,7 @@ if(classifyImages | classifySentenceImages)
         currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
-        if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]))
+        if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]) || (isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]) ))
             idx=find(cell2mat(featureExtractors(:,1))==featureExtractorsRun(i),1);
             %Could do error checking here to test match exists: 1x0
             %featureID= cell2mat(featureExtractors(u,1));
@@ -321,7 +321,7 @@ if(classifyImages | classifySentenceImages)
             end
             
             featuresReduce=0;
-            if(autoDimensionReduce~=0)
+            if(featureExtractorsRun(i)==LOMO_F)
                 dimensionMethodUsed=options.dimensionMatchMethod;
                 switch(options.dimensionMatchMethod)
                     case 'lda'
@@ -330,11 +330,17 @@ if(classifyImages | classifySentenceImages)
                     case 'pca'
                         fprintf('Beginning pca automatic feature reduction\n')
                         featuresReduce= extractPCA(features, autoDimensionReduce);
-                end       
+                end 
+                if(strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))
+                    save(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),'featuresReduce', 'personIds', 'precisePersonIds');
+                end
             end
-            save(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''), 'reduce.mat')),'featuresReduce', 'dimensionMethodUsed');
-            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
-
+            %if not lomo and pca/lda
+            %technically lomo should never be run without lda/pca as too
+            %much memory
+            if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))))
+                save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
+            end
         else
           fprintf('Already exists. Not extracting current feature %s, config %d %d\n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
         end
@@ -420,6 +426,7 @@ end
 featureList = dir(strcat(featuresDir,'images/',featureExts));
 featuresAvail=[featureList.name];
 %%For every image feature set
+features=0;
 for i=1:length(featureExtractorsRun)
     currFeatureName=cell2mat(featureName(featureExtractorsRun(i)));
     %config=sprintf('_%d_%d_%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit, imageOptions.noImages);
@@ -428,28 +435,27 @@ for i=1:length(featureExtractorsRun)
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
     
-    
+    if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))))
+         if(~isequal(strfind(featuresAvail,currFeatureName),[]))
 
-    if(~isequal(strfind(featuresAvail,currFeatureName),[]))
-        
-        %% Load image feature variables from file  
-        fprintf('Currently loading features %s into matrices \n',currFeatureName);
-        load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
-        size(features,1)
-        length(imgList)
-        %Way of loading reduced feature size if has been previously
-        %generated with correct method
-        if(~isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''), 'reduce.mat')),[]))
-            load(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''), 'reduce.mat')));%featuresReduce, dimensionMethodUsed
-            
-            if(~isequal(featuresReduce,0) && strcmp(dimensionMethodUsed,options.dimensionMatchMethod))
-                fprintf('Converting features to their pre-reduced form using method %s\n',dimensionMethodUsed);
+                %% Load image feature variables from file  
+                fprintf('Currently loading features %s into matrices \n',currFeatureName);
+                load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
+                size(features,1)
+                length(imgList)    
+         end
+    end
+    if(~isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]))
+            load(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')));%featuresReduce, dimensionMethodUsed
+            %if(~isequal(featuresReduce,0) && strcmp(dimensionMethodUsed,options.dimensionMatchMethod))
+               fprintf('Converting features to their pre-reduced form using method %s\n',dimensionMethodUsed);
                features=featuresReduce; 
-            end
-        else
-           fprintf('No pre-reduced features for this dimension reduction method exists: %s\n', options.dimensionMatchMethod); 
-        end
-
+            %end  
+    else
+            fprintf('No pre-reduced features for this dimension reduction method exists: %s\n', options.dimensionMatchMethod); 
+    end
+    %if features have been successfully extracted through one of the methods    
+    if(features~=0)
             
         if(size(features,1) ~= (length(imgList)+length(imgList2)))
             descriptors=features.';
