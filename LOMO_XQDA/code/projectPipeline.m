@@ -148,12 +148,12 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
 classifyImages=true;
 classifySentenceImages=false;
 classifySentences=false;
-dimensionReduce=40;
+autoDimensionReduce=40;
 
 
 %% Feature Extractors and Classifiers
@@ -316,17 +316,24 @@ if(classifyImages | classifySentenceImages)
             %RandonPerm depending on noImages, need to keep associated
             %order of personIds or worthless
             [personIds,precisePersonIds, features]=featureFunct(images,person_ids,precisePersonIds, imageOptions); %(:,:,:,1:options.noImages) done inside function 
+            if(size(features,1) ~= (length(imgList)+length(imgList2)))
+                features=features.';
+            end
+            
             featuresReduce=0;
             if(autoDimensionReduce~=0)
                 dimensionMethodUsed=options.dimensionMatchMethod;
                 switch(options.dimensionMatchMethod)
                     case 'lda'
+                        fprintf('Beginning lda automatic feature reduction\n')
                     	featuresReduce= extractLDA(features,personIds, autoDimensionReduce);
                     case 'pca'
+                        fprintf('Beginning pca automatic feature reduction\n')
                         featuresReduce= extractPCA(features, autoDimensionReduce);
                 end       
             end
-            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds', 'featuresReduce', 'dimensionMethodUsed');
+            save(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''), 'reduce.mat')),'featuresReduce', 'dimensionMethodUsed');
+            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
 
         else
           fprintf('Already exists. Not extracting current feature %s, config %d %d\n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
@@ -420,6 +427,9 @@ for i=1:length(featureExtractorsRun)
     currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
+    
+    
+
     if(~isequal(strfind(featuresAvail,currFeatureName),[]))
         
         %% Load image feature variables from file  
@@ -429,9 +439,17 @@ for i=1:length(featureExtractorsRun)
         length(imgList)
         %Way of loading reduced feature size if has been previously
         %generated with correct method
-        if(~isequal(featuresReduced,0) && dimensionMethodUsed==options.dimensionMatchMethod)
-           features=featuresReduce; 
+        if(~isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''), 'reduce.mat')),[]))
+            load(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''), 'reduce.mat')));%featuresReduce, dimensionMethodUsed
+            
+            if(~isequal(featuresReduce,0) && strcmp(dimensionMethodUsed,options.dimensionMatchMethod))
+                fprintf('Converting features to their pre-reduced form using method %s\n',dimensionMethodUsed);
+               features=featuresReduce; 
+            end
+        else
+           fprintf('No pre-reduced features for this dimension reduction method exists: %s\n', options.dimensionMatchMethod); 
         end
+
             
         if(size(features,1) ~= (length(imgList)+length(imgList2)))
             descriptors=features.';

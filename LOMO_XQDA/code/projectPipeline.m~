@@ -108,7 +108,7 @@ imageReduce=1; % artificial means to reduce image size when comparing results of
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=200; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -148,12 +148,12 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
 classifyImages=true;
 classifySentenceImages=false;
 classifySentences=false;
-dimensionReduce=40;
+autoDimensionReduce=40;
 
 
 %% Feature Extractors and Classifiers
@@ -326,7 +326,8 @@ if(classifyImages | classifySentenceImages)
                         featuresReduce= extractPCA(features, autoDimensionReduce);
                 end       
             end
-            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds', 'featuresReduce', 'dimensionMethodUsed');
+            save(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''), 'reduce.mat')),'featuresReduce', 'dimensionMethodUsed');
+            save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
 
         else
           fprintf('Already exists. Not extracting current feature %s, config %d %d\n',currFeatureName,imageOptions.imResizeMethod,imageOptions.imageTrainSplit)
@@ -420,6 +421,11 @@ for i=1:length(featureExtractorsRun)
     currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
+    
+    if(~isequal(strfind(featuresAvail,strcat(strreplace(currFeatureName,'.mat',''), 'reduce.mat')),[]))
+        load(char(strcat(featuresDir,'images/',strreplace(currFeatureName,'.mat',''), 'reduce.mat')));%featuresReduce, dimensionMethodUsed
+    end
+
     if(~isequal(strfind(featuresAvail,currFeatureName),[]))
         
         %% Load image feature variables from file  
@@ -427,8 +433,11 @@ for i=1:length(featureExtractorsRun)
         load(char(strcat(featuresDir,'images/',currFeatureName)));%originally saved as features, personIds
         size(features,1)
         length(imgList)
-        
-        if(featuresReduced~=0 &&
+        %Way of loading reduced feature size if has been previously
+        %generated with correct method
+        if(~isequal(featuresReduced,0) && dimensionMethodUsed==options.dimensionMatchMethod)
+           features=featuresReduce; 
+        end
             
         if(size(features,1) ~= (length(imgList)+length(imgList2)))
             descriptors=features.';
