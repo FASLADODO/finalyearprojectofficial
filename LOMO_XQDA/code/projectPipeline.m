@@ -101,9 +101,9 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='none';%none, rotated_right
+imageOptions.extend='mirrored';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
- % artificial means to reduce image size when comparing results of images does not impact classificiation
+imageReduce=1; % whether to display reduce comparison graph
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
@@ -148,7 +148,7 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=true;
+featureForce=false;
 sentenceForce=false;
 classifyImages=true;
 classifySentenceImages=false;
@@ -294,7 +294,7 @@ if(classifyImages | classifySentenceImages)
         currFeatureName=strrep(strcat(currFeatureName,config,'.mat'),' ', '');
         %Run feature extraction function
         %If being forced or features Available doesnt already exist
-        if(featureForce || isequal(strfind(featuresAvail,currFeatureName),[]) || (isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]) ))
+        if(featureForce || (isequal(strfind(featuresAvail,currFeatureName),[]) && (isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]) )))
             idx=find(cell2mat(featureExtractors(:,1))==featureExtractorsRun(i),1);
             %Could do error checking here to test match exists: 1x0
             %featureID= cell2mat(featureExtractors(u,1));
@@ -338,7 +338,7 @@ if(classifyImages | classifySentenceImages)
             %if not lomo and pca/lda
             %technically lomo should never be run without lda/pca as too
             %much memory
-            if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))))
+            if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))) || imageReduce==0)
                 save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
             end
         else
@@ -435,7 +435,7 @@ for i=1:length(featureExtractorsRun)
     fprintf('Now trying to load %s to perform image feature arrangement into gal/prob\n', currFeatureName);
     %% If feature file exists 
     
-    if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))))
+    if( ~(featureExtractorsRun(i)==LOMO_F && (strcmp(options.dimensionMatchMethod,'lda') || strcmp(options.dimensionMatchMethod,'pca'))) || imageReduce==0)
          if(~isequal(strfind(featuresAvail,currFeatureName),[]))
 
                 %% Load image feature variables from file  
@@ -445,10 +445,10 @@ for i=1:length(featureExtractorsRun)
                 length(imgList)    
          end
     end
-    if(~isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]))
+    if(~isequal(strfind(featuresAvail,strcat(strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')),[]) &&imageReduce==1)
             load(char(strcat(featuresDir,'images/',strrep(currFeatureName,'.mat',''),options.dimensionMatchMethod, '.mat')));%featuresReduce, dimensionMethodUsed
             %if(~isequal(featuresReduce,0) && strcmp(dimensionMethodUsed,options.dimensionMatchMethod))
-               fprintf('Converting features to their pre-reduced form using method %s\n',dimensionMethodUsed);
+               fprintf('Converting features to their pre-reduced form using method %s\n',options.dimensionMatchMethod);
                features=featuresReduce; 
             %end  
     else
@@ -812,7 +812,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    if(~imageReduce)
+                    if(~imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                         labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
                     else
                         labels{(size(galFea,1)*(i-1)*2)+(ft-1)*2+1}=char(strcat(currClassifierName,'-',currFeatureName,'-', config)); 
@@ -824,14 +824,14 @@ if(classifyImages)
                     if (exist(char(strrep(csvFileName,'.csv','.mat')), 'file') ~= 2 || matchForce==true)
                         %Repeat classification process numFolds times
                         for iter=1:numFolds
-                            if(imageReduce)
+                            if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                                 galFeaY=extractPCA(squeeze(galFea(ft,:,:)),40);
                                 probFeaY=extractPCA(squeeze(probFea(ft,:,:)),40);
                                 [distReduce,classLabelGal2Reduce, classLabelProb2Reduce]=currClassifierFunct(galFeaY, probFeaY,squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
                             end
                             
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
-                            if(imageReduce)
+                            if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                                 cmsReduce(iter,:)= EvalCMC( -distReduce, classLabelGal2, classLabelProb2, numRanks );
                             end
                             cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
@@ -843,11 +843,11 @@ if(classifyImages)
                         end        
                         %Mean for every feature set, classifier combination
                         meanCms = mean(cms(:,:)); 
-                        if(imageReduce)
+                        if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                             meanReduceCms=mean(cmsReduce(:,:));
                         end
                         save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
-                        if(imageReduce)
+                        if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                            save(strcat(char(strrep(csvFileName,'','.mat')),'reduce.csv'), 'meanReduceCms');
                         end
                     else
@@ -856,7 +856,7 @@ if(classifyImages)
 
                     plot(1 : numRanks, meanCms)
                     hold on;
-                    if(imageReduce)
+                    if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                         plot(1:numRanks,meanReduceCms)
                         hold on;
                     end
@@ -867,7 +867,7 @@ if(classifyImages)
                     fprintf('The average performance:\n');
                     fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
                     fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanCms([1,5,10,15,50, 100]) * 100);
-                    if(imageReduce)
+                    if(imageReduce && featureExtractorsRun(ft)~=LOMO_F)
                         fprintf('The average performance reduce:\n');
                         fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank50, Rank 100\n');
                         fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', meanReduceCms([1,5,10,15,50, 100]) * 100);

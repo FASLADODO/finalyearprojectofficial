@@ -37,7 +37,7 @@ function sentenceVectors=extractLDA(sentences, sentenceIds, numDims)
     %size(sb)
     %size(inv(sw))
     %orig=sw\sb;
-    orig=pinv(sw)*sb
+    orig=pinv(sw)*sb;
     %'sb first row'
     %sb(1:100,1)
     %'sw first row'
