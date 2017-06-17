@@ -1,12 +1,13 @@
 %similarityTests={'he', 'she', 'male', 'female', 'him','her', 'man','woman','boy','girl'};
-similarityTests={'fat','large','slim','slender','phone','mobile','man','male','short','small','sneakers','shoes'};
-similarityTests={'sneakers','shoes', 'trousers','jeans', 'male','man' 'shirt','t-shirt', 'bag','backpack','shoulder','bag', 'long','phone','small','files'};
-%similarityTests={'long','short','long-sleeved','short-sleeved', 'old', 'young' 'large','small', 'tall', 'short'};
+%similarityTests={'fat','large','slim','slender','phone','mobile','long','short', 'old', 'young' };
+%similarityTests={'sneakers','shoes', 'trousers','jeans', 'shirt','t-shirt', 'bag','backpack'};
+similarityTests={'long','short','long-sleeved','short-sleeved', 'old', 'young', 'large','small', 'tall', 'short', 'male','man'};
 
 RELATION=0;
 GROUP=1;
 mode=GROUP;%RELATION
-wordvectors= table2cell(readtable('../../word2vec/trunk/phrasevectors-txt/vectors-phrase-win5-threshold0-size500.txt'));
+
+wordvectors= table2cell(readtable('../../word2vec/trunk/phrasevectors-txt/vectors-phrase-win5-threshold0-size100.txt'));
 size(wordvectors);
 words=wordvectors(:,1);
 vectors=wordvectors(:,2:size(wordvectors,2)-1);
@@ -26,7 +27,7 @@ end
 plotvectors=extractPCA(testvectors, 2);
 figure
 for i=1:2:size(plotvectors,1)
-    plot(plotvectors(i,:),plotvectors(i+1,:))
+    plot(plotvectors(i,:),plotvectors(i+1,:),'LineWidth',2)
     hold on
 end
 legend(labels);

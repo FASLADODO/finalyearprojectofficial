@@ -154,7 +154,7 @@ classifyImages=true;
 classifySentenceImages=false;
 classifySentences=false;
 autoDimensionReduce=40;
-imageReduce=1; % whether to display reduce comparison graph
+imageReduce=1=0; % whether to display reduce comparison graph
 
 %% Feature Extractors and Classifiers
 %%Features
