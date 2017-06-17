@@ -148,13 +148,13 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=true;
+featureForce=false;
 sentenceForce=false;
-classifyImages=true;
-classifySentenceImages=false;
+classifyImages=false;
+classifySentenceImages=true;
 classifySentences=false;
 autoDimensionReduce=40;
-imageReduce=0; % whether to display reduce comparison graph
+imageReduce=1; % whether to display reduce comparison graph
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -323,6 +323,7 @@ if(classifyImages | classifySentenceImages)
             featuresReduce=0;
             %If traditional image features
             if(imageReduce==0)
+                fprintf('Saved non-reduced features')
                 save(char(strcat(featuresDir,'images/',currFeatureName)),'features', 'personIds', 'precisePersonIds');
             %If need to extract and save reduced image features
             else
@@ -444,7 +445,7 @@ for i=1:length(featureExtractorsRun)
     end
     
     %if features have been successfully extracted through one of the methods    
-    if(descriptors~=0)       
+    if(~isequal(descriptors,0))       
         
         %% Order image features
         [personIds,idx] = sort(personIds);
@@ -794,7 +795,7 @@ if(classifyImages)
                     currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                     %config=sprintf('%d-%d-%d',imageOptions.imResizeMethod,imageOptions.imageTrainSplit,imageOptions.noImages);
                     config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
-                    if(~imageReduce)
+                    if(imageReduce==0)
                         labels{(size(galFea,1)*(i-1))+ft}=char(strcat(currClassifierName,'-',currFeatureName,'-', config));
                         csvFileName=strcat(resultsDir,'images/',currClassifierName,'-',currFeatureName,'-', config,'.csv');
                     else
@@ -806,7 +807,10 @@ if(classifyImages)
                         %Repeat classification process numFolds times
                         for iter=1:numFolds                           
                             [dist,classLabelGal2, classLabelProb2]=currClassifierFunct(squeeze(galFea(ft,:,:)), squeeze(probFea(ft,:,:)),squeeze(classLabelGal(ft,:)),squeeze(classLabelProb(ft,:)),iter, options);
-                            cms(iter,:) = EvalCMC( -dist, classLabelGal2, classLabelProb2, numRanks );
+                            if(mean(dist)>=0)
+				dist=-dist;
+			    end
+			    cms(iter,:) = EvalCMC( dist, classLabelGal2, classLabelProb2, numRanks );
                             clear dist           
 
                             fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20\n');
@@ -817,6 +821,7 @@ if(classifyImages)
                         meanCms = mean(cms(:,:)); 
                         save(char(strrep(csvFileName,'.csv','.mat')), 'meanCms');
                     else
+			fprintf('Match results already exist...loading \n')
                         load( char(strrep(csvFileName,'.csv','.mat')));
                     end                       
 
