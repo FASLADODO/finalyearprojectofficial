@@ -17,15 +17,24 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     'WHether the gal and prob, sentences and images are matching labels'
     isequal(galClassLabel,probClassLabel)
 
+    %% sort gal and prob labels
+    %galClassLabel(1:8)
+    %[galClassLabel,idx]=sort(galClassLabel);
+    %probClassLabel=probClassLabel(idx);
+    %galFea=galFea(idx);
+    %probFea=probFea(idx);
+    %galClassLabel(1:8)
+    
     'initial gal, prob sizes'
     size(galFea)
     numMatches=0;
-    reps=int16(size(galFea,1)/length(unique(galClassLabel)));
+    reps=int16(length(galClassLabel)/length(unique(galClassLabel)))*2; %should be 4
     fprintf('\nTHe number of repetitions of sentenceIds are %d\n',reps);
     %galFea1 = galFea(p(1:int16(numMatches*(reps-1)/reps)), : );
     %probFea1 = probFea(p(1:int16(numMatches*(reps-1)/reps)), : );
     %classLabelGal1=galClassLabel(p(1:int16(numMatches*(reps-1)/reps)));
     %classLabelProb1=probClassLabel(p(1:int16(numMatches*(reps-1)/reps)));
+    
     
     if(~options.trainAll)
         numMatches=int16(size(galFea,1)*(reps-1)/reps);
@@ -34,6 +43,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     end   
     numTestMatches=int16(size(galFea,1)*(reps-1)/reps);
     fprintf('generating galFea1, probFea1, with correct match labels, in proportion to falsePositiveRatio\n')
+    
     
     
     %% Create training positive matches
@@ -48,11 +58,22 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     
     testSize=min(options.testSize, int16(size(galFea,1)*(reps-1)/reps));
     %% Squeeze removes singleton dimensions
-    galFea2 = galFea(p(numTestMatches+1 :numTestMatches+ testSize), : );
-    probFea2 = probFea(p(numTestMatches+1 : numTestMatches+testSize), : );
-    classLabelGal2=galClassLabel(p(numTestMatches+1 : numTestMatches+testSize));
-    classLabelProb2=probClassLabel(p(numTestMatches+1 :numTestMatches+ testSize));
+    %for i=1:testSize
+      %  s=randperm(reps/2);
+      %  idx=s*int16(size(galFea
+    %end
     
+    galFeaT = galFea(p(numTestMatches+1 :end), : );
+    probFeaT = probFea(p(numTestMatches+1 : end), : );
+    classLabelGalT=galClassLabel(p(numTestMatches+1 : end));
+    classLabelProbT=probClassLabel(p(numTestMatches+1 :end));
+    [ids, idx,u]=unique(classLabelGalT);
+    classLabelGal2=classLabelGalT(idx(1:testSize));
+    
+    
+    'sizes of classLabelGal2 unique'
+    size(classLabelGal2)
+    size(unique(classLabelGal2))   
     fprintf('Size of training data is %d, reps %d, unique ids %d and falsepositiveratio %d\n',numMatches*(1+options.falsePositiveRatio), reps, length(unique(galClassLabel)),options.falsePositiveRatio)
     fprintf('Size of testing data is %d',length(classLabelGal2));
     

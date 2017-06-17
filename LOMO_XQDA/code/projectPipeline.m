@@ -117,7 +117,7 @@ options.maxepoch1=20;
 options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
-options.trainAll=1;
+options.trainAll=0;
 options.learningRate=0.01;
 options.maxEpochs=1000;
 options.precise=0;
@@ -147,7 +147,7 @@ sentenceOptions.preciseId=false;
 
 
 %% What to run?
-matchForce=true;
+matchForce=false;
 featureForce=false;
 sentenceForce=false;
 classifyImages=false;

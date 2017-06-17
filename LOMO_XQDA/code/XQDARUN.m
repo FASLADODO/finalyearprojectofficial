@@ -20,7 +20,9 @@ function [dist,classLabelGal2, classLabelProb2]=XQDARUN(galFea, probFea,galClass
     galFea2 = galFea(p(int16(numMatches*(reps-1)/reps)+1 : end), : );
     probFea2 = probFea(p(int16(numMatches*(reps-1)/reps)+1 : end), : );
     classLabelGal2=galClassLabel(p(int16(numMatches*(reps-1)/reps)+1 : end));
-    classLabelProb2=probClassLabel(p(int16(numMatches*(reps-1)/reps)+1 : end));     
+    classLabelProb2=probClassLabel(p(int16(numMatches*(reps-1)/reps)+1 : end));   
+    
+    
     %{
     if(strcmp(imageOptions.extend,'none'))
         galFea1 = galFea(p(1:int16(numMatches/2)), : );
