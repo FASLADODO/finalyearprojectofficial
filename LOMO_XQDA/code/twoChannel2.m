@@ -56,7 +56,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     temp=zeros((numMatches*options.falsePositiveRatio),1);
     matchResults((1+numMatches):((1+options.falsePositiveRatio)*numMatches),1)=temp;
     
-    testSize=min(options.testSize, int16(size(galFea,1)*(reps-1)/reps));
+    testSize=min(options.testSize, int16(size(galFea,1)/reps));
     %% Squeeze removes singleton dimensions
     %for i=1:testSize
       %  s=randperm(reps/2);
@@ -67,12 +67,18 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     probFeaT = probFea(p(numTestMatches+1 : end), : );
     classLabelGalT=galClassLabel(p(numTestMatches+1 : end));
     classLabelProbT=probClassLabel(p(numTestMatches+1 :end));
-    [ids, idx,u]=unique(classLabelGalT);
-    classLabelGal2=classLabelGalT(idx(1:testSize));
-    classLabelProb2=classLabelProbT(idx(1:testSize));
-    galFea2=galFeaT(idx(1:testSize),:);
-    probFea2=probFeaT(idx(1:testSize),:);
-    
+   size(classLabelGalT)
+  [idsNot, indexes,notused]=unique(squeeze(classLabelGalT));
+    indexes
+    classLabelGal2=classLabelGalT(indexes(1:testSize));
+    classLabelProb2=classLabelProbT(indexes(1:testSize));
+    galFea2=galFeaT(indexes(1:testSize),:);
+    probFea2=probFeaT(indexes(1:testSize),:);
+    %classLabelGal2=classLabelGalT(1:testSize);
+    %classLabelProb2=classLabelProbT(1:testSize);
+    %galFea2=galFeaT(1:testSize,:);
+    %probFea2=probFeaT(1:testSize,:);    
+
     'sizes of classLabelGal2 unique'
     size(classLabelGal2)
     size(unique(classLabelGal2))   

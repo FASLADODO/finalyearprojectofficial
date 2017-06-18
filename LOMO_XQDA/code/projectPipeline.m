@@ -117,10 +117,10 @@ options.maxepoch1=20;
 options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
-options.trainAll=0;
+options.trainAll=1;
 options.learningRate=0.01;
 options.maxEpochs=1000;
-options.precise=0;
+options.precise=1;
 %try larger flasepositiveratio
 
 
@@ -154,7 +154,7 @@ classifyImages=false;
 classifySentenceImages=true;
 classifySentences=false;
 autoDimensionReduce=40;
-imageReduce=0; % whether to display reduce comparison graph
+imageReduce=1; % whether to display reduce comparison graph
 
 %% Feature Extractors and Classifiers
 %%Features
