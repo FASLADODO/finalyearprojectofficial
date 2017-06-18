@@ -28,7 +28,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     'initial gal, prob sizes'
     size(galFea)
     numMatches=0;
-    reps=int16(length(galClassLabel)/length(unique(galClassLabel)))*2; %should be 4
+    reps=int16(size(galFea,1)/length(unique(galClassLabel)))*2; %should be 4
     fprintf('\nTHe number of repetitions of sentenceIds are %d\n',reps);
     %galFea1 = galFea(p(1:int16(numMatches*(reps-1)/reps)), : );
     %probFea1 = probFea(p(1:int16(numMatches*(reps-1)/reps)), : );
@@ -69,7 +69,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     classLabelProbT=probClassLabel(p(numTestMatches+1 :end));
    size(classLabelGalT)
   [idsNot, indexes,notused]=unique(squeeze(classLabelGalT));
-    indexes
+    %indexes
     classLabelGal2=classLabelGalT(indexes(1:testSize));
     classLabelProb2=classLabelProbT(indexes(1:testSize));
     galFea2=galFeaT(indexes(1:testSize),:);
@@ -178,11 +178,14 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                             match=classLabelGal2(i)==classLabelProb2(u);
                             %2 numbers 1e-04 i think 1st is prob 0 second
                             %is prob 1 
-                            dist(i,u)=abs(threshAim-values(2));  %ones down centre should match
-                            
+                            dist(i,u)=10-values(2)+values(1);  %ones down centre should match
+                            %values 1 prob is a nonmatch (greater=greater distance)
+                            %was originally abs(1-values(2)) stupid!
                             if(match && i~=1 && u~=1 && i<10)
                                fprintf('match %0.2f and nearest wrong neighbour %0.2f \n',dist(i,u), dist(i,u-1)) 
-                            end
+                               
+			    end
+                            fprintf('match values %0.2f %0.2f',values(1), values(2));
                         end
                     end   
                     matchTime = toc(t0); 
@@ -190,7 +193,7 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     fprintf('Fold %d: ', iter);
     fprintf('Training time: %.3g seconds. ', trainTime);    
     fprintf('Matching time: %.3g seconds.\n', matchTime); 
-                    
+            dist(1:10,1:10)                    
         %{            
     %% Create test pairs
     testPairs=zeros(size(galFea2,2),2,1,size(galFea2,1).^2);
