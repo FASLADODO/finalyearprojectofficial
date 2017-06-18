@@ -82,7 +82,7 @@ addpath(classifyDir);
 addpath(evalDir);
 
 %% Experiment parameters
-numFolds=5; %Number of times to repeat experiment
+numFolds=2; %Number of times to repeat experiment
 numRanks = 1000; %Number of ranks to show for
 READ_STD=1;
 READ_CENTRAL=2;
@@ -101,7 +101,7 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='mirrored';%none, rotated_right
+imageOptions.extend='none';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
 
 
@@ -150,11 +150,11 @@ sentenceOptions.preciseId=false;
 matchForce=true;
 featureForce=false;
 sentenceForce=false;
-classifyImages=true;
-classifySentenceImages=false;
+classifyImages=false;
+classifySentenceImages=true;
 classifySentences=false;
 autoDimensionReduce=40;
-imageReduce=1; % whether to display reduce comparison graph
+imageReduce=0; % whether to display reduce comparison graph
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -195,7 +195,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3}];
 classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F
 sentenceClassifiersRun=[XQDA_F];
@@ -679,8 +679,8 @@ if(classifySentenceImages)
                             csvwrite(char(csvFileName),meanCms) 
 
                             fprintf('The average performance:\n');
-                            fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100\n');
-                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,15,20,100]) * 100));
+                            fprintf(' Rank1,  Rank5, Rank10, Rank20, Rank50,  Rank100\n');
+                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,20,50,100]) * 100));
 
                         end
 
@@ -733,8 +733,8 @@ if(classifySentenceImages)
                             csvwrite(char(csvFileName),meanCms) 
 
                             fprintf('The average performance:\n');
-                            fprintf(' Rank1,  Rank5, Rank10, Rank15, Rank20,  Rank100\n');
-                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,15,20,100]) * 100));
+                            fprintf(' Rank1,  Rank5, Rank10, Rank20, Rank50,  Rank100\n');
+                            fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%\n\n', (meanCms([1,5,10,20,50,100]) * 100));
 
                         end
 
@@ -928,8 +928,8 @@ if(classifySentences)
                     csvwrite(csvFileName,meanCms)   
 
                     fprintf('The average performance:\n');
-                    fprintf(' Rank1,  Rank10, Rank20, Rank50, Rnk60, Rank70, Rank80, Rank90\n');
-                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,%5.2f%%\n\n', meanCms([1,10,20,50,60,70,80,90]) * 100);
+                    fprintf(' Rank1,  Rank5, Rank10, Rank20, Rnk50, Rank70, Rank80, Rank90\n');
+                    fprintf('%5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%, %5.2f%%,%5.2f%%\n\n', meanCms([1,5,10,20,50,70,80,90]) * 100);
                 end
            % end
        % end
