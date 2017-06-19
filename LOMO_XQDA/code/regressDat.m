@@ -6,10 +6,11 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
     size(galFea)
     size(probFea)
     
-    %{
+    
     outCoeffs=zeros(size(probFea,2),size(galFea,2));
     outFeatures=zeros(size(galFea,1),size(galFea,2));
-    for i=1:size(galFea,2)
+   %{ 
+   for i=1:size(galFea,2)
         %ens = fitrensemble(probFea,galFea(:,i),'LSBoost',100,'Tree');
         %outFeatures(:,i) = predict(ens,probFea);
         temp=regress(squeeze(galFea(:,i)),probFea);
@@ -18,8 +19,10 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
         outCoeffs(:,i)=temp;
         %outFeatures(:,i)=temp;
     end
-    
+    %}
     'size outcoeffs'
+    %200 by 40
+    outcoeffs=mvregress(probFea(1:1000,:),galFea(1:1000,:));
     size(outCoeffs)
     for i=size(galFea,1)
         for u=1:size(galFea,2)
@@ -32,9 +35,9 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
     
         
     probFea=outFeatures;
-    %}
-    'NOW STARTING MVREGRESSION'
-    probFea=mvregress(probFea(1:100,:),galFea(1:100,:));
+    
+    %'NOW STARTING MVREGRESSION'
+    %probFea=mvregress(probFea(1:100,:),galFea(1:100,:));
     size(probFea)
     'whether probFea and galFea now match in dimension'
     isequal(size(galFea),size(probFea))

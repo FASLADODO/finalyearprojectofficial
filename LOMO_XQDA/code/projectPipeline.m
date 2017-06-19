@@ -101,14 +101,14 @@ imageOptions.maxepoch3=100;
 imageOptions.retinexy=false;
 imageOptions.width=50;
 imageOptions.height=50;
-imageOptions.extend='none';%none, rotated_right
+imageOptions.extend='mirrored';%none, rotated_right
 %% Artificially reduce image dimensions to predict correctness
 
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
 options.falsePositiveRatio=1;
-options.dimensionMatchMethod='pca'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
+options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
 options.hiddensize2=20;%100 500
@@ -120,7 +120,7 @@ options.maxepoch4=5;
 options.trainAll=0;
 options.learningRate=0.01;
 options.maxEpochs=1000;
-options.precise=1;
+options.precise=0;
 %try larger flasepositiveratio
 
 
@@ -147,7 +147,7 @@ sentenceOptions.preciseId=false;
 
 
 %% What to run?
-matchForce=false;
+matchForce=true;
 featureForce=false;
 sentenceForce=false;
 classifyImages=false;
