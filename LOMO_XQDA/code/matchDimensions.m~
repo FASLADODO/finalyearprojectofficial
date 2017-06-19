@@ -43,6 +43,14 @@ function [sentenceGalFea, sentenceProbFea]=matchDimensions(sentenceProbFea,sente
                                 end
                             end
                             sentenceGalFea=sentenceGalFea2; 
+                        case 'regress'
+                            for ft= 1:size(sentenceProbFea,1)
+                                for c=1:size(sentenceProbFea,2)
+                                    sentenceProbFea2(ft,c,:,:)= regressDat(squeeze(sentenceProbFea(ft,c,:,:)),squeeze(sentencebFea(ft,c,:,:)));
+                                end
+                            end
+                            sentenceProbFea=sentenceProbFea2;     
+                        
                     end
                 else
                    switch dimensionMatchMethod
