@@ -643,7 +643,7 @@ if(classifySentenceImages)
 
                             currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                             temp=strrep(resultSentences(st),'../results/sentences/','');
-                            config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
+                            config=imageOptions.extend;%config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                             csvFileName=strcat(resultsDir,'sentenceImages/',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                             %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
                             labels{((i-1)*size(sentenceImgGalFea,1)*size(sentenceImgGalFea,2))+ (size(sentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
@@ -697,7 +697,7 @@ if(classifySentenceImages)
 
                             currFeatureName=cell2mat(featureName(featureExtractorsRun(ft)));
                             temp=strrep(resultSentences(st),'../results/sentences/','');
-                            config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
+                            config=imageOptions.extend;%config=strjoin(cellfun(@num2str,struct2cell(imageOptions),'UniformOutput',0),'-');
                             csvFileName=strcat(resultsDir,'sentenceImages/','precise',currClassifierName,'_',currFeatureName,'_',config,matchingConfig, temp,'.csv');
                             %strcat(currClassifierName,'_',currFeatureName,config,matchingConfig, temp)
                             labels{((i-1)*size(preciseSentenceImgGalFea,1)*size(preciseSentenceImgGalFea,2))+ (size(preciseSentenceImgGalFea,2)*(ft-1))+st}=char(strcat(currClassifierName,'-',currFeatureName,'-',config,matchingConfig, temp));
