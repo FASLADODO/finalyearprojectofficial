@@ -178,14 +178,14 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
                             match=classLabelGal2(i)==classLabelProb2(u);
                             %2 numbers 1e-04 i think 1st is prob 0 second
                             %is prob 1 
-                            dist(i,u)=10-values(2)+values(1);  %ones down centre should match
+                            dist(i,u)=100-values(2)+values(1);  %ones down centre should match
                             %values 1 prob is a nonmatch (greater=greater distance)
                             %was originally abs(1-values(2)) stupid!
                             if(match && i~=1 && u~=1 && i<10)
                                fprintf('match %0.2f and nearest wrong neighbour %0.2f \n',dist(i,u), dist(i,u-1)) 
                                
 			    end
-                            fprintf('match values %0.2f %0.2f',values(1), values(2));
+                  %          fprintf('match values %0.2f %0.2f',values(1), values(2));
                         end
                     end   
                     matchTime = toc(t0); 
