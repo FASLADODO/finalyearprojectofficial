@@ -107,7 +107,7 @@ imageOptions.extend='mirrored';%none, rotated_right
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
-options.falsePositiveRatio=1;
+options.falsePositiveRatio=5;
 options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
@@ -118,7 +118,7 @@ options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
 options.trainAll=0;
-options.learningRate=0.01;
+options.learningRate=0.0075;
 options.maxEpochs=1000;
 options.precise=0;
 %try larger flasepositiveratio
@@ -154,7 +154,7 @@ classifyImages=false;
 classifySentenceImages=true;
 classifySentences=false;
 autoDimensionReduce=40;
-imageReduce=0; % whether to display reduce comparison graph
+imageReduce=1; % whether to display reduce comparison graph
 
 %% Feature Extractors and Classifiers
 %%Features
@@ -196,11 +196,11 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 
 
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3};{REGRESS_F, @regressDat};];
-classifiersRun=[REGRESS_F];%AUTOENCODE3_F TWOCHANNEL2_F
+classifiersRun=[TWOCHANNEL2_F];%AUTOENCODE3_F TWOCHANNEL2_F REGRESS_F
 
 sentenceClassifiersRun=[XQDA_F];
 imageClassifiersRun=[XQDA_F];

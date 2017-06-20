@@ -35,7 +35,9 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
     
         
     probFea=outFeatures;
-    
+    [dist,classLabelGal2,classLabelProb2]=twoChannel2(galFea,probFea,galClassLabel,probClassLabel,iter,options);
+
+%{    
     %'NOW STARTING MVREGRESSION'
     %probFea=mvregress(probFea(1:100,:),galFea(1:100,:));
     size(probFea)
@@ -77,7 +79,7 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
     probFea2=probFeaT(idx(1:testSize),:);
     
     
-    %{
+    
     if(strcmp(imageOptions.extend,'none'))
         galFea1 = galFea(p(1:int16(numMatches/2)), : );
         probFea1 = probFea(p(1:int16(numMatches/2)), : );
@@ -101,7 +103,7 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
         classLabelGal2=galClassLabel(p(int16(numMatches*3/4)+1 : end));
         classLabelProb2=probClassLabel(p(int16(numMatches*3/4)+1 : end));          
     end
-%}
+
     t0 = tic;
     xqdaOptions.qdaDims=size(galFea1,2);
     xqdaOptions.verboes=true;
@@ -125,6 +127,6 @@ function [dist,classLabelGal2, classLabelProb2]=regressDat(galFea, probFea,galCl
     fprintf('Fold %d: ', iter);
     fprintf('Training time: %.3g seconds. ', trainTime);    
     fprintf('Matching time: %.3g seconds.\n', matchTime); 
-    
+  %}  
 end
 
