@@ -22,7 +22,7 @@ MATRIX=3;
 READ_ALL=3;
 READ_DISTORT=4;
 
-mode=IMAGESPECIFIC;
+mode=SENTENCESPECIFIC;
 
 imageClassifier='XQDA';
 imageFeature='autoEncode2d';
@@ -41,18 +41,18 @@ imageNumRanks=1000;
 sentenceFeature='autoEncodeSentences';
 sentenceTrainLevel='3';
 sentenceArrange='pairs';
-sentencePrecise=0;
+sentencePrecise=1;
 % Will vary
 sentenceClassifier={'XQDA'}; %twoChannel2, twoChannel3, XQDA
 sentenceSizes=[100,200,300,400,500];
-sentenceNormalisation=[MAX];%MEAN, MODE
+sentenceNormalisation=[MATRIX];%MEAN, MODE
 sentenceModes=[USELESSWORDS, SIMWORDS, NORMAL];%,SIMWORDS,USELESSWORDS
 sentenceWindows=[3,5,7,10];
 sentenceThresholds=[200,150,0];
 sentenceHiddenSizes=[[100,40]];%etc
 sentenceMaxEpochs=[[20,10,100]];
 sentenceTrainSplit=[2000];%200
-sentenceTop=0.4;%0 by default
+sentenceTop=0;%0 by default 0.4?
 sentencesRun={
    %'XQDA_mode2_norm3outvectors_phrase_win7_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
   % 'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
@@ -64,15 +64,17 @@ sentencesRun={
   % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
   % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
   % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
-    'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode0_norm3outvectors_phrase_win5_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode0_norm3outvectors_phrase_win10_threshold0_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode0_norm3outvectors_phrase_win7_threshold0_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode0_norm3outvectors_phrase_win5_threshold150_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
-    'XQDA_mode0_norm3outvectors_phrase_win3_threshold0_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
+    
+   % 'XQDA_mode2_norm3outvectors_phrase_win10_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode0_norm3outvectors_phrase_win5_threshold200_size200autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode0_norm3outvectors_phrase_win10_threshold0_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode0_norm3outvectors_phrase_win7_threshold0_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode0_norm3outvectors_phrase_win5_threshold150_size400autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
+   % 'XQDA_mode0_norm3outvectors_phrase_win3_threshold0_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
    
-   
+   'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise1',...
+   'XQDA_mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0'
    
     %'autoEncodeMatches_mode0_norm3outvectors_phrase_win10_threshold200_size300autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat',...
     %'twoChannel2_mode1_norm3outvectors_phrase_win10_threshold200_size500autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0',...
@@ -414,7 +416,8 @@ switch(mode)
         for i=1:length(sentencesRun)
             props(i,:)=strsplit(sentencesRun{i},'_');
         end
-        for e=1:size(props,2)
+        repeatVal=zeros(length(sentencesRun),size(props,2));
+         for e=1:size(props,2)
             for i=1:length(sentencesRun)
                repeatdetected=0;
                for u=1:length(sentencesRun)
@@ -448,7 +451,8 @@ switch(mode)
             	fprintf('filename %s not found\n',fileName);
             end  
         end
-        
+        plot(1 : 100, 0.01:0.01:1,'k--','LineWidth',1.5)
+        hold on;        
         title(sprintf('CMS Curve for Sentence Matching'))
         %title(sprintf('CMS Curve for Sentence Matching with %s', config{1}))
         xlabel('No. Ranks of ordered Gallery Sentences') % x-axis label

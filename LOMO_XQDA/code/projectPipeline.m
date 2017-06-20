@@ -88,8 +88,27 @@ READ_STD=1;
 READ_CENTRAL=2;
 READ_ALL=3;
 READ_DISTORT=4;
+
+%% Feature Extractors and Classifiers
+%%Features
+LOMO_F=1;
+ALEX_F=2;
+VGG_F=3;
+AUTOENCODEIMG_F=4;
+AUTOENCODEIMG2_F=5;
+%%Classifiers
+XQDA_F=1;
+TWOCHANNEL_F=2;
+TWOCHANNEL2_F=3;
+AUTOENCODEMATCHES_F=4;
+AUTOENCODEMATCHES3_F=5;
+AUTOENCODEMATCHES1_F=6;
+FEEDFORWARD_F=7;
+TWOCHANNEL3_F=8;
+REGRESS_F=9;
+
 imageOptions.noImages=0;
-imageOptions.imResizeMethod=READ_DISTORT;
+imageOptions.imResizeMethod=READ_ALL;
 imageOptions.imageTrainSplit=2000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
@@ -134,7 +153,7 @@ sentenceOptions.maxepoch1=20;
 sentenceOptions.maxepoch2=10;
 sentenceOptions.maxepoch3=100;
 sentenceOptions.sentenceTrainSplit=2000; %no.sentences used to train system
-sentenceOptions.force=false;
+sentenceOptions.force=true;
 sentenceOptions.preciseId=false;
  %If precise only match with exact same sentences, important when training image-sentnece association
 %passed to sentences to determine how sentenceIds loaded are formatted
@@ -148,31 +167,15 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
-classifyImages=false;
-classifySentenceImages=true;
+classifyImages=true;
+classifySentenceImages=false;
 classifySentences=false;
 autoDimensionReduce=40;
 imageReduce=1; % whether to display reduce comparison graph
 
-%% Feature Extractors and Classifiers
-%%Features
-LOMO_F=1;
-ALEX_F=2;
-VGG_F=3;
-AUTOENCODEIMG_F=4;
-AUTOENCODEIMG2_F=5;
-%%Classifiers
-XQDA_F=1;
-TWOCHANNEL_F=2;
-TWOCHANNEL2_F=3;
-AUTOENCODEMATCHES_F=4;
-AUTOENCODEMATCHES3_F=5;
-AUTOENCODEMATCHES1_F=6;
-FEEDFORWARD_F=7;
-TWOCHANNEL3_F=8;
-REGRESS_F=9;
+
 %%Which feature extractors to run
 %%Which classifiers to run
 featureExtractors= [{LOMO_F, @LOMO};{ALEX_F, @ALEX};{VGG_F, @VGG};{AUTOENCODEIMG_F,@autoEncodeImages};{AUTOENCODEIMG2_F,@autoEncodeImages2d}];%%,{MACH, @MACH}
@@ -196,7 +199,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 
 
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3};{REGRESS_F, @regressDat};];
