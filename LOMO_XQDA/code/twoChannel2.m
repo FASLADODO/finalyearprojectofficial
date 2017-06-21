@@ -194,7 +194,13 @@ function [dist,classLabelGal2, classLabelProb2]=twoChannel2(galFea, probFea,galC
     fprintf('Training time: %.3g seconds. ', trainTime);    
     fprintf('Matching time: %.3g seconds.\n', matchTime); 
             dist(1:10,1:10)                    
-        %{            
+    
+	figure;
+	imagesc(dist); 
+	colormap jet;
+saveas(gcf,'Barchart.png')
+
+    %{            
     %% Create test pairs
     testPairs=zeros(size(galFea2,2),2,1,size(galFea2,1).^2);
     testMatches=zeros(size(galFea2,1).^2,1);
