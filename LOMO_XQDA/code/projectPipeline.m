@@ -108,7 +108,7 @@ TWOCHANNEL3_F=8;
 REGRESS_F=9;
 
 imageOptions.noImages=0;
-imageOptions.imResizeMethod=READ_ALL;
+imageOptions.imResizeMethod=READ_DISTORT;
 imageOptions.imageTrainSplit=2000;
 imageOptions.imageSplit='pairs'; %'oneofeach' 'oneofeach+' 
 imageOptions.trainLevel=3; %autoEncode3 autoencoder level
@@ -126,7 +126,7 @@ imageOptions.extend='mirrored';%none, rotated_right
 
 %options.noImages=0;%if 0 then all run
 %options.featureExtractionMethod='AUTOENCODE3';%AUTOENCODE2, LOMO
-options.falsePositiveRatio=5;
+options.falsePositiveRatio=10;
 options.dimensionMatchMethod='lda'; %first pca FIRST USED WHEN COMPOSING NEURAL NETWORKS EXPAND?????
 options.testSize=100; %used for twoChannel, as matches go to 16,000,000 otherwise
 options.hiddensize1=40;%199 1000 %sentences are size 40, so total is 80 if force match (but dont have to necc)
@@ -137,7 +137,7 @@ options.maxepoch2=10;
 options.maxepoch3=100;%classification layer
 options.maxepoch4=5;
 options.trainAll=0;
-options.learningRate=0.0075;
+options.learningRate=0.02;
 options.maxEpochs=1000;
 options.precise=0;
 %try larger flasepositiveratio
@@ -148,12 +148,12 @@ sentenceOptions.featureExtractionName='autoEncodeSentences';
 sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
 sentenceOptions.hiddensize1=100;%200,100,150,175,100,50
-sentenceOptions.hiddensize2=40;%100,50,100,150,25,25
+sentenceOptions.hiddensize2=50;%100,50,100,150,25,25
 sentenceOptions.maxepoch1=20;
 sentenceOptions.maxepoch2=10;
 sentenceOptions.maxepoch3=100;
 sentenceOptions.sentenceTrainSplit=2000; %no.sentences used to train system
-sentenceOptions.force=true;
+sentenceOptions.force=false;
 sentenceOptions.preciseId=false;
  %If precise only match with exact same sentences, important when training image-sentnece association
 %passed to sentences to determine how sentenceIds loaded are formatted
@@ -167,10 +167,10 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=true;
+featureForce=false;
 sentenceForce=false;
-classifyImages=true;
-classifySentenceImages=false;
+classifyImages=false;
+classifySentenceImages=true;
 classifySentences=false;
 autoDimensionReduce=40;
 imageReduce=1; % whether to display reduce comparison graph
@@ -199,7 +199,7 @@ sentencesRun={
 
 sentencesRunType=3; %very important to clarify the kind of sentences we want to be loading (can only hold one type in array)
 
-featureExtractorsRun=[AUTOENCODEIMG2_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
+featureExtractorsRun=[LOMO_F];%LOMO_F AUTOENCODEIMG2_F %AUTOENCODEIMG2_F
 
 
 classifiers= [{XQDA_F, @XQDARUN};{TWOCHANNEL_F, @twoChannel};{TWOCHANNEL2_F, @twoChannel2};{AUTOENCODEMATCHES_F, @autoEncodeMatches};{AUTOENCODEMATCHES3_F, @autoEncodeMatches3};{AUTOENCODEMATCHES1_F, @autoEncodeMatches1}; {FEEDFORWARD_F,@feedForwardMatch};{TWOCHANNEL3_F,@twoChannel3};{REGRESS_F, @regressDat};];
