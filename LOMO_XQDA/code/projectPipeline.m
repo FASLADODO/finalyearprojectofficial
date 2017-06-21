@@ -148,7 +148,7 @@ sentenceOptions.featureExtractionName='autoEncodeSentences';
 sentenceOptions.trainLevel=3; %autoEncode3 autoencoder level
 sentenceOptions.sentenceSplit='pairs';
 sentenceOptions.hiddensize1=100;%200,100,150,175,100,50
-sentenceOptions.hiddensize2=50;%100,50,100,150,25,25
+sentenceOptions.hiddensize2=40;%100,50,100,150,25,25
 sentenceOptions.maxepoch1=20;
 sentenceOptions.maxepoch2=10;
 sentenceOptions.maxepoch3=100;
@@ -167,12 +167,12 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=false;
+featureForce=true;
 sentenceForce=false;
 classifyImages=false;
 classifySentenceImages=true;
 classifySentences=false;
-autoDimensionReduce=40;
+autoDimensionReduce=30;
 imageReduce=1; % whether to display reduce comparison graph
 
 
