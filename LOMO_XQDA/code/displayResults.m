@@ -22,7 +22,7 @@ MATRIX=3;
 READ_ALL=3;
 READ_DISTORT=4;
 
-mode=SENTENCESPECIFIC;
+mode=SENTENCEIMAGES;
 
 imageClassifier='XQDA';
 imageFeature='autoEncode2d';
@@ -154,6 +154,15 @@ sentenceImagesRun={
 %'twoChannel2_LOMO_10lda1004020102010100500.0110000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
 %'twoChannel2_LOMO_10lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
 %'twoChannel2_LOMO_10lda1004020102010100500.0310000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat'
+%'twoChannel2_LOMO_4lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+
+
+'twoChannel2_LOMO_4lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+'twoChannel2_LOMO_10lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+'twoChannel2_LOMO_mirrored10lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10040_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+'twoChannel2_LOMO_mirrored10lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10050_maxepochs2010100_trainsplit2000_precise0.mat.mat',...
+'twoChannel2_LOMO_mirrored10lda1004020102010100500.0210000mode1_norm3outvectors_phrase_win5_threshold0_size100autoEncodeSentences_trainLevel3_pairs_hiddensizes10060_maxepochs2010100_trainsplit2000_precise0.mat.mat'
+
 
 };
 
@@ -177,6 +186,18 @@ imagesRun={
 };
 
 presetLabels={
+    'FalsePositiveRatio 4 Learning Rate 0.02, Sentence Vector Size 40, Match Vector Size 40',...
+    'FalsePositiveRatio 10 Learning Rate 0.02, Sentence Vector Size 40, Match Vector Size 40',...
+    'FalsePositiveRatio 10 Learning Rate 0.02, Sentence Vector Size 40, Match Vector Size 30',...
+    'FalsePositiveRatio 10 Learning Rate 0.02, Sentence Vector Size 50, Match Vector Size 40',...
+    'FalsePositiveRatio 10 Learning Rate 0.02, Sentence Vector Size 60, Match Vector Size 40 '
+
+   
+};
+
+
+%{
+presetLabels={
    
     'ALEXNET. 60% Training Samples. ResizeMethod READALL',...
      'VGGNET. 60% Training Samples. ResizeMethod READALL',...
@@ -195,7 +216,7 @@ presetLabels={
     %'LOMO. Not Extended. Not Reduced',...
     %'LOMO. Extended using Mirrored. Not Reduced'
 };
-
+%}
 
 %{
 presetLabels={
