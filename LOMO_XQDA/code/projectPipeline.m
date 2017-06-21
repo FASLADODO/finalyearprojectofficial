@@ -167,7 +167,7 @@ sentenceOptions.preciseId=false;
 
 %% What to run?
 matchForce=true;
-featureForce=true;
+featureForce=false;
 sentenceForce=false;
 classifyImages=false;
 classifySentenceImages=true;
